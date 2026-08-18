@@ -1,5 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 import {
     ActivityIndicator,
     Alert,
@@ -579,109 +587,60 @@ const App = () => {
         contextRef,
     ]);
 
-    useEffect(() => {
-        initializeApp();
+    const handleNotificationOpen = useCallback(
+        async (workId, chapterNumber) => {
+            const ctx = contextRef.current;
 
-        function unsubscribeForeground() {
-            setupNotificationListeners(setActiveScreen, setScreens, (workId, chapterId) =>
-                handleNotificationOpen(workId, chapterId),
-            );
-        }
+            if (!ctx.workDAO) return;
 
-        const checkInitialNotification = async () => {
-            const initialNotification = await notifee.getInitialNotification();
+            try {
+                const { fetchWorkFromWorkID } = require('./web/worksScreen/fetchWork');
+                const work = await fetchWorkFromWorkID(workId, workDAO, chapterDAO);
 
-            if (initialNotification) {
-                if (initialNotification.notification.id === 'updateComplete') {
-                    setActiveScreen('update');
-                } else if (initialNotification.notification.data?.action === 'OPEN_WORK') {
-                    const { workId, chapterId } = initialNotification.notification.data;
-                    setTimeout(() => handleNotificationOpen(workId, chapterId), 1000);
+                if (!work) return;
+
+                let loadChapterIndex = null;
+
+                if (chapterNumber && work.chapters && work.chapters.length > 0) {
+                    const targetNum = parseInt(chapterNumber, 10);
+
+                    const foundIndex = work.chapters.findIndex(c => c.number === targetNum);
+
+                    if (foundIndex !== -1) {
+                        loadChapterIndex = foundIndex;
+                    } else if (targetNum <= work.chapters.length && targetNum > 0) {
+                        loadChapterIndex = targetNum - 1;
+                    }
                 }
+
+                console.log(
+                    `[Notification] Opening Work: ${work.title}, Index: ${loadChapterIndex}`,
+                );
+                navigation.push('Work', {
+                    key: `notif_${workId}_${Date.now()}`,
+                    workId: workId,
+                    currentTheme: ctx.currentTheme,
+                    libraryDAO: ctx.libraryDAO,
+                    workDAO: ctx.workDAO,
+                    setScreens: setScreens,
+                    settingsDAO: ctx.settingsDAO,
+                    historyDAO: ctx.historyDAO,
+                    progressDAO: ctx.progressDAO,
+                    kudoHistoryDAO: ctx.kudoHistoryDAO,
+                    openTagSearch: openTagSearch,
+                    loadChapter: loadChapterIndex,
+                    chapterDAO: ctx.chapterDAO,
+                });
+
+                setActiveScreen('update');
+            } catch (e) {
+                console.error('Failed to open work from notification', e);
             }
-        };
+        },
+        [contextRef, workDAO, chapterDAO, navigation, setScreens, openTagSearch, setActiveScreen],
+    );
 
-        checkInitialNotification();
-
-        return () => {
-            if (database) {
-                database.close();
-            }
-            unsubscribeForeground();
-        };
-    }, [initializeApp, setActiveScreen, setScreens, handleNotificationOpen]);
-
-    const handleDoubleTap = screenId => {
-        DeviceEventEmitter.emit('doubleTap', screenId);
-    };
-
-    const handleNotificationOpen = async (workId, chapterNumber) => {
-        const ctx = contextRef.current;
-
-        if (!ctx.workDAO) return;
-
-        try {
-            const { fetchWorkFromWorkID } = require('./web/worksScreen/fetchWork');
-            const work = await fetchWorkFromWorkID(workId, workDAO, chapterDAO);
-
-            if (!work) return;
-
-            let loadChapterIndex = null;
-
-            if (chapterNumber && work.chapters && work.chapters.length > 0) {
-                const targetNum = parseInt(chapterNumber, 10);
-
-                const foundIndex = work.chapters.findIndex(c => c.number === targetNum);
-
-                if (foundIndex !== -1) {
-                    loadChapterIndex = foundIndex;
-                } else if (targetNum <= work.chapters.length && targetNum > 0) {
-                    loadChapterIndex = targetNum - 1;
-                }
-            }
-
-            console.log(`[Notification] Opening Work: ${work.title}, Index: ${loadChapterIndex}`);
-            navigation.push('Work', {
-                key: `notif_${workId}_${Date.now()}`,
-                workId: workId,
-                currentTheme: ctx.currentTheme,
-                libraryDAO: ctx.libraryDAO,
-                workDAO: ctx.workDAO,
-                setScreens: setScreens,
-                settingsDAO: ctx.settingsDAO,
-                historyDAO: ctx.historyDAO,
-                progressDAO: ctx.progressDAO,
-                kudoHistoryDAO: ctx.kudoHistoryDAO,
-                openTagSearch: openTagSearch,
-                loadChapter: loadChapterIndex,
-                chapterDAO: ctx.chapterDAO,
-            });
-
-            setActiveScreen('update');
-        } catch (e) {
-            console.error('Failed to open work from notification', e);
-        }
-    };
-
-    useEffect(() => {
-        const backAction = () => {
-            console.log(screens);
-            if (screens.length > 0) {
-                return true;
-            } else if (activeScreen === 'search') {
-                setActiveScreen('library');
-                console.log('Back on search, opening library as fallback'); //For some reason if I remove this, it doesn't work. Might be the first heisenbug of this codebase
-                return true;
-            }
-            return false;
-        };
-
-        const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
-
-        return () => backHandler.remove();
-    }, [screens, setActiveScreen, activeScreen]);
-
-    const initializeApp = async () => {
+    const initializeApp = useCallback(async () => {
         const jsonSettings = await getJsonSettings();
         setJsonSettings(jsonSettings);
         setup(jsonSettings.time);
@@ -730,7 +689,77 @@ const App = () => {
         } finally {
             setLoading(false);
         }
+    }, [
+        setJsonSettings,
+        setDatabaseObj,
+        setWorkDAO,
+        setHistoryDAO,
+        setSettingsDAO,
+        setLibraryDAO,
+        setProgressDAO,
+        setKudoHistoryDAO,
+        setupdateDAO,
+        setChapterDAO,
+        setTheme,
+        setIsIncognitoMode,
+        setViewMode,
+        setBooks,
+        setLoading,
+    ]);
+
+    useEffect(() => {
+        initializeApp();
+
+        function unsubscribeForeground() {
+            setupNotificationListeners(setActiveScreen, setScreens, (workId, chapterId) =>
+                handleNotificationOpen(workId, chapterId),
+            );
+        }
+
+        const checkInitialNotification = async () => {
+            const initialNotification = await notifee.getInitialNotification();
+
+            if (initialNotification) {
+                if (initialNotification.notification.id === 'updateComplete') {
+                    setActiveScreen('update');
+                } else if (initialNotification.notification.data?.action === 'OPEN_WORK') {
+                    const { workId, chapterId } = initialNotification.notification.data;
+                    setTimeout(() => handleNotificationOpen(workId, chapterId), 1000);
+                }
+            }
+        };
+
+        checkInitialNotification();
+
+        return () => {
+            if (database) {
+                database.close();
+            }
+            unsubscribeForeground();
+        };
+    }, [initializeApp, setActiveScreen, setScreens, handleNotificationOpen]);
+
+    const handleDoubleTap = screenId => {
+        DeviceEventEmitter.emit('doubleTap', screenId);
     };
+
+    useEffect(() => {
+        const backAction = () => {
+            console.log(screens);
+            if (screens.length > 0) {
+                return true;
+            } else if (activeScreen === 'search') {
+                setActiveScreen('library');
+                console.log('Back on search, opening library as fallback'); //For some reason if I remove this, it doesn't work. Might be the first heisenbug of this codebase
+                return true;
+            }
+            return false;
+        };
+
+        const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+
+        return () => backHandler.remove();
+    }, [screens, setActiveScreen, activeScreen]);
 
     useEffect(() => {
         if (workDAO) {

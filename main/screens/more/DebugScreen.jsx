@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function DebugScreen({ route }) {
-    const { db, setScreens } = route.params;
+    const { db } = route.params;
     const [sqlCmd, setSqlCmd] = useState('');
     const [logs, setLogs] = useState([]);
 

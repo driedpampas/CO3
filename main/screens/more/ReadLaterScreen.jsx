@@ -49,10 +49,6 @@ export default function ReadLaterScreen({ route }) {
 
     const PAGE_SIZE = 20;
 
-    useEffect(() => {
-        loadInitialEntries();
-    }, [loadInitialEntries]);
-
     const formatWork = work => {
         return {
             id: work.id,
@@ -82,7 +78,7 @@ export default function ReadLaterScreen({ route }) {
         };
     };
 
-    const loadInitialEntries = async () => {
+    const loadInitialEntries = useCallback(async () => {
         const username = await getUsername();
         if (!username) {
             setError({
@@ -105,7 +101,11 @@ export default function ReadLaterScreen({ route }) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [t]);
+
+    useEffect(() => {
+        loadInitialEntries();
+    }, [loadInitialEntries]);
 
     const loadMoreEntries = async () => {
         if (loadingMore || !hasMore) return;

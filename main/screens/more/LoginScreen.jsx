@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
@@ -53,11 +53,7 @@ const LoginScreen = ({ route }) => {
 
     const { t } = useTranslation();
 
-    useEffect(() => {
-        checkLoginStatus();
-    }, [checkLoginStatus]);
-
-    const checkLoginStatus = async () => {
+    const checkLoginStatus = useCallback(async () => {
         try {
             setValidating(true);
             const storedToken = await getCredsToken();
@@ -74,7 +70,11 @@ const LoginScreen = ({ route }) => {
         } finally {
             setValidating(false);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        checkLoginStatus();
+    }, [checkLoginStatus]);
 
     const showAlert = (title, message) => {
         setAlert({ visible: true, title, message });

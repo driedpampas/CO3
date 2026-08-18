@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 export default function HelpScreen({ route }) {
-    const { setScreens, currentTheme } = route.params;
+    const { currentTheme } = route.params;
     const navigation = useNavigation();
     function onBack() {
         navigation.goBack();

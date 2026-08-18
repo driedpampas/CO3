@@ -725,6 +725,16 @@ const AdvancedSearchScreen = ({
         savedFilters['work_search[sort_direction]'] || 'desc',
     );
 
+    const loadPresetsFromStorage = useCallback(async () => {
+        try {
+            const loadedPresets = await getAllPresets();
+            setPresets(loadedPresets);
+            console.log(loadedPresets);
+        } catch (error) {
+            console.error('Error loading presets:', error);
+        }
+    }, []);
+
     useEffect(() => {
         if (
             //This is fucking bad but it works really well so i'm not changing it
@@ -812,16 +822,6 @@ const AdvancedSearchScreen = ({
             setSortBy('_score');
         }
     }, [sortBy, sortDirection]);
-
-    const loadPresetsFromStorage = async () => {
-        try {
-            const loadedPresets = await getAllPresets();
-            setPresets(loadedPresets);
-            console.log(loadedPresets);
-        } catch (error) {
-            console.error('Error loading presets:', error);
-        }
-    };
 
     const handleSearch = useCallback(() => {
         const filters = {};

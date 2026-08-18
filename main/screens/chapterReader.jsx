@@ -167,6 +167,19 @@ const ChapterReader = ({
         loadSettings();
     }, [settingsDAO]);
 
+    // Function to send commands to the WebView
+    const sendWebViewCommand = useCallback((action, payload = {}) => {
+        if (webViewRef.current) {
+            const message = JSON.stringify({ action, payload });
+            webViewRef.current.injectJavaScript(`
+        if (window.onMessageFromReactNative) {
+          window.onMessageFromReactNative(${message});
+        }
+        true;
+      `);
+        }
+    }, []);
+
     // Load initial progress when chapterID changes and not in incognito
     useEffect(() => {
         const loadInitialProgress = async () => {
@@ -241,19 +254,6 @@ const ChapterReader = ({
 
         manageHistory();
     }, [workId, currentChapterIndex, historyDAO, isIncognitoMode]);
-
-    // Function to send commands to the WebView
-    const sendWebViewCommand = useCallback((action, payload = {}) => {
-        if (webViewRef.current) {
-            const message = JSON.stringify({ action, payload });
-            webViewRef.current.injectJavaScript(`
-        if (window.onMessageFromReactNative) {
-          window.onMessageFromReactNative(${message});
-        }
-        true;
-      `);
-        }
-    }, []);
 
     // Reset state when chapter changes
     useEffect(() => {

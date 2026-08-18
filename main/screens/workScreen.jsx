@@ -466,17 +466,7 @@ const ChapterInfoScreen = ({ route }) => {
             bottomOffset: 80,
         });
     };
-    useEffect(() => {
-        loadCategories();
-        getJsonSettings().then(settings => {
-            if (settings?.showChapterDate !== undefined) {
-                setShowDate(settings.showChapterDate);
-            }
-            setJsonSettings(settings);
-        });
-    }, [loadCategories]);
-
-    const loadCategories = async () => {
+    const loadCategories = useCallback(async () => {
         try {
             const res = await AsyncStorage.getItem('Categories');
             if (res) {
@@ -493,7 +483,17 @@ const ChapterInfoScreen = ({ route }) => {
             console.error('Error loading categories:', error);
             setCategories(['Default']);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        loadCategories();
+        getJsonSettings().then(settings => {
+            if (settings?.showChapterDate !== undefined) {
+                setShowDate(settings.showChapterDate);
+            }
+            setJsonSettings(settings);
+        });
+    }, [loadCategories]);
 
     const showCategorySelection = async (action = 'add') => {
         if (action === 'remove') {
@@ -540,11 +540,7 @@ const ChapterInfoScreen = ({ route }) => {
         }
     };
 
-    useEffect(() => {
-        loadWorkData();
-    }, [loadWorkData]);
-
-    const loadWorkData = async () => {
+    const loadWorkData = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
@@ -662,7 +658,26 @@ const ChapterInfoScreen = ({ route }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [
+        workId,
+        workDAO,
+        chapterDAO,
+        progressDAO,
+        loadChapter,
+        url,
+        currentTheme,
+        settingsDAO,
+        navigation,
+        libraryDAO,
+        historyDAO,
+        kudoHistoryDAO,
+        openTagSearch,
+        jsonSettings,
+    ]);
+
+    useEffect(() => {
+        loadWorkData();
+    }, [loadWorkData]);
 
     useEffect(() => {
         const checkLibraryStatus = async () => {

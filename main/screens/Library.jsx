@@ -135,6 +135,116 @@ const LibraryScreen = ({
         chapterDAO,
     ]);
 
+    const loadCollections = useCallback(async () => {
+        try {
+            const collections = await libraryDAO.getCollectionsWithCounts();
+            setAllCollections(collections.map(c => c.name));
+            setCollectionsWithCounts(collections);
+        } catch (err) {
+            console.error('Error loading collections:', err);
+        }
+    }, [libraryDAO]);
+
+    const loadWorks = useCallback(
+        async (reset = false, isFilter = false) => {
+            if (!reset && loadingMore) return;
+            if (!reset && !hasMore) return;
+
+            try {
+                if (reset && !isFilter) {
+                    setLoading(true);
+                }
+                if (reset && isFilter) {
+                    setFilterLoading(true);
+                }
+                if (reset) {
+                    setCurrentPage(1);
+                    setWorks([]);
+                    setHasMore(true);
+                    setError(null);
+                } else {
+                    setLoadingMore(true);
+                }
+
+                const pageToLoad = reset ? 1 : currentPage + 1;
+
+                let libraryEntries;
+                let count;
+
+                if (searchTerm?.trim()) {
+                    setIsSearching(true);
+                    libraryEntries = await libraryDAO.search(
+                        searchTerm.trim(),
+                        pageToLoad,
+                        pageSize,
+                        sortType,
+                        selectedCollection,
+                    );
+                    count = await libraryDAO.getSearchCount(searchTerm.trim(), selectedCollection);
+                } else {
+                    setIsSearching(false);
+                    libraryEntries = await libraryDAO.getByPage(
+                        pageToLoad,
+                        pageSize,
+                        sortType,
+                        selectedCollection,
+                    );
+                    count = await libraryDAO.getTotalCount(selectedCollection);
+                }
+
+                const worksWithLibraryData = [];
+                for (const entry of libraryEntries) {
+                    try {
+                        const work = await workDAO.get(entry.work.id);
+                        if (work) {
+                            worksWithLibraryData.push({
+                                work: work,
+                                library: entry.library,
+                            });
+                        }
+                    } catch (err) {
+                        console.error(`Error fetching work ${entry.work.id}:`, err);
+                    }
+                }
+
+                if (reset) {
+                    setWorks(worksWithLibraryData);
+                    setTotalCount(count);
+                } else {
+                    setWorks(prevWorks => [...prevWorks, ...worksWithLibraryData]);
+                }
+
+                setCurrentPage(pageToLoad);
+
+                const isLastPage = libraryEntries.length < pageSize;
+                setHasMore(!isLastPage);
+
+                setJsonSettings(await getJsonSettings());
+            } catch (err) {
+                console.error('Error loading works:', err);
+                setError({
+                    message: err.message || 'Failed to load library',
+                    details: err.toString(),
+                });
+            } finally {
+                setLoading(false);
+                setFilterLoading(false);
+                setLoadingMore(false);
+                setRefreshing(false);
+            }
+        },
+        [
+            loadingMore,
+            hasMore,
+            currentPage,
+            searchTerm,
+            libraryDAO,
+            sortType,
+            selectedCollection,
+            workDAO,
+        ],
+    );
+
     useEffect(() => {
         if (libraryDAO) {
             loadCollections();
@@ -146,104 +256,6 @@ const LibraryScreen = ({
             loadWorks(true, true);
         }
     }, [libraryDAO, workDAO, loadWorks]);
-
-    const loadCollections = async () => {
-        try {
-            const collections = await libraryDAO.getCollectionsWithCounts();
-            setAllCollections(collections.map(c => c.name));
-            setCollectionsWithCounts(collections);
-        } catch (err) {
-            console.error('Error loading collections:', err);
-        }
-    };
-
-    const loadWorks = async (reset = false, isFilter = false) => {
-        if (!reset && loadingMore) return;
-        if (!reset && !hasMore) return;
-
-        try {
-            if (reset && !isFilter) {
-                setLoading(true);
-            }
-            if (reset && isFilter) {
-                setFilterLoading(true);
-            }
-            if (reset) {
-                setCurrentPage(1);
-                setWorks([]);
-                setHasMore(true);
-                setError(null);
-            } else {
-                setLoadingMore(true);
-            }
-
-            const pageToLoad = reset ? 1 : currentPage + 1;
-
-            let libraryEntries;
-            let count;
-
-            if (searchTerm?.trim()) {
-                setIsSearching(true);
-                libraryEntries = await libraryDAO.search(
-                    searchTerm.trim(),
-                    pageToLoad,
-                    pageSize,
-                    sortType,
-                    selectedCollection,
-                );
-                count = await libraryDAO.getSearchCount(searchTerm.trim(), selectedCollection);
-            } else {
-                setIsSearching(false);
-                libraryEntries = await libraryDAO.getByPage(
-                    pageToLoad,
-                    pageSize,
-                    sortType,
-                    selectedCollection,
-                );
-                count = await libraryDAO.getTotalCount(selectedCollection);
-            }
-
-            const worksWithLibraryData = [];
-            for (const entry of libraryEntries) {
-                try {
-                    const work = await workDAO.get(entry.work.id);
-                    if (work) {
-                        worksWithLibraryData.push({
-                            work: work,
-                            library: entry.library,
-                        });
-                    }
-                } catch (err) {
-                    console.error(`Error fetching work ${entry.work.id}:`, err);
-                }
-            }
-
-            if (reset) {
-                setWorks(worksWithLibraryData);
-                setTotalCount(count);
-            } else {
-                setWorks(prevWorks => [...prevWorks, ...worksWithLibraryData]);
-            }
-
-            setCurrentPage(pageToLoad);
-
-            const isLastPage = libraryEntries.length < pageSize;
-            setHasMore(!isLastPage);
-
-            setJsonSettings(await getJsonSettings());
-        } catch (err) {
-            console.error('Error loading works:', err);
-            setError({
-                message: err.message || 'Failed to load library',
-                details: err.toString(),
-            });
-        } finally {
-            setLoading(false);
-            setFilterLoading(false);
-            setLoadingMore(false);
-            setRefreshing(false);
-        }
-    };
 
     const handleRefresh = useCallback(() => {
         setRefreshing(true);

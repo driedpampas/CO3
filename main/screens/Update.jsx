@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     DeviceEventEmitter,
@@ -39,6 +39,50 @@ const UpdateScreen = ({
 
     const { t } = useTranslation();
 
+    const formatRelativeTime = useCallback(
+        date => {
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 1) return t('screen_update_time_now');
+            if (diffMins < 60)
+                return diffMins > 1
+                    ? t('screen_update_time_minute_plural', { count: diffMins })
+                    : t('screen_update_time_minute', { count: diffMins });
+            if (diffHours < 24)
+                return diffMins > 1
+                    ? t('screen_update_time_hour_plural', { count: diffHours })
+                    : t('screen_update_time_hour', { count: diffHours });
+            return diffDays > 1
+                ? t('screen_update_time_day_plural', { count: diffDays })
+                : t('screen_update_time_day', { count: diffDays });
+        },
+        [t],
+    );
+
+    const loadUpdates = useCallback(async () => {
+        try {
+            if (updateDAO) {
+                const allUpdates = await updateDAO.getAll();
+                // Sort updates by date descending (newest first)
+                const sortedUpdates = allUpdates.sort((a, b) => b.date - a.date);
+                setUpdates(sortedUpdates);
+
+                if (sortedUpdates.length > 0) {
+                    const latest = new Date(sortedUpdates[0].date);
+                    setLastUpdate(formatRelativeTime(latest));
+                }
+            }
+        } catch (error) {
+            console.error('Error loading updates:', error);
+        } finally {
+            setLoading(false);
+        }
+    }, [updateDAO, formatRelativeTime]);
+
     useEffect(() => {
         loadUpdates();
     }, [loadUpdates]);
@@ -58,26 +102,6 @@ const UpdateScreen = ({
         };
     }, []);
 
-    const loadUpdates = async () => {
-        try {
-            if (updateDAO) {
-                const allUpdates = await updateDAO.getAll();
-                // Sort updates by date descending (newest first)
-                const sortedUpdates = allUpdates.sort((a, b) => b.date - a.date);
-                setUpdates(sortedUpdates);
-
-                if (sortedUpdates.length > 0) {
-                    const latest = new Date(sortedUpdates[0].date);
-                    setLastUpdate(formatRelativeTime(latest));
-                }
-            }
-        } catch (error) {
-            console.error('Error loading updates:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const handleManualUpdate = async () => {
         setRefreshing(true);
         try {
@@ -88,27 +112,6 @@ const UpdateScreen = ({
         } finally {
             setRefreshing(false);
         }
-    };
-
-    const formatRelativeTime = date => {
-        const now = new Date();
-        const diffMs = now - date;
-        const diffMins = Math.floor(diffMs / 60000);
-        const diffHours = Math.floor(diffMs / 3600000);
-        const diffDays = Math.floor(diffMs / 86400000);
-
-        if (diffMins < 1) return t('screen_update_time_now');
-        if (diffMins < 60)
-            return diffMins > 1
-                ? t('screen_update_time_minute_plural', { count: diffMins })
-                : t('screen_update_time_minute', { count: diffMins });
-        if (diffHours < 24)
-            return diffMins > 1
-                ? t('screen_update_time_hour_plural', { count: diffHours })
-                : t('screen_update_time_hour', { count: diffHours });
-        return diffDays > 1
-            ? t('screen_update_time_day_plural', { count: diffDays })
-            : t('screen_update_time_day', { count: diffDays });
     };
 
     const groupUpdatesByDate = updatesList => {

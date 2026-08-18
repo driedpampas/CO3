@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
@@ -42,11 +42,7 @@ export const CommentsScreen = ({
 
     const { t } = useTranslation();
 
-    useEffect(() => {
-        asyncFetchComments();
-    }, [asyncFetchComments]);
-
-    const asyncFetchComments = async () => {
+    const asyncFetchComments = useCallback(async () => {
         const preferHtml = (await getJsonSettings()).preferHtml;
         setPreferHTML(preferHtml);
         const _comments = await fetchComments(
@@ -59,7 +55,11 @@ export const CommentsScreen = ({
         );
         setComments(p => [...p, ..._comments]);
         setLoading(false);
-    };
+    }, [singleChapter, workOrChapterId, page]);
+
+    useEffect(() => {
+        asyncFetchComments();
+    }, [asyncFetchComments]);
 
     const renderAuthorPic = authorImg => {
         let url = 'https://archiveofourown.org/images/skins/iconsets/default/icon_user.png';

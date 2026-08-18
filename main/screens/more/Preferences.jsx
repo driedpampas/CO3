@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Slider from '@react-native-community/slider';
 import { keepLocalCopy, pick } from '@react-native-documents/picker';
 import { useNavigation } from '@react-navigation/native';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -59,12 +59,7 @@ const PreferencesScreen = ({ route }) => {
 
     const { t, i18n } = useTranslation(); // i18n is reactive
 
-    useEffect(() => {
-        loadSettings();
-        loadCategories();
-    }, [loadCategories, loadSettings]);
-
-    const loadSettings = async () => {
+    const loadSettings = useCallback(async () => {
         try {
             // Load Database Settings (Appearance)
             const dbSettings = await settingsDAO.getSettings();
@@ -105,9 +100,9 @@ const PreferencesScreen = ({ route }) => {
         } catch (error) {
             console.error('Error loading settings:', error);
         }
-    };
+    }, [settingsDAO]);
 
-    async function loadCategories() {
+    const loadCategories = useCallback(async () => {
         try {
             const res = await AsyncStorage.getItem('Categories');
             if (res) {
@@ -118,7 +113,12 @@ const PreferencesScreen = ({ route }) => {
         } catch (error) {
             console.error('Error loading categories:', error);
         }
-    }
+    }, []);
+
+    useEffect(() => {
+        loadSettings();
+        loadCategories();
+    }, [loadCategories, loadSettings]);
 
     const saveDbSettings = async newSettings => {
         try {

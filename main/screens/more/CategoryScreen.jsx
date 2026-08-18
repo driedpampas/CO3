@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     Alert,
@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 export default function CategoryScreen({ route }) {
-    const { currentTheme, setScreens, libraryDAO } = route.params;
+    const { currentTheme, libraryDAO } = route.params;
 
     const [categories, setCategories] = useState([]);
     const [editingId, setEditingId] = useState(null);
@@ -23,11 +23,7 @@ export default function CategoryScreen({ route }) {
 
     const { t } = useTranslation();
 
-    useEffect(() => {
-        loadCategories();
-    }, [loadCategories]);
-
-    async function loadCategories() {
+    const loadCategories = useCallback(async () => {
         try {
             const res = await AsyncStorage.getItem('Categories');
             if (res) {
@@ -38,7 +34,11 @@ export default function CategoryScreen({ route }) {
         } catch (error) {
             console.error('Error loading categories:', error);
         }
-    }
+    }, []);
+
+    useEffect(() => {
+        loadCategories();
+    }, [loadCategories]);
 
     async function saveCategories(categoriesToSave) {
         try {

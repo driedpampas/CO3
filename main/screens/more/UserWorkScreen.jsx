@@ -44,10 +44,6 @@ export default function UserWorkScreen({ route }) {
         pseud,
     } = route.params;
 
-    useEffect(() => {
-        loadInitialUserWork();
-    }, [loadInitialUserWork]);
-
     const formatWork = work => {
         return {
             id: work.id,
@@ -75,7 +71,7 @@ export default function UserWorkScreen({ route }) {
         };
     };
 
-    const loadInitialUserWork = async () => {
+    const loadInitialUserWork = useCallback(async () => {
         try {
             setLoading(true);
             setCurrentPage(1);
@@ -92,7 +88,11 @@ export default function UserWorkScreen({ route }) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [pseud, username]);
+
+    useEffect(() => {
+        loadInitialUserWork();
+    }, [loadInitialUserWork]);
 
     const loadMoreWorks = async () => {
         if (loadingMore || !hasMore) return;

@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
@@ -39,6 +39,24 @@ export default function UserInfoScreen({ route }) {
     const [properUsername, setProperUsername] = useState();
     const [properPseud, setProperPseud] = useState();
 
+    const loadUserInfo = useCallback(async (parsedUsername, parsedPseud) => {
+        console.log('loadUserInfo');
+        setError(false);
+        setUserInfo(undefined);
+        const fetch = parsedPseud
+            ? getUserInfoByPseud(parsedUsername, parsedPseud)
+            : getUserInfo(parsedUsername);
+        fetch
+            .then(data => {
+                const bioHtml = data.bio ? data.bio.toString() : undefined;
+                setUserInfo({ ...data, bio: bioHtml });
+            })
+            .catch(err => {
+                console.error(err);
+                setError(true);
+            });
+    }, []);
+
     useEffect(() => {
         let parsedUsername = username;
         let parsedPseud = null;
@@ -55,24 +73,6 @@ export default function UserInfoScreen({ route }) {
         setProperPseud(parsedPseud);
         loadUserInfo(parsedUsername, parsedPseud);
     }, [username, loadUserInfo]);
-
-    const loadUserInfo = async (parsedUsername, parsedPseud) => {
-        console.log('loadUserInfo');
-        setError(false);
-        setUserInfo(undefined);
-        const fetch = parsedPseud
-            ? getUserInfoByPseud(parsedUsername, parsedPseud)
-            : getUserInfo(parsedUsername);
-        fetch
-            .then(data => {
-                const bioHtml = data.bio ? data.bio.toString() : undefined;
-                setUserInfo({ ...data, bio: bioHtml });
-            })
-            .catch(err => {
-                console.error(err);
-                setError(true);
-            });
-    };
 
     function userHeader() {
         if (error) {
