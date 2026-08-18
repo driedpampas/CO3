@@ -13,14 +13,11 @@ import { AppContext } from '../../app';
 import CustomToast from '../../components/common/CustomToast';
 import { countDownloads, deleteAllDownloads } from '../../downloads/Downloader';
 import { exportBackup, importBackup } from '../../storage/Backups';
-import { clearUnusedCache, database } from '../../storage/Database';
-import { exportDb } from '../../storage/DatabaseManager';
+import { clearUnusedCache, database, exportDb } from '../../storage/DatabaseManager';
 
 export default function StorageScreen({ route }) {
-    const { setScreens, currentTheme, databaseObj } = route.params;
+    const { setScreens, currentTheme, databaseObj = database } = route.params || {};
     const { workDAO, chapterDAO } = useContext(AppContext);
-
-    console.log(databaseObj);
 
     const navigation = useNavigation();
 
@@ -123,13 +120,17 @@ export default function StorageScreen({ route }) {
             .then(() => {
                 Toast.show({
                     type: 'success',
-                    text1: 'yay it worked',
+                    text1: t('screen_storage_button_create_backup_success_1'),
+                    text2: t('screen_storage_button_create_backup_success_2'),
                 });
             })
             .catch(err => {
                 Toast.show({
-                    type: 'success',
-                    text1: 'noooo it broke',
+                    type: 'error',
+                    text1: t('screen_storage_button_create_backup_err_1'),
+                    text2: t('screen_storage_button_create_backup_err_2', {
+                        error: err?.message || err,
+                    }),
                 });
             });
     }

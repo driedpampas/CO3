@@ -74,12 +74,12 @@ function buildTagSearchParams(filters = {}, page = 1) {
         if (filters['work_search[rating_ids]']) {
             params.append('work_search[rating_ids][]', filters['work_search[rating_ids]']);
         }
-        (filters['work_search[archive_warning_ids][]'] || []).forEach(id =>
-            params.append('work_search[archive_warning_ids][]', id),
-        );
-        (filters['work_search[category_ids][]'] || []).forEach(id =>
-            params.append('work_search[category_ids][]', id),
-        );
+        for (const id of filters['work_search[archive_warning_ids][]'] || []) {
+            params.append('work_search[archive_warning_ids][]', id);
+        }
+        for (const id of filters['work_search[category_ids][]'] || []) {
+            params.append('work_search[category_ids][]', id);
+        }
 
         if (filters['work_search[excluded_tag_names]']) {
             params.append(
@@ -94,52 +94,52 @@ function buildTagSearchParams(filters = {}, page = 1) {
 
         const { include = {}, exclude = {} } = filters;
 
-        (include.ratingIds || []).forEach(id =>
-            params.append('include_work_search[rating_ids][]', id),
-        );
-        (include.warningIds || []).forEach(id =>
-            params.append('include_work_search[archive_warning_ids][]', id),
-        );
-        (include.categoryIds || []).forEach(id =>
-            params.append('include_work_search[category_ids][]', id),
-        );
-        (include.fandomIds || []).forEach(id =>
-            params.append('include_work_search[fandom_ids][]', id),
-        );
-        (include.characterIds || []).forEach(id =>
-            params.append('include_work_search[character_ids][]', id),
-        );
-        (include.relationshipIds || []).forEach(id =>
-            params.append('include_work_search[relationship_ids][]', id),
-        );
-        (include.freeformIds || []).forEach(id =>
-            params.append('include_work_search[freeform_ids][]', id),
-        );
+        for (const id of include.ratingIds || []) {
+            params.append('include_work_search[rating_ids][]', id);
+        }
+        for (const id of include.warningIds || []) {
+            params.append('include_work_search[archive_warning_ids][]', id);
+        }
+        for (const id of include.categoryIds || []) {
+            params.append('include_work_search[category_ids][]', id);
+        }
+        for (const id of include.fandomIds || []) {
+            params.append('include_work_search[fandom_ids][]', id);
+        }
+        for (const id of include.characterIds || []) {
+            params.append('include_work_search[character_ids][]', id);
+        }
+        for (const id of include.relationshipIds || []) {
+            params.append('include_work_search[relationship_ids][]', id);
+        }
+        for (const id of include.freeformIds || []) {
+            params.append('include_work_search[freeform_ids][]', id);
+        }
         if (include.otherTagNames) {
             params.append('work_search[other_tag_names]', include.otherTagNames);
         }
 
-        (exclude.ratingIds || []).forEach(id =>
-            params.append('exclude_work_search[rating_ids][]', id),
-        );
-        (exclude.warningIds || []).forEach(id =>
-            params.append('exclude_work_search[archive_warning_ids][]', id),
-        );
-        (exclude.categoryIds || []).forEach(id =>
-            params.append('exclude_work_search[category_ids][]', id),
-        );
-        (exclude.fandomIds || []).forEach(id =>
-            params.append('exclude_work_search[fandom_ids][]', id),
-        );
-        (exclude.characterIds || []).forEach(id =>
-            params.append('exclude_work_search[character_ids][]', id),
-        );
-        (exclude.relationshipIds || []).forEach(id =>
-            params.append('exclude_work_search[relationship_ids][]', id),
-        );
-        (exclude.freeformIds || []).forEach(id =>
-            params.append('exclude_work_search[freeform_ids][]', id),
-        );
+        for (const id of exclude.ratingIds || []) {
+            params.append('exclude_work_search[rating_ids][]', id);
+        }
+        for (const id of exclude.warningIds || []) {
+            params.append('exclude_work_search[archive_warning_ids][]', id);
+        }
+        for (const id of exclude.categoryIds || []) {
+            params.append('exclude_work_search[category_ids][]', id);
+        }
+        for (const id of exclude.fandomIds || []) {
+            params.append('exclude_work_search[fandom_ids][]', id);
+        }
+        for (const id of exclude.characterIds || []) {
+            params.append('exclude_work_search[character_ids][]', id);
+        }
+        for (const id of exclude.relationshipIds || []) {
+            params.append('exclude_work_search[relationship_ids][]', id);
+        }
+        for (const id of exclude.freeformIds || []) {
+            params.append('exclude_work_search[freeform_ids][]', id);
+        }
         if (exclude.excludedTagNames) {
             params.append('work_search[excluded_tag_names]', exclude.excludedTagNames);
         }

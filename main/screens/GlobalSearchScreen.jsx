@@ -136,9 +136,9 @@ function WorksList({
     kudoHistoryDAO,
     chapterDAO,
 }) {
-    if (!values || values?.length === 0) return null;
-
     const navigation = useNavigation();
+
+    if (!values || values?.length === 0) return null;
 
     return (
         <View style={styles.section}>

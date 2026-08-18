@@ -9,7 +9,6 @@ async function dumpAsyncStorage() {
         const result = await AsyncStorage.multiGet(keys);
 
         const dump = Object.fromEntries(result);
-        console.log(JSON.stringify(dump, null, 2));
         return dump;
     } catch (e) {
         console.error('Failed to dump AsyncStorage', e);
@@ -28,7 +27,6 @@ async function restoreAsyncStorage(dataObject, { clearFirst = false } = {}) {
         ]);
 
         await AsyncStorage.multiSet(pairs);
-        console.log(`Restored ${pairs.length} keys`);
     } catch (e) {
         console.error('Failed to restore AsyncStorage', e);
     }
@@ -126,7 +124,6 @@ async function addDirToZip(zip, dirPath, entryPrefix) {
         if (item.isDirectory()) {
             await addDirToZip(zip, item.path, `${entryPath}/`);
         } else {
-            // html/css are utf8; if you ever store binary downloads, branch on extension
             const content = await RNFS.readFile(item.path, 'utf8');
             zip.file(entryPath, content);
         }
@@ -138,9 +135,16 @@ async function extractDirFromZip(zip, entryPrefix, destDir) {
         name => name.startsWith(entryPrefix) && !zip.files[name].dir,
     );
 
+    const normalizedDest = destDir.endsWith('/') ? destDir.slice(0, -1) : destDir;
+
     for (const entryName of entries) {
         const relativePath = entryName.slice(entryPrefix.length);
-        const outPath = `${destDir}/${relativePath}`;
+        if (relativePath.includes('..') || relativePath.startsWith('/')) {
+            console.warn(`Skipping unsafe zip entry path: ${entryName}`);
+            continue;
+        }
+
+        const outPath = `${normalizedDest}/${relativePath}`;
         const outDir = outPath.substring(0, outPath.lastIndexOf('/'));
 
         await RNFS.mkdir(outDir);

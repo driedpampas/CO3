@@ -115,6 +115,8 @@ function extractWorkMetadata(doc) {
 
                     if (statClass === 'published') {
                         result.published = parseDate(statText);
+                    } else if (statClass === 'status' || statClass === 'completed') {
+                        result.completed = parseDate(statText);
                     } else if (statClass === 'words') {
                         result.words = parseInt(statText?.replace(/,/g, '') || '0', 10) || 0;
                     } else if (statClass === 'chapters') {
@@ -212,7 +214,7 @@ export function extractWorkContent(doc) {
             if (blockquote) {
                 result.summary = getElementText(blockquote);
 
-                if (blockquote && blockquote.childNodes) {
+                if (blockquote?.childNodes) {
                     for (let j = 0; j < blockquote.childNodes.length; j++) {
                         result.summaryHTML += blockquote.childNodes[j].toString();
                     }
@@ -295,7 +297,11 @@ export async function fetchWorkFromWorkID(
         }));
 
         const chapterInfo = parseChapters(metadata.chapters);
-        const isCompleted = metadata.completed !== null;
+        const isCompleted =
+            (chapterInfo.total !== '?' && chapterInfo.current === chapterInfo.total) ||
+            metadata.completed !== null
+                ? 1
+                : 0;
 
         const warningStatus = metadata.warnings.some(w =>
             w.includes('Choose Not To Use Archive Warnings'),

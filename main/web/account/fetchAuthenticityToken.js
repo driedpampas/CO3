@@ -6,26 +6,27 @@ const DomParser = require('react-native-html-parser').DOMParser;
 export async function fetchLoginAuthenticityToken() {
     try {
         let html = await ky.get('https://archiveofourown.org/users/login').text();
-        html = html.replace('<br \\>', ''); //Before you ask, no. I don't know. I don't need them anyway. /shrug
+        html = html.replace('<br \\>', '');
         if (
             html.includes('You are already logged in to an account. Please log out and try again.')
         ) {
-            throw 'already logged in.';
+            throw new Error('Already logged in.');
         }
-        console.log(html);
-        return new DomParser()
-            .parseFromString(html, 'text/html')
-            .getElementById('new_user') //Get the form
-            .childNodes[0].getAttribute('value'); //Get the hidden element and it's value
+        const doc = new DomParser().parseFromString(html, 'text/html');
+        const form = doc.getElementById('new_user');
+        if (!form || !form.childNodes || !form.childNodes[0]) {
+            throw new Error('Could not find login form authenticity token');
+        }
+        return form.childNodes[0].getAttribute('value');
     } catch (e) {
-        console.error('An error occurred while running fetchLoginAuthenticityToken', e);
+        console.error('Failed to fetch login authenticity token:', e?.message || e);
         throw e;
     }
 }
 
 export async function fetchKudoAuthenticityToken(workId) {
     try {
-        let html = await getUrl('http://archiveofourown.org/works/' + workId);
+        let html = await getUrl(`https://archiveofourown.org/works/${workId}`);
         html = html.replace('<br \\>', '');
 
         const doc = new DomParser().parseFromString(html, 'text/html');
@@ -35,7 +36,6 @@ export async function fetchKudoAuthenticityToken(workId) {
             throw new Error('Kudo form not found on the page');
         }
 
-        // Find the authenticity token input within the form
         const tokenInput = kudoForm.childNodes[0];
 
         if (!tokenInput) {
@@ -44,7 +44,7 @@ export async function fetchKudoAuthenticityToken(workId) {
 
         return tokenInput.getAttribute('value');
     } catch (e) {
-        console.error('An error occurred while running fetchKudoAuthenticityToken', e);
-        throw e; // Re-throw to allow caller to handle
+        console.error(`Failed to fetch kudo token for work ${workId}:`, e?.message || e);
+        throw e;
     }
 }

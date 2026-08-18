@@ -72,6 +72,14 @@ const BrowseScreen = ({
         }).start();
     };
 
+    const closeSearch = useCallback(() => {
+        Animated.timing(slideAnim, {
+            toValue: Dimensions.get('window').height,
+            duration: 220,
+            useNativeDriver: true,
+        }).start();
+    }, [slideAnim]);
+
     useEffect(() => {
         const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
             if (searchMounted && slideAnim._value === 0) {
@@ -83,14 +91,6 @@ const BrowseScreen = ({
 
         return () => subscription.remove();
     }, [searchMounted, slideAnim, closeSearch]);
-
-    const closeSearch = () => {
-        Animated.timing(slideAnim, {
-            toValue: Dimensions.get('window').height,
-            duration: 220,
-            useNativeDriver: true,
-        }).start();
-    };
 
     const [currentPage, setCurrentPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);

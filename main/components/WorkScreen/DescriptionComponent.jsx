@@ -68,9 +68,8 @@ export const WorkDescription = React.memo(({ work, currentTheme, jsonSettings })
         };
     });
 
-    if (!work?.description) return null;
-
     const renderedContent = useMemo(() => {
+        if (!work?.description) return null;
         return (
             <View style={styles.contentPadding}>
                 {jsonSettings?.preferHtml ? (
@@ -86,7 +85,9 @@ export const WorkDescription = React.memo(({ work, currentTheme, jsonSettings })
                 )}
             </View>
         );
-    }, [work.descriptionHTML, work.description, currentTheme, jsonSettings?.preferHtml]);
+    }, [work?.descriptionHTML, work?.description, currentTheme, jsonSettings?.preferHtml]);
+
+    if (!work?.description) return null;
 
     const isActuallyTall = fullHeight > COLLAPSED_HEIGHT;
 

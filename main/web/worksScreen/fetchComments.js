@@ -54,8 +54,8 @@ export async function fetchComments(
 ) {
     try {
         setStep('Fetching');
-        var url = `https://archiveofourown.org/comments/show_comments?${singleChapter ? 'work' : 'chapter'}_id=${Math.abs(workOrChapterId)}`;
-        if (!singleChapter) url += '&page=' + page;
+        let url = `https://archiveofourown.org/comments/show_comments?${singleChapter ? 'work' : 'chapter'}_id=${Math.abs(workOrChapterId)}`;
+        if (!singleChapter) url += `&page=${page}`;
 
         console.log(`Fetching comments from: ${url}`);
 
@@ -74,11 +74,20 @@ export async function fetchComments(
             response.includes('$j("#comments_placeholder").html("");') ||
                 response.includes('<span class=\\"disabled\\">Next &#8594;<\\/span>'),
         );
-        const htmlCT = response
-            .split('.append("<!-- START thread -->')[1]
-            .split('");')[0]
-            .replaceAll('\\n', '')
-            .replaceAll('\\', '');
+
+        let htmlCT = '';
+        if (response.includes('<!-- START thread -->')) {
+            const threadPart = response.split('<!-- START thread -->')[1];
+            const endIdx = threadPart.lastIndexOf('<!-- END thread -->');
+            const rawThread = endIdx !== -1 ? threadPart.substring(0, endIdx) : threadPart.split('");')[0];
+            htmlCT = rawThread
+                .replace(/\\"/g, '"')
+                .replace(/\\'/g, "'")
+                .replace(/\\n/g, '\n')
+                .replace(/\\t/g, '\t')
+                .replace(/\\\//g, '/');
+        }
+
         setStep('Parsing');
         const doc = new DomParser().parseFromString(htmlCT, 'text/html');
 
@@ -93,11 +102,15 @@ export async function fetchComments(
 
         const addComment = (comment, parentId) => {
             if (wfpComments[comment.id]) {
-                wfpComments[comment.id].forEach(com => comment.children.push(com));
+                for (const com of wfpComments[comment.id]) {
+                    comment.children.push(com);
+                }
                 delete wfpComments[comment.id];
             }
             if (wfpComments.next) {
-                wfpComments.next.forEach(com => comment.children.push(com));
+                for (const com of wfpComments.next) {
+                    comment.children.push(com);
+                }
                 delete wfpComments.next;
             }
             if (parentId) {
@@ -127,7 +140,7 @@ export async function fetchComments(
             if (coms[i].childNodes.length < 3) {
                 addComment(
                     new Comment({ id, isDeleted: true }),
-                    coms[i].parentNode.parentNode.tagName !== 'li' || 'next',
+                    coms[i].parentNode?.parentNode?.tagName === 'li' ? null : 'next',
                 );
                 continue;
             }
@@ -184,7 +197,7 @@ export async function fetchComments(
 
         return comments.reverse();
     } catch (error) {
-        console.error('Error fetching chapters:', error);
+        console.error('Error fetching comments:', error);
         return [];
     }
 }

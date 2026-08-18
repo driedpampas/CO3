@@ -65,14 +65,16 @@ class DatabaseManager {
                 location: 'default',
             });
         } else {
-            const { ipcRenderer } = window.require('electron');
-
             this.db = {
                 executeSql: async (sql, params = []) => {
-                    const raw = await ipcRenderer.invoke('db:exec', sql, params);
+                    if (!window.electronDB) {
+                        return [toResultSet([])];
+                    }
+                    const raw = await window.electronDB.exec(sql, params);
                     return [toResultSet(raw)];
                 },
                 transaction: async fn => {
+                    if (!window.electronDB) return;
                     const ops = [];
                     const tx = {
                         executeSql: (sql, params = []) => {
@@ -80,7 +82,7 @@ class DatabaseManager {
                         },
                     };
                     fn(tx);
-                    await ipcRenderer.invoke('db:transaction', ops);
+                    await window.electronDB.transaction(ops);
                 },
             };
         }
@@ -319,6 +321,24 @@ export async function exportDb(db) {
                 console.error('Failed to reopen database:', reopenError);
             }
         }
+        throw error;
+    }
+}
+
+export async function clearUnusedCache(db) {
+    try {
+        await db.executeSql('PRAGMA foreign_keys = ON;');
+
+        const [result] = await db.executeSql(
+            `DELETE FROM works
+       WHERE id NOT IN (SELECT workId FROM library)
+         AND id NOT IN (SELECT workId FROM history)
+         AND id NOT IN (SELECT workId FROM kudo_history)`,
+        );
+
+        return result.rowsAffected;
+    } catch (error) {
+        console.error('Failed to clear unused cache:', error);
         throw error;
     }
 }

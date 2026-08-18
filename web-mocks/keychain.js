@@ -1,37 +1,54 @@
 const PREFIX = '__keychain__';
 
+const memoryStore = new Map();
+
+function getStorage() {
+  if (typeof sessionStorage !== 'undefined') {
+    return {
+      getItem: key => sessionStorage.getItem(key),
+      setItem: (key, val) => sessionStorage.setItem(key, val),
+      removeItem: key => sessionStorage.removeItem(key),
+    };
+  }
+  return {
+    getItem: key => memoryStore.get(key) || null,
+    setItem: (key, val) => memoryStore.set(key, val),
+    removeItem: key => memoryStore.delete(key),
+  };
+}
+
 export const setGenericPassword = async (username, password, options) => {
   const key = PREFIX + (options?.service || 'default');
-  localStorage.setItem(key, JSON.stringify({ username, password }));
+  getStorage().setItem(key, JSON.stringify({ username, password }));
   return true;
 };
 
 export const getGenericPassword = async (options) => {
   const key = PREFIX + (options?.service || 'default');
-  const raw = localStorage.getItem(key);
+  const raw = getStorage().getItem(key);
   if (!raw) return false;
   return JSON.parse(raw);
 };
 
 export const resetGenericPassword = async (options) => {
   const key = PREFIX + (options?.service || 'default');
-  localStorage.removeItem(key);
+  getStorage().removeItem(key);
   return true;
 };
 
 export const setInternetCredentials = async (server, username, password) => {
-  localStorage.setItem(PREFIX + server, JSON.stringify({ username, password }));
+  getStorage().setItem(PREFIX + server, JSON.stringify({ username, password }));
   return true;
 };
 
 export const getInternetCredentials = async (server) => {
-  const raw = localStorage.getItem(PREFIX + server);
+  const raw = getStorage().getItem(PREFIX + server);
   if (!raw) return false;
   return JSON.parse(raw);
 };
 
 export const resetInternetCredentials = async (server) => {
-  localStorage.removeItem(PREFIX + server);
+  getStorage().removeItem(PREFIX + server);
   return true;
 };
 

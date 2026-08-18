@@ -29,12 +29,15 @@ export default function AboutScreen({ route }) {
             <ScrollView style={{ height: '100%' }}>
                 <View style={styles.mainContent}>
                     <TouchableOpacity
-                        onPress={() =>
-                            navigation.push('Debug', {
-                                setScreens: setScreens,
-                                db: db,
-                            })
-                        }
+                        disabled={!__DEV__}
+                        onPress={() => {
+                            if (__DEV__) {
+                                navigation.push('Debug', {
+                                    setScreens: setScreens,
+                                    db: db,
+                                });
+                            }
+                        }}
                     >
                         <Image style={styles.image} source={require('../../res/CO3.png')} />
                     </TouchableOpacity>

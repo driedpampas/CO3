@@ -67,20 +67,25 @@ export default async function getUrl(url, noWebview = false) {
                         onPress: async () => {
                             if (await hasStoredPassword()) {
                                 try {
-                                    await handleLogin(await getUsername(), await getCredsPasswd());
+                                    const creds = await getCredsPasswd();
+                                    if (creds && creds.password) {
+                                        await handleLogin(creds.username, creds.password);
+                                    } else {
+                                        navigationRef.navigate('Account', {});
+                                    }
                                 } catch (e) {
                                     Toast.show({
                                         type: 'error',
                                         text1: 'Login failed.',
-                                        text2: e,
+                                        text2: e?.message || String(e),
                                         onPress: () => {
                                             navigationRef.navigate('Account', {});
                                         },
                                     });
 
-                                    deleteLastLogin();
-                                    deleteCredsPasswd();
-                                    deleteCredsToken();
+                                    await deleteLastLogin();
+                                    await deleteCredsPasswd();
+                                    await deleteCredsToken();
                                 }
                             } else {
                                 navigationRef.navigate('Account', {});

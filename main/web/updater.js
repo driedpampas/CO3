@@ -177,9 +177,8 @@ const runUpdate = async (useCompactNotification, settings) => {
         const workDAO = new WorkDAO(db);
         const updateDAO = new UpdateDAO(db);
         const chapterDAO = new ChapterDAO(db);
-        const libraryDAO = new LibraryDAO(db);
-
-        if ((await getUsername()) !== undefined && settings.addBookmarksToCategory) {
+        const currentUsername = await getUsername();
+        if (currentUsername && settings.addBookmarksToCategory) {
             const bookmarks = await fetchBookmarks(1, undefined, undefined, true);
 
             const category = await loadCategories();

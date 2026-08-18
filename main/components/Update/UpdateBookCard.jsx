@@ -63,19 +63,22 @@ const UpdateBookCard = ({ update, workDAO, theme, onPress }) => {
     const { t } = useTranslation();
 
     useEffect(() => {
+        let active = true;
+        const loadWork = async () => {
+            try {
+                const workData = await workDAO.get(update.workId);
+                if (active) setWork(workData);
+            } catch (error) {
+                console.error('Error loading work:', error);
+            } finally {
+                if (active) setLoading(false);
+            }
+        };
         loadWork();
-    }, [update.workId]);
-
-    const loadWork = async () => {
-        try {
-            const workData = await workDAO.get(update.workId);
-            setWork(workData);
-        } catch (error) {
-            console.error('Error loading work:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+        return () => {
+            active = false;
+        };
+    }, [update.workId, workDAO]);
 
     useEffect(() => {
         isMounted.current = true;

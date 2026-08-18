@@ -186,19 +186,19 @@ export function parseWorkElements(workElements) {
             id: workId,
             title: getElementText(titleElement) || 'Work not found',
             author: getElementText(authorElement) || 'Unknown author',
-            kudos: parseNumber(stats.kudos) || '?',
-            hits: parseNumber(stats.hits) || '?',
+            kudos: parseNumber(stats.kudos),
+            hits: parseNumber(stats.hits),
             language: stats.language || 'Unknown',
             updated: parseDate(dateText),
-            bookmarks: parseNumber(stats.bookmarks) || '?',
-            words: stats.words || '?',
+            bookmarks: parseNumber(stats.bookmarks),
+            words: parseNumber(stats.words),
             tags: allTags,
             warnings: categorizedTags.warnings,
             description: fullDescriptionText,
             descriptionHTML: fullDescriptionHTML,
             chapters: [],
-            currentChapter: chapterInfo.current || '?',
-            chapterCount: chapterInfo.total || '?',
+            currentChapter: chapterInfo.current || 1,
+            chapterCount: chapterInfo.total || 1,
             rating: requiredTags.rating || 'Not Rated',
             category: requiredTags.category || 'None',
             warningStatus: requiredTags.warningStatus || 'NoWarningsApply',
@@ -220,7 +220,9 @@ export async function fetchFilteredWorks(filters = {}, page = 1) {
             Object.entries(filters).forEach(([key, value]) => {
                 if (value !== null && value !== undefined && value !== '') {
                     if (Array.isArray(value)) {
-                        value.forEach(v => params.append(key, v));
+                        for (const v of value) {
+                            params.append(key, v);
+                        }
                     } else {
                         params.append(key, value);
                     }
@@ -240,15 +242,8 @@ export async function fetchFilteredWorks(filters = {}, page = 1) {
             }
         }
 
-        const error = false;
-
         console.log(`Fetching works from: ${url}`);
         const response = await getUrl(url);
-        console.log(response);
-
-        if (error) {
-            throw 'Failed to load works';
-        }
 
         const doc = new DomParser().parseFromString(response, 'text/html');
 
