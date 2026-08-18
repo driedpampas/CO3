@@ -1,16 +1,16 @@
 import { Work } from '../../storage/models/work';
 import getUrl from '../requestManager';
 
-let DomParser = require('react-native-html-parser').DOMParser;
+const DomParser = require('react-native-html-parser').DOMParser;
 
 function getElementText(element) {
     if (!element) return null;
-    let text = "";
+    let text = '';
     if (element.nodeType === 3) return element.nodeValue?.trim() || null;
 
     for (let i = 0; i < element.childNodes.length; i++) {
         const child = element.childNodes[i];
-        text += child.nodeType === 3 ? child.nodeValue : getElementText(child) || "";
+        text += child.nodeType === 3 ? child.nodeValue : getElementText(child) || '';
     }
     return text.trim() || null;
 }
@@ -31,35 +31,35 @@ function parseChapters(chapterText) {
     if (match) {
         return {
             current: parseInt(match[1], 10),
-            total: match[2] === '?' ? null : parseInt(match[2], 10)
+            total: match[2] === '?' ? null : parseInt(match[2], 10),
         };
     }
     return { current: null, total: null };
 }
 
 function extractRequiredTags(workElement) {
-    const requiredTags = workElement.getElementsByClassName("required-tags")[0];
+    const requiredTags = workElement.getElementsByClassName('required-tags')[0];
     if (!requiredTags) return {};
 
-    const tags = Array.from(requiredTags.getElementsByTagName("li"));
+    const tags = Array.from(requiredTags.getElementsByTagName('li'));
     const result = {};
 
     tags.forEach(tag => {
-        const span = tag.getElementsByTagName("span")[0];
+        const span = tag.getElementsByTagName('span')[0];
         if (!span) return;
 
-        const className = span.getAttribute("class") || "";
-        const title = span.getAttribute("title") || "";
+        const className = span.getAttribute('class') || '';
+        const title = span.getAttribute('title') || '';
 
-        if (className.includes("rating")) {
+        if (className.includes('rating')) {
             result.rating = title;
-        } else if (className.includes("warnings")) {
+        } else if (className.includes('warnings')) {
             result.warnings = title;
-            result.warningStatus = className.includes("warning-yes") ? "Yes" : "No";
-        } else if (className.includes("category")) {
+            result.warningStatus = className.includes('warning-yes') ? 'Yes' : 'No';
+        } else if (className.includes('category')) {
             result.category = title;
-        } else if (className.includes("complete")) {
-            result.isCompleted = className.includes("complete-yes");
+        } else if (className.includes('complete')) {
+            result.isCompleted = className.includes('complete-yes');
         }
     });
 
@@ -67,30 +67,30 @@ function extractRequiredTags(workElement) {
 }
 
 function categorizeTagsByClass(workElement) {
-    const tagsContainer = workElement.getElementsByClassName("tags commas")[0];
+    const tagsContainer = workElement.getElementsByClassName('tags commas')[0];
     if (!tagsContainer) return { warnings: [], relationships: [], characters: [], freeforms: [] };
 
-    const tagItems = Array.from(tagsContainer.getElementsByTagName("li"));
+    const tagItems = Array.from(tagsContainer.getElementsByTagName('li'));
     const categorized = {
         warnings: [],
         relationships: [],
         characters: [],
-        freeforms: []
+        freeforms: [],
     };
 
     tagItems.forEach(item => {
-        const className = item.getAttribute("class") || "";
-        const linkElement = item.getElementsByTagName("a")[0];
+        const className = item.getAttribute('class') || '';
+        const linkElement = item.getElementsByTagName('a')[0];
         const tagText = getElementText(linkElement);
 
         if (tagText) {
-            if (className.includes("warnings")) {
+            if (className.includes('warnings')) {
                 categorized.warnings.push(tagText);
-            } else if (className.includes("relationships")) {
+            } else if (className.includes('relationships')) {
                 categorized.relationships.push(tagText);
-            } else if (className.includes("characters")) {
+            } else if (className.includes('characters')) {
                 categorized.characters.push(tagText);
-            } else if (className.includes("freeforms")) {
+            } else if (className.includes('freeforms')) {
                 categorized.freeforms.push(tagText);
             }
         }
@@ -100,13 +100,13 @@ function categorizeTagsByClass(workElement) {
 }
 
 export function extractPaginationInfo(doc) {
-    const paginationElement = doc.getElementsByClassName("pagination")[0];
+    const paginationElement = doc.getElementsByClassName('pagination')[0];
     if (!paginationElement) return { currentPage: 1, maxPages: 1 };
 
-    const pageLinks = Array.from(paginationElement.getElementsByTagName("a"));
+    const pageLinks = Array.from(paginationElement.getElementsByTagName('a'));
     const pageNumbers = pageLinks
         .map(link => {
-            const href = link.getAttribute("href");
+            const href = link.getAttribute('href');
             if (href) {
                 const match = href.match(/[?&]page=(\d+)/);
                 return match ? parseInt(match[1], 10) : null;
@@ -115,7 +115,7 @@ export function extractPaginationInfo(doc) {
         })
         .filter(num => num !== null);
 
-    const currentSpan = paginationElement.getElementsByClassName("current")[0];
+    const currentSpan = paginationElement.getElementsByClassName('current')[0];
     const currentPage = currentSpan ? parseInt(getElementText(currentSpan), 10) : 1;
     const maxPages = pageNumbers.length > 0 ? Math.max(...pageNumbers) : currentPage;
 
@@ -123,97 +123,97 @@ export function extractPaginationInfo(doc) {
 }
 
 export function parseWorkElements(workElements) {
-  return workElements.map(workElement => {
-    let workId = workElement.getAttribute("id")?.replace("work_", "") || null;
+    return workElements.map(workElement => {
+        let workId = workElement.getAttribute('id')?.replace('work_', '') || null;
 
-    if (!workId || workId.includes("bookmark")) {
-      const classMatch = workElement.getAttribute("class")?.match(/work-(\d+)/);
-      workId = classMatch ? classMatch[1] : null;
-    }
-
-    const heading = workElement.getElementsByTagName("h4")[0];
-    const titleElement = heading?.getElementsByTagName("a")[0];
-    const authorElement = Array.from(heading?.getElementsByTagName("a") || [])
-      .find(a => a.getAttribute("rel") === "author");
-
-    const requiredTags = extractRequiredTags(workElement);
-    const categorizedTags = categorizeTagsByClass(workElement);
-
-    const allTags = [
-      ...categorizedTags.relationships,
-      ...categorizedTags.characters,
-      ...categorizedTags.freeforms
-    ];
-
-    const summaryContainer = workElement.getElementsByClassName("userstuff summary")[0];
-
-    const fullDescriptionText = getElementText(summaryContainer);
-    let fullDescriptionHTML = "";
-    if (summaryContainer && summaryContainer.childNodes) {
-      for (let i = 0; i < summaryContainer.childNodes.length; i++) {
-        fullDescriptionHTML += summaryContainer.childNodes[i].toString();
-      }
-    }
-    fullDescriptionHTML = fullDescriptionHTML.trim() || null;
-
-    const dateElement = workElement.getElementsByClassName("datetime")[0];
-    const dateText = getElementText(dateElement);
-
-    const stats = {};
-    const statElements = workElement.getElementsByClassName("stats")[0];
-
-    if (statElements) {
-      const ddElements = Array.from(statElements.getElementsByTagName("dd"));
-      ddElements.forEach(dd => {
-        const className = dd.getAttribute("class") || "";
-        const value = getElementText(dd);
-        if (value) {
-          stats[className] = value;
+        if (!workId || workId.includes('bookmark')) {
+            const classMatch = workElement.getAttribute('class')?.match(/work-(\d+)/);
+            workId = classMatch ? classMatch[1] : null;
         }
-      });
-    }
 
-    const chapterInfo = parseChapters(stats.chapters);
+        const heading = workElement.getElementsByTagName('h4')[0];
+        const titleElement = heading?.getElementsByTagName('a')[0];
+        const authorElement = Array.from(heading?.getElementsByTagName('a') || []).find(
+            a => a.getAttribute('rel') === 'author',
+        );
 
-    const parseNumber = (str) => {
-      if (!str) return 0;
-      const num = parseInt(str.replace(/,/g, ''), 10);
-      return isNaN(num) ? 0 : num;
-    };
+        const requiredTags = extractRequiredTags(workElement);
+        const categorizedTags = categorizeTagsByClass(workElement);
 
-    return new Work({
-      id: workId,
-      title: getElementText(titleElement) || "Work not found",
-      author: getElementText(authorElement) || "Unknown author",
-      kudos: parseNumber(stats.kudos) || "?",
-      hits: parseNumber(stats.hits) || "?",
-      language: stats.language || 'Unknown',
-      updated: parseDate(dateText),
-      bookmarks: parseNumber(stats.bookmarks) || "?",
-      words: stats.words || "?",
-      tags: allTags,
-      warnings: categorizedTags.warnings,
-      description: fullDescriptionText,
-      descriptionHTML: fullDescriptionHTML,
-      chapters: [],
-      currentChapter: chapterInfo.current || "?",
-      chapterCount: chapterInfo.total || "?",
-      rating: requiredTags.rating || 'Not Rated',
-      category: requiredTags.category || 'None',
-      warningStatus: requiredTags.warningStatus || 'NoWarningsApply',
-      isCompleted: requiredTags.isCompleted
+        const allTags = [
+            ...categorizedTags.relationships,
+            ...categorizedTags.characters,
+            ...categorizedTags.freeforms,
+        ];
+
+        const summaryContainer = workElement.getElementsByClassName('userstuff summary')[0];
+
+        const fullDescriptionText = getElementText(summaryContainer);
+        let fullDescriptionHTML = '';
+        if (summaryContainer && summaryContainer.childNodes) {
+            for (let i = 0; i < summaryContainer.childNodes.length; i++) {
+                fullDescriptionHTML += summaryContainer.childNodes[i].toString();
+            }
+        }
+        fullDescriptionHTML = fullDescriptionHTML.trim() || null;
+
+        const dateElement = workElement.getElementsByClassName('datetime')[0];
+        const dateText = getElementText(dateElement);
+
+        const stats = {};
+        const statElements = workElement.getElementsByClassName('stats')[0];
+
+        if (statElements) {
+            const ddElements = Array.from(statElements.getElementsByTagName('dd'));
+            ddElements.forEach(dd => {
+                const className = dd.getAttribute('class') || '';
+                const value = getElementText(dd);
+                if (value) {
+                    stats[className] = value;
+                }
+            });
+        }
+
+        const chapterInfo = parseChapters(stats.chapters);
+
+        const parseNumber = str => {
+            if (!str) return 0;
+            const num = parseInt(str.replace(/,/g, ''), 10);
+            return isNaN(num) ? 0 : num;
+        };
+
+        return new Work({
+            id: workId,
+            title: getElementText(titleElement) || 'Work not found',
+            author: getElementText(authorElement) || 'Unknown author',
+            kudos: parseNumber(stats.kudos) || '?',
+            hits: parseNumber(stats.hits) || '?',
+            language: stats.language || 'Unknown',
+            updated: parseDate(dateText),
+            bookmarks: parseNumber(stats.bookmarks) || '?',
+            words: stats.words || '?',
+            tags: allTags,
+            warnings: categorizedTags.warnings,
+            description: fullDescriptionText,
+            descriptionHTML: fullDescriptionHTML,
+            chapters: [],
+            currentChapter: chapterInfo.current || '?',
+            chapterCount: chapterInfo.total || '?',
+            rating: requiredTags.rating || 'Not Rated',
+            category: requiredTags.category || 'None',
+            warningStatus: requiredTags.warningStatus || 'NoWarningsApply',
+            isCompleted: requiredTags.isCompleted,
+        });
     });
-  });
 }
-
 
 export async function fetchFilteredWorks(filters = {}, page = 1) {
     try {
-        let url = "https://archiveofourown.org/works";
+        let url = 'https://archiveofourown.org/works';
 
         // If filters are provided, use search endpoint
         if (Object.keys(filters).length > 0) {
-            url = "https://archiveofourown.org/works/search";
+            url = 'https://archiveofourown.org/works/search';
             const params = new URLSearchParams();
 
             // Add all filter parameters
@@ -240,34 +240,37 @@ export async function fetchFilteredWorks(filters = {}, page = 1) {
             }
         }
 
-        let error = false;
+        const error = false;
 
         console.log(`Fetching works from: ${url}`);
-        const response = await getUrl(url)
+        const response = await getUrl(url);
         console.log(response);
 
         if (error) {
-          throw "Failed to load works";
+            throw 'Failed to load works';
         }
 
-        const doc = new DomParser().parseFromString(response, "text/html");
+        const doc = new DomParser().parseFromString(response, 'text/html');
 
-        const workElements = Array.from(doc.getElementsByTagName("li"))
-            .filter(li => li.getAttribute("class")?.includes("work blurb"));
+        const workElements = Array.from(doc.getElementsByTagName('li')).filter(li =>
+            li.getAttribute('class')?.includes('work blurb'),
+        );
 
         const works = parseWorkElements(workElements);
         const paginationInfo = extractPaginationInfo(doc);
 
-        console.log(`Found ${works.length} works on page ${paginationInfo.currentPage} of ${paginationInfo.maxPages}`);
+        console.log(
+            `Found ${works.length} works on page ${paginationInfo.currentPage} of ${paginationInfo.maxPages}`,
+        );
 
         return {
             works,
             currentPage: paginationInfo.currentPage,
             maxPages: paginationInfo.maxPages,
-            hasMore: paginationInfo.currentPage < paginationInfo.maxPages
+            hasMore: paginationInfo.currentPage < paginationInfo.maxPages,
         };
     } catch (error) {
-        console.error("Error fetching worksScreen:", error);
+        console.error('Error fetching worksScreen:', error);
         throw error;
     }
 }

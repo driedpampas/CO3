@@ -1,34 +1,24 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { StyleSheet, Text, View } from 'react-native';
 
 const EmptyState = ({ currentTheme, isFilterActive, textLine1, textLine2 }) => {
-  const { t } = useTranslation();
+    const { t } = useTranslation();
 
-  return (
-    <View style={styles.emptyState}>
-      <Text
-        style={[
-          styles.emptyStateText,
-          { color: currentTheme.placeholderColor },
-        ]}
-      >
-        {isFilterActive
-          ? t('component_empty_for_range_title')
-          : textLine1 ?? t('component_empty_title')}
-      </Text>
-      <Text
-        style={[
-          styles.emptyStateSubtext,
-          { color: currentTheme.placeholderColor },
-        ]}
-      >
-        {isFilterActive
-          ? t('component_empty_for_range_sub')
-          : textLine2 ?? t('component_empty_sub')}
-      </Text>
-    </View>
-  );
+    return (
+        <View style={styles.emptyState}>
+            <Text style={[styles.emptyStateText, { color: currentTheme.placeholderColor }]}>
+                {isFilterActive
+                    ? t('component_empty_for_range_title')
+                    : (textLine1 ?? t('component_empty_title'))}
+            </Text>
+            <Text style={[styles.emptyStateSubtext, { color: currentTheme.placeholderColor }]}>
+                {isFilterActive
+                    ? t('component_empty_for_range_sub')
+                    : (textLine2 ?? t('component_empty_sub'))}
+            </Text>
+        </View>
+    );
 };
 
 const styles = StyleSheet.create({

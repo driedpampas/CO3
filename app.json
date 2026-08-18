@@ -1,7 +1,5 @@
 {
-  "name": "CO3",
-  "displayName": "CO3",
-  "plugins": [
-    "expo-font"
-  ]
+    "name": "CO3",
+    "displayName": "CO3",
+    "plugins": ["expo-font"]
 }

@@ -1,116 +1,118 @@
 import { getDownloaded, isDownloaded } from '../../downloads/Downloader';
 import getUrl from '../requestManager';
 
-let DomParser = require('react-native-html-parser').DOMParser;
+const DomParser = require('react-native-html-parser').DOMParser;
 
 export async function fetchChapter(workId, chapterId, noWebview = false) {
-  let url;
-  if (!chapterId || String(chapterId) === String(workId)) {
-    url = `https://archiveofourown.org/works/${workId}?view_adult=true`;
-  } else {
-    url = `https://archiveofourown.org/works/${workId}/chapters/${chapterId}?view_adult=true`;
-  }
+    let url;
+    if (!chapterId || String(chapterId) === String(workId)) {
+        url = `https://archiveofourown.org/works/${workId}?view_adult=true`;
+    } else {
+        url = `https://archiveofourown.org/works/${workId}/chapters/${chapterId}?view_adult=true`;
+    }
 
-  console.log(`Fetching chapter from: ${url}`);
-  const response = await getUrl(url, noWebview);
-  const doc = new DomParser().parseFromString(response, 'text/html');
+    console.log(`Fetching chapter from: ${url}`);
+    const response = await getUrl(url, noWebview);
+    const doc = new DomParser().parseFromString(response, 'text/html');
 
-  let chapterDiv = doc.getElementById('workskin');
+    let chapterDiv = doc.getElementById('workskin');
 
-  if (!chapterDiv) {
-    const userstuffDivs = doc.getElementsByClassName('userstuff');
-    if (userstuffDivs.length > 0) {
-      let longest = userstuffDivs[0];
-      let maxLen = 0;
-      for (let i = 0; i < userstuffDivs.length; i++) {
-        const txt = getElementText(userstuffDivs[i]) || '';
-        if (txt.length > maxLen) {
-          maxLen = txt.length;
-          longest = userstuffDivs[i];
+    if (!chapterDiv) {
+        const userstuffDivs = doc.getElementsByClassName('userstuff');
+        if (userstuffDivs.length > 0) {
+            let longest = userstuffDivs[0];
+            let maxLen = 0;
+            for (let i = 0; i < userstuffDivs.length; i++) {
+                const txt = getElementText(userstuffDivs[i]) || '';
+                if (txt.length > maxLen) {
+                    maxLen = txt.length;
+                    longest = userstuffDivs[i];
+                }
+            }
+            chapterDiv = longest;
         }
-      }
-      chapterDiv = longest;
     }
-  }
 
-  if (!chapterDiv) {
-    console.log('No chapter content found');
-    return null;
-  }
-
-  console.log('chapterDiv', chapterDiv);
-
-  let cssStyles = '';
-
-  const workDiv = doc.getElementsByClassName('work')[0];
-  if (workDiv) {
-    const styleElements = workDiv.getElementsByTagName('style');
-    for (let i = 0; i < styleElements.length; i++) {
-      const styleContent = getElementText(styleElements[i]);
-      if (styleContent) {
-        cssStyles += styleContent + '\n';
-      }
+    if (!chapterDiv) {
+        console.log('No chapter content found');
+        return null;
     }
-  }
 
-  if (chapterDiv.getAttribute('id') === 'workskin') {
-    const styleElements = chapterDiv.getElementsByTagName('style');
-    for (let i = 0; i < styleElements.length; i++) {
-      const styleContent = getElementText(styleElements[i]);
-      if (styleContent) cssStyles += styleContent + '\n';
+    console.log('chapterDiv', chapterDiv);
+
+    let cssStyles = '';
+
+    const workDiv = doc.getElementsByClassName('work')[0];
+    if (workDiv) {
+        const styleElements = workDiv.getElementsByTagName('style');
+        for (let i = 0; i < styleElements.length; i++) {
+            const styleContent = getElementText(styleElements[i]);
+            if (styleContent) {
+                cssStyles += styleContent + '\n';
+            }
+        }
     }
-  }
 
-  const allStyleElements = doc.getElementsByTagName('style');
-  for (let i = 0; i < allStyleElements.length; i++) {
-    const styleContent = getElementText(allStyleElements[i]);
-    if (styleContent && styleContent.includes('#workskin')) {
-      cssStyles += styleContent + '\n';
+    if (chapterDiv.getAttribute('id') === 'workskin') {
+        const styleElements = chapterDiv.getElementsByTagName('style');
+        for (let i = 0; i < styleElements.length; i++) {
+            const styleContent = getElementText(styleElements[i]);
+            if (styleContent) cssStyles += styleContent + '\n';
+        }
     }
-  }
 
-  return [getElementHtml(chapterDiv), cssStyles ];
+    const allStyleElements = doc.getElementsByTagName('style');
+    for (let i = 0; i < allStyleElements.length; i++) {
+        const styleContent = getElementText(allStyleElements[i]);
+        if (styleContent && styleContent.includes('#workskin')) {
+            cssStyles += styleContent + '\n';
+        }
+    }
+
+    return [getElementHtml(chapterDiv), cssStyles];
 }
 
 export async function fetchChapterWithTheme(workId, chapterId, currentTheme = null, settingsDAO) {
+    const isDL = await isDownloaded(workId, chapterId);
 
-  const isDL = await isDownloaded(workId, chapterId);
+    if (isDL) {
+        console.log(`Using downloaded resource for chapter ${chapterId} on work ${workId}`);
+    }
 
-  if (isDL) {
-    console.log(`Using downloaded resource for chapter ${chapterId} on work ${workId}`);
-  }
+    const dataSource = isDL ? getDownloaded : fetchChapter;
 
-  const dataSource = isDL
-    ? getDownloaded
-    : fetchChapter;
+    const [chapterHtml, cssStyles] = await dataSource(workId, chapterId);
 
-  const [chapterHtml, cssStyles] = await dataSource(workId, chapterId);
+    const completeHtml = await createCompleteHtml(
+        chapterHtml,
+        cssStyles,
+        currentTheme,
+        settingsDAO,
+    );
 
-  const completeHtml = await createCompleteHtml(chapterHtml, cssStyles, currentTheme, settingsDAO);
+    console.log(`Successfully fetched content for work ${workId}`);
 
-  console.log(`Successfully fetched content for work ${workId}`);
-
-  return completeHtml;
+    return completeHtml;
 }
 
 function getElementText(element) {
-  if (!element) return null;
-  let text = "";
-  if (element.nodeType === 3) return element.nodeValue?.trim() || null;
+    if (!element) return null;
+    let text = '';
+    if (element.nodeType === 3) return element.nodeValue?.trim() || null;
 
-  for (let i = 0; i < element.childNodes.length; i++) {
-    const child = element.childNodes[i];
-    text += child.nodeType === 3 ? child.nodeValue : getElementText(child) || "";
-  }
-  return text.trim() || null;
+    for (let i = 0; i < element.childNodes.length; i++) {
+        const child = element.childNodes[i];
+        text += child.nodeType === 3 ? child.nodeValue : getElementText(child) || '';
+    }
+    return text.trim() || null;
 }
 
 async function createCompleteHtml(chapterHtml, cssStyles, currentTheme, settingsDAO) {
-  const themeCSS = currentTheme ? generateThemeCSS(currentTheme) : '';
+    const themeCSS = currentTheme ? generateThemeCSS(currentTheme) : '';
 
-  const settings = await settingsDAO.getSettings();
+    const settings = await settingsDAO.getSettings();
 
-  return `<!DOCTYPE html>
+    return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -120,7 +122,7 @@ async function createCompleteHtml(chapterHtml, cssStyles, currentTheme, settings
   <style>
     /* Theme variables */
     ${themeCSS}
-    ${settings.useCustomFont ? `@font-face {font-family: '${settings.fontFamily}'; src: url('${settings.font}')}` : ""}
+    ${settings.useCustomFont ? `@font-face {font-family: '${settings.fontFamily}'; src: url('${settings.font}')}` : ''}
     
     .landmark {
         visibility: hidden;
@@ -137,7 +139,7 @@ async function createCompleteHtml(chapterHtml, cssStyles, currentTheme, settings
 
     /* Base styles for better readability with theme integration */
     body {
-      font-family: ${settings.useCustomFont ? settings.fontFamily :  "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"};
+      font-family: ${settings.useCustomFont ? settings.fontFamily : "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"};
       line-height: 1.6;
       max-width: 800px;
       margin: 0 auto;
@@ -224,7 +226,7 @@ async function createCompleteHtml(chapterHtml, cssStyles, currentTheme, settings
 }
 
 function generateThemeCSS(theme) {
-  return `
+    return `
     :root {
       --bg-color: ${theme.backgroundColor};
       --text-color: ${theme.textColor};
@@ -240,31 +242,31 @@ function generateThemeCSS(theme) {
 }
 
 function getElementHtml(element) {
-  if (!element) return null;
+    if (!element) return null;
 
-  let html = `<${element.tagName}`;
+    let html = `<${element.tagName}`;
 
-  if (element.attributes) {
-    for (let i = 0; i < element.attributes.length; i++) {
-      const attr = element.attributes[i];
-      html += ` ${attr.name}="${attr.value}"`;
+    if (element.attributes) {
+        for (let i = 0; i < element.attributes.length; i++) {
+            const attr = element.attributes[i];
+            html += ` ${attr.name}="${attr.value}"`;
+        }
     }
-  }
 
-  html += '>';
+    html += '>';
 
-  if (element.childNodes) {
-    for (let i = 0; i < element.childNodes.length; i++) {
-      const child = element.childNodes[i];
-      if (child.nodeType === 3) {
-        html += child.nodeValue;
-      } else if (child.nodeType === 1) {
-        html += getElementHtml(child);
-      }
+    if (element.childNodes) {
+        for (let i = 0; i < element.childNodes.length; i++) {
+            const child = element.childNodes[i];
+            if (child.nodeType === 3) {
+                html += child.nodeValue;
+            } else if (child.nodeType === 1) {
+                html += getElementHtml(child);
+            }
+        }
     }
-  }
 
-  html += `</${element.tagName}>`;
+    html += `</${element.tagName}>`;
 
-  return html;
+    return html;
 }

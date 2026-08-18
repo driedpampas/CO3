@@ -13,59 +13,59 @@ import { fetchChapterWithTheme } from '../web/worksScreen/fetchChapter';
  * @returns {Promise<Object|null>} - New chapter data or null if no next chapter
  */
 export const navigateToNextChapter = async ({
-                                              workId,
-                                              currentChapterId,
-                                              chapterList,
-                                              currentChapterIndex,
-                                              currentTheme,
-                                              onChapterChange,
-                                              historyDAO,
-                                              settingsDAO
-                                            }) => {
-  // Check if there's a next chapter
-  if (currentChapterIndex >= chapterList.length - 1) {
-    console.log('Already at the last chapter');
-    return null;
-  }
-
-  const nextChapterIndex = currentChapterIndex + 1;
-  const nextChapter = chapterList[nextChapterIndex];
-
-  if (!nextChapter) {
-    console.log('Next chapter not found in chapter list');
-    return null;
-  }
-
-  // Fetch the next chapter content
-  const nextChapterContent = await fetchChapterWithTheme(
     workId,
-    nextChapter.id,
+    currentChapterId,
+    chapterList,
+    currentChapterIndex,
     currentTheme,
-    settingsDAO
-  );
+    onChapterChange,
+    historyDAO,
+    settingsDAO,
+}) => {
+    // Check if there's a next chapter
+    if (currentChapterIndex >= chapterList.length - 1) {
+        console.log('Already at the last chapter');
+        return null;
+    }
 
-  // Record in history
-  if (historyDAO) {
-    await recordChapterRead(historyDAO, workId, nextChapter.id, nextChapter.title);
-  }
+    const nextChapterIndex = currentChapterIndex + 1;
+    const nextChapter = chapterList[nextChapterIndex];
 
-  // Prepare chapter data
-  const chapterData = {
-    workId,
-    chapterId: nextChapter.id,
-    chapterTitle: nextChapter.title,
-    chapterIndex: nextChapterIndex,
-    htmlContent: nextChapterContent,
-    hasNextChapter: nextChapterIndex < chapterList.length - 1,
-    hasPreviousChapter: nextChapterIndex > 0,
-  };
+    if (!nextChapter) {
+        console.log('Next chapter not found in chapter list');
+        return null;
+    }
 
-  // Call the change callback
-  if (onChapterChange) {
-    onChapterChange(chapterData);
-  }
+    // Fetch the next chapter content
+    const nextChapterContent = await fetchChapterWithTheme(
+        workId,
+        nextChapter.id,
+        currentTheme,
+        settingsDAO,
+    );
 
-  return chapterData;
+    // Record in history
+    if (historyDAO) {
+        await recordChapterRead(historyDAO, workId, nextChapter.id, nextChapter.title);
+    }
+
+    // Prepare chapter data
+    const chapterData = {
+        workId,
+        chapterId: nextChapter.id,
+        chapterTitle: nextChapter.title,
+        chapterIndex: nextChapterIndex,
+        htmlContent: nextChapterContent,
+        hasNextChapter: nextChapterIndex < chapterList.length - 1,
+        hasPreviousChapter: nextChapterIndex > 0,
+    };
+
+    // Call the change callback
+    if (onChapterChange) {
+        onChapterChange(chapterData);
+    }
+
+    return chapterData;
 };
 
 /**
@@ -81,55 +81,55 @@ export const navigateToNextChapter = async ({
  * @returns {Promise<Object|null>} - Previous chapter data or null if no previous chapter
  */
 export const navigateToPreviousChapter = async ({
-                                                  workId,
-                                                  currentChapterId,
-                                                  chapterList,
-                                                  currentChapterIndex,
-                                                  currentTheme,
-                                                  onChapterChange,
-                                                  historyDAO,
-                                                  settingsDAO
-                                                }) => {
-if (currentChapterIndex <= 0) {
-      console.log('Already at the first chapter');
-      return null;
+    workId,
+    currentChapterId,
+    chapterList,
+    currentChapterIndex,
+    currentTheme,
+    onChapterChange,
+    historyDAO,
+    settingsDAO,
+}) => {
+    if (currentChapterIndex <= 0) {
+        console.log('Already at the first chapter');
+        return null;
     }
 
     const previousChapterIndex = currentChapterIndex - 1;
     const previousChapter = chapterList[previousChapterIndex];
 
     if (!previousChapter) {
-      console.log('Previous chapter not found in chapter list');
-      return null;
+        console.log('Previous chapter not found in chapter list');
+        return null;
     }
 
     // Fetch the previous chapter content
     const previousChapterContent = await fetchChapterWithTheme(
-      workId,
-      previousChapter.id,
-      currentTheme,
-      settingsDAO
+        workId,
+        previousChapter.id,
+        currentTheme,
+        settingsDAO,
     );
 
     // Record in history
     if (historyDAO) {
-      await recordChapterRead(historyDAO, workId, previousChapter.id, previousChapter.title);
+        await recordChapterRead(historyDAO, workId, previousChapter.id, previousChapter.title);
     }
 
     // Prepare chapter data
     const chapterData = {
-      workId,
-      chapterId: previousChapter.id,
-      chapterTitle: previousChapter.title,
-      chapterIndex: previousChapterIndex,
-      htmlContent: previousChapterContent,
-      hasNextChapter: previousChapterIndex < chapterList.length - 1,
-      hasPreviousChapter: previousChapterIndex > 0,
+        workId,
+        chapterId: previousChapter.id,
+        chapterTitle: previousChapter.title,
+        chapterIndex: previousChapterIndex,
+        htmlContent: previousChapterContent,
+        hasNextChapter: previousChapterIndex < chapterList.length - 1,
+        hasPreviousChapter: previousChapterIndex > 0,
     };
 
     // Call the change callback
     if (onChapterChange) {
-      onChapterChange(chapterData);
+        onChapterChange(chapterData);
     }
 
     return chapterData;
@@ -143,23 +143,23 @@ if (currentChapterIndex <= 0) {
  * @param {string} chapterTitle - Chapter title
  */
 const recordChapterRead = async (historyDAO, workId, chapterId, chapterTitle) => {
-  try {
-    if (!historyDAO || !historyDAO.addHistoryEntry) {
-      console.log('History DAO not available or method not found');
-      return;
+    try {
+        if (!historyDAO || !historyDAO.addHistoryEntry) {
+            console.log('History DAO not available or method not found');
+            return;
+        }
+
+        const historyEntry = {
+            workId,
+            chapterId,
+            chapterTitle,
+            timestamp: Date.now(),
+            progress: 0,
+        };
+
+        await historyDAO.addHistoryEntry(historyEntry);
+        console.log(`Chapter ${chapterId} recorded in history`);
+    } catch (error) {
+        console.error('Error recording chapter in history:', error);
     }
-
-    const historyEntry = {
-      workId,
-      chapterId,
-      chapterTitle,
-      timestamp: Date.now(),
-      progress: 0,
-    };
-
-    await historyDAO.addHistoryEntry(historyEntry);
-    console.log(`Chapter ${chapterId} recorded in history`);
-  } catch (error) {
-    console.error('Error recording chapter in history:', error);
-  }
 };

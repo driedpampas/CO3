@@ -1,45 +1,45 @@
 export class Work {
     constructor({
-                    id = null,
-                    title,
-                    author,
-                    kudos = 0,
-                    hits = 0,
-                    language = 'English',
-                    updated,
-                    bookmarks = 0,
-                    words = 0,
-                    tags = [],
-                    warnings = [],
-                    description = '',
-                    descriptionHTML = '',
-                    chapters = [],
-                    currentChapter = 1,
-                    chapterCount = null,
-                    rating = 'Not Rated',
-                    category = 'Default',
-                    warningStatus = 'NoWarningsApply',
-                    isCompleted = null
-                }) {
-    this.id = id;
-    this.title = title;
-    this.author = author;
-    this.kudos = kudos;
-    this.hits = hits;
-    this.language = language;
-    this.updated = updated || Date.now();
-    this.bookmarks = bookmarks;
-    this.words = words;
-    this.tags = tags;
-    this.warnings = warnings;
-    this.description = description;
-    this.descriptionHTML = descriptionHTML;
-    this.chapters = chapters;
-    this.currentChapter = currentChapter;
-    this.chapterCount = chapterCount;
-    this.rating = rating;
-    this.category = category;
-    this.warningStatus = warningStatus;
-    this.isCompleted = isCompleted;
-  }
+        id = null,
+        title,
+        author,
+        kudos = 0,
+        hits = 0,
+        language = 'English',
+        updated,
+        bookmarks = 0,
+        words = 0,
+        tags = [],
+        warnings = [],
+        description = '',
+        descriptionHTML = '',
+        chapters = [],
+        currentChapter = 1,
+        chapterCount = null,
+        rating = 'Not Rated',
+        category = 'Default',
+        warningStatus = 'NoWarningsApply',
+        isCompleted = null,
+    }) {
+        this.id = id;
+        this.title = title;
+        this.author = author;
+        this.kudos = kudos;
+        this.hits = hits;
+        this.language = language;
+        this.updated = updated || Date.now();
+        this.bookmarks = bookmarks;
+        this.words = words;
+        this.tags = tags;
+        this.warnings = warnings;
+        this.description = description;
+        this.descriptionHTML = descriptionHTML;
+        this.chapters = chapters;
+        this.currentChapter = currentChapter;
+        this.chapterCount = chapterCount;
+        this.rating = rating;
+        this.category = category;
+        this.warningStatus = warningStatus;
+        this.isCompleted = isCompleted;
+    }
 }

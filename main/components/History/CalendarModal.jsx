@@ -1,41 +1,45 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
-  Dimensions,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  View,
+    Dimensions,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    View,
 } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useTranslation } from 'react-i18next';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const CalendarModal = ({
-                           visible,
-                           currentTheme,
-                           dateRange,
-                           readingDates,
-                           onClose,
-                           onDateRangeChange,
-                           onApplyFilter,
-                       }) => {
+    visible,
+    currentTheme,
+    dateRange,
+    readingDates,
+    onClose,
+    onDateRangeChange,
+    onApplyFilter,
+}) => {
     const [selectedDates, setSelectedDates] = useState({});
 
     const { t } = useTranslation();
 
-    const handleCalendarDayPress = (day) => {
+    const handleCalendarDayPress = day => {
         const dateString = day.dateString;
 
         if (!dateRange.start || (dateRange.start && dateRange.end)) {
             const newDateRange = { start: dateString, end: null };
             onDateRangeChange(newDateRange);
             setSelectedDates({
-                [dateString]: { selected: true, startingDay: true, color: currentTheme.primaryColor }
+                [dateString]: {
+                    selected: true,
+                    startingDay: true,
+                    color: currentTheme.primaryColor,
+                },
             });
         } else if (dateRange.start && !dateRange.end) {
             const start = new Date(dateRange.start);
@@ -81,13 +85,13 @@ const CalendarModal = ({
                 marked[date] = {
                     marked: true,
                     dotColor: currentTheme.primaryColor,
-                    selectedColor: currentTheme.primaryColor
+                    selectedColor: currentTheme.primaryColor,
                 };
             } else {
                 marked[date] = {
                     ...marked[date],
                     marked: true,
-                    dotColor: currentTheme.primaryColor
+                    dotColor: currentTheme.primaryColor,
                 };
             }
         });
@@ -105,89 +109,118 @@ const CalendarModal = ({
     };
 
     return (
-        <Modal
-            visible={visible}
-            transparent={true}
-            onRequestClose={onClose}
-        >
+        <Modal visible={visible} transparent={true} onRequestClose={onClose}>
             <TouchableWithoutFeedback onPress={handleModalOverlayPress}>
                 <View style={styles.modalOverlay}>
                     <TouchableWithoutFeedback onPress={() => {}}>
-                      <View style={[styles.basContainer]}>
-                        <ScrollView style={[styles.modalContainer, { backgroundColor: currentTheme.backgroundColor }]}>
-                          <View style={styles.modalHeader}>
-                            <Text style={[styles.modalTitle, { color: currentTheme.textColor }]}>
-                              {t("component_calendar_title")}
-                            </Text>
-                            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-                              <Icon name="close" size={24} color={currentTheme.placeholderColor} />
-                            </TouchableOpacity>
-                          </View>
-
-                          <Text style={[styles.modalSubtitle, { color: currentTheme.placeholderColor }]}>
-                            {dateRange.start && dateRange.end
-                              ? t("component_calendar_sub_start_end", { start: dateRange.start, end: dateRange.end })
-                              : dateRange.start
-                                ? t("component_calendar_sub_start", { start: dateRange.start })
-                                : t("component_calendar_sub")
-                            }
-                          </Text>
-
-                          <Calendar
-                            onDayPress={handleCalendarDayPress}
-                            markedDates={getCalendarMarkedDates()}
-                            markingType="period"
-                            theme={{
-                              backgroundColor: currentTheme.backgroundColor,
-                              calendarBackground: currentTheme.backgroundColor,
-                              textSectionTitleColor: currentTheme.textColor,
-                              selectedDayBackgroundColor: currentTheme.primaryColor,
-                              selectedDayTextColor: 'white',
-                              todayTextColor: currentTheme.primaryColor,
-                              dayTextColor: currentTheme.textColor,
-                              textDisabledColor: currentTheme.placeholderColor,
-                              dotColor: currentTheme.primaryColor,
-                              selectedDotColor: 'white',
-                              arrowColor: currentTheme.primaryColor,
-                              monthTextColor: currentTheme.textColor,
-                              indicatorColor: currentTheme.primaryColor,
-                              textDayFontWeight: '300',
-                              textMonthFontWeight: 'bold',
-                              textDayHeaderFontWeight: '300',
-                              textDayFontSize: 16,
-                              textMonthFontSize: 16,
-                              textDayHeaderFontSize: 13
-                            }}
-                          />
-
-                          <View style={styles.modalButtons}>
-                            <TouchableOpacity
-                              style={[styles.modalButton, { borderColor: currentTheme.placeholderColor }]}
-                              onPress={handleClearSelection}
+                        <View style={[styles.basContainer]}>
+                            <ScrollView
+                                style={[
+                                    styles.modalContainer,
+                                    { backgroundColor: currentTheme.backgroundColor },
+                                ]}
                             >
-                              <Text style={[styles.modalButtonText, { color: currentTheme.placeholderColor }]}>
-                                {t("component_calendar_clear")}
-                              </Text>
-                            </TouchableOpacity>
+                                <View style={styles.modalHeader}>
+                                    <Text
+                                        style={[
+                                            styles.modalTitle,
+                                            { color: currentTheme.textColor },
+                                        ]}
+                                    >
+                                        {t('component_calendar_title')}
+                                    </Text>
+                                    <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+                                        <Icon
+                                            name="close"
+                                            size={24}
+                                            color={currentTheme.placeholderColor}
+                                        />
+                                    </TouchableOpacity>
+                                </View>
 
-                            <TouchableOpacity
-                              style={[
-                                styles.modalButton,
-                                styles.applyButton,
-                                {
-                                  backgroundColor: currentTheme.primaryColor,
-                                  borderColor: currentTheme.primaryColor
-                                }
-                              ]}
-                              onPress={onApplyFilter}
-                            >
-                              <Text style={[styles.modalButtonText, { color: 'white' }]}>
-                                {dateRange.start ? t("component_calendar_apply") : t("component_calendar_show_all")}
-                              </Text>
-                            </TouchableOpacity>
-                          </View>
-                        </ScrollView>
-                      </View>
+                                <Text
+                                    style={[
+                                        styles.modalSubtitle,
+                                        { color: currentTheme.placeholderColor },
+                                    ]}
+                                >
+                                    {dateRange.start && dateRange.end
+                                        ? t('component_calendar_sub_start_end', {
+                                              start: dateRange.start,
+                                              end: dateRange.end,
+                                          })
+                                        : dateRange.start
+                                          ? t('component_calendar_sub_start', {
+                                                start: dateRange.start,
+                                            })
+                                          : t('component_calendar_sub')}
+                                </Text>
+
+                                <Calendar
+                                    onDayPress={handleCalendarDayPress}
+                                    markedDates={getCalendarMarkedDates()}
+                                    markingType="period"
+                                    theme={{
+                                        backgroundColor: currentTheme.backgroundColor,
+                                        calendarBackground: currentTheme.backgroundColor,
+                                        textSectionTitleColor: currentTheme.textColor,
+                                        selectedDayBackgroundColor: currentTheme.primaryColor,
+                                        selectedDayTextColor: 'white',
+                                        todayTextColor: currentTheme.primaryColor,
+                                        dayTextColor: currentTheme.textColor,
+                                        textDisabledColor: currentTheme.placeholderColor,
+                                        dotColor: currentTheme.primaryColor,
+                                        selectedDotColor: 'white',
+                                        arrowColor: currentTheme.primaryColor,
+                                        monthTextColor: currentTheme.textColor,
+                                        indicatorColor: currentTheme.primaryColor,
+                                        textDayFontWeight: '300',
+                                        textMonthFontWeight: 'bold',
+                                        textDayHeaderFontWeight: '300',
+                                        textDayFontSize: 16,
+                                        textMonthFontSize: 16,
+                                        textDayHeaderFontSize: 13,
+                                    }}
+                                />
+
+                                <View style={styles.modalButtons}>
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.modalButton,
+                                            { borderColor: currentTheme.placeholderColor },
+                                        ]}
+                                        onPress={handleClearSelection}
+                                    >
+                                        <Text
+                                            style={[
+                                                styles.modalButtonText,
+                                                { color: currentTheme.placeholderColor },
+                                            ]}
+                                        >
+                                            {t('component_calendar_clear')}
+                                        </Text>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.modalButton,
+                                            styles.applyButton,
+                                            {
+                                                backgroundColor: currentTheme.primaryColor,
+                                                borderColor: currentTheme.primaryColor,
+                                            },
+                                        ]}
+                                        onPress={onApplyFilter}
+                                    >
+                                        <Text style={[styles.modalButtonText, { color: 'white' }]}>
+                                            {dateRange.start
+                                                ? t('component_calendar_apply')
+                                                : t('component_calendar_show_all')}
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </ScrollView>
+                        </View>
                     </TouchableWithoutFeedback>
                 </View>
             </TouchableWithoutFeedback>
@@ -202,7 +235,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     basContainer: {
-      width: screenWidth - 32,
+        width: screenWidth - 32,
     },
     modalContainer: {
         width: screenWidth - 32,

@@ -1,677 +1,710 @@
 import React, { useContext, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
-  Dimensions,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Dimensions,
+    Modal,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useTranslation } from 'react-i18next';
-import { getTempPreset, setTempPreset } from '../../storage/jsonSearches';
 import { AppContext } from '../../app';
+import { getTempPreset, setTempPreset } from '../../storage/jsonSearches';
 
 const windowHeight = Dimensions.get('window').height;
 
-const BookDetailsModal = ({
-  book,
-  isOpen,
-  onClose,
-  mode,
-  theme,
-  onShowAllTags,
-  openTagSearch,
-}) => {
-  const { openSearch } = useContext(AppContext);
+const BookDetailsModal = ({ book, isOpen, onClose, mode, theme, onShowAllTags, openTagSearch }) => {
+    const { openSearch } = useContext(AppContext);
 
-  const MAX_SCROLL_HEIGHT = windowHeight * 0.7;
-  const [scrollHeight, setScrollHeight] = useState(MAX_SCROLL_HEIGHT);
-  const [selected, setSelected] = useState({});
+    const MAX_SCROLL_HEIGHT = windowHeight * 0.7;
+    const [scrollHeight, setScrollHeight] = useState(MAX_SCROLL_HEIGHT);
+    const [selected, setSelected] = useState({});
 
-  const handleContentSizeChange = (_w, h) => {
-    setScrollHeight(Math.min(h, MAX_SCROLL_HEIGHT));
-  };
+    const handleContentSizeChange = (_w, h) => {
+        setScrollHeight(Math.min(h, MAX_SCROLL_HEIGHT));
+    };
 
-  const MAX_TAGS_IN_SUMMARY_MODAL = 5;
+    const MAX_TAGS_IN_SUMMARY_MODAL = 5;
 
-  const showTagsSection =
-    mode === 'summary' || mode === 'full' || mode === 'allTags';
-  const showWarningsSection = mode === 'summary' || mode === 'full';
-  const showDescriptionSection = mode === 'summary' || mode === 'full';
-  const showMetadataSection = mode === 'full';
+    const showTagsSection = mode === 'summary' || mode === 'full' || mode === 'allTags';
+    const showWarningsSection = mode === 'summary' || mode === 'full';
+    const showDescriptionSection = mode === 'summary' || mode === 'full';
+    const showMetadataSection = mode === 'full';
 
-  const { t } = useTranslation();
+    const { t } = useTranslation();
 
-  let modalTitle = t('component_book_details_modal_title', {
-    title: book.title,
-  });
-  if (mode === 'summary') {
-    modalTitle = t('component_book_details_modal_title_tags_and_warning', {
-      title: book.title,
+    let modalTitle = t('component_book_details_modal_title', {
+        title: book.title,
     });
-  } else if (mode === 'allTags') {
-    modalTitle = t('component_book_details_modal_title_tags', {
-      title: book.title,
-    });
-  }
-
-  function tagLongedPressed(tag) {
-    if (mode !== 'allTags') {
-      return;
+    if (mode === 'summary') {
+        modalTitle = t('component_book_details_modal_title_tags_and_warning', {
+            title: book.title,
+        });
+    } else if (mode === 'allTags') {
+        modalTitle = t('component_book_details_modal_title_tags', {
+            title: book.title,
+        });
     }
 
-    setSelected(p => {
-      const current = p[tag];
-      const next =
-        current === 'include'
-          ? 'exclude'
-          : current === 'exclude'
-          ? undefined
-          : 'include';
-      return { ...p, [tag]: next };
-    });
-  }
-
-  function tagShortPress(tag) {
-    openTagSearch(tag);
-  }
-
-  async function applyTag(tags = undefined) {
-    const included = [];
-    const excluded = [];
-
-    Object.entries(tags || selected).forEach(([tag, state]) => {
-      if (state === 'include') {
-        included.push({ id: `custom-${tag}`, name: tag });
-      } else if (state === 'exclude') {
-        excluded.push({ id: `custom-${tag}`, name: tag });
-      }
-    });
-
-    const current = await getTempPreset();
-    const currentPreset = current?.preset || {};
-
-    // Normalize strings → objects and merge without duplicates (by name, case-insensitive)
-    const normalizeTag = item => {
-      if (typeof item === 'string') {
-        return { id: `custom-${item}`, name: item };
-      }
-      if (item && typeof item === 'object' && item.name) {
-        return item;
-      }
-      return null;
-    };
-
-    const mergeTagArrays = (existing = [], incoming = []) => {
-      const map = new Map();
-      [...existing, ...incoming].forEach(item => {
-        const normalized = normalizeTag(item);
-        if (normalized) {
-          map.set(normalized.name.toLowerCase(), normalized);
+    function tagLongedPressed(tag) {
+        if (mode !== 'allTags') {
+            return;
         }
-      });
-      return Array.from(map.values());
-    };
 
-    await setTempPreset({
-      timestamp: Date.now(),
-      preset: {
-        ...currentPreset,
-        additionalTags: mergeTagArrays(currentPreset.additionalTags, included),
-        excludedAdditionalTags: mergeTagArrays(
-          currentPreset.excludedAdditionalTags,
-          excluded,
-        ),
-      },
-    });
+        setSelected(p => {
+            const current = p[tag];
+            const next =
+                current === 'include' ? 'exclude' : current === 'exclude' ? undefined : 'include';
+            return { ...p, [tag]: next };
+        });
+    }
 
-    onClose();
-    openSearch();
-  }
+    function tagShortPress(tag) {
+        openTagSearch(tag);
+    }
 
-  const hasSelectedTags = Object.values(selected).some(
-    value => value === 'include' || value === 'exclude',
-  );
+    async function applyTag(tags = undefined) {
+        const included = [];
+        const excluded = [];
 
-  return (
-    <Modal
-      visible={isOpen}
-      animationType="slide"
-      transparent={true}
-      onRequestClose={onClose}
-    >
-      {isOpen && (
-        <SafeAreaView style={styles.overlay}>
-          <Pressable style={styles.backdrop} onPress={onClose} />
+        Object.entries(tags || selected).forEach(([tag, state]) => {
+            if (state === 'include') {
+                included.push({ id: `custom-${tag}`, name: tag });
+            } else if (state === 'exclude') {
+                excluded.push({ id: `custom-${tag}`, name: tag });
+            }
+        });
 
-          <View style={styles.modalContainerWrapper} pointerEvents="box-none">
-            <View style={styles.modalContainer}>
-              <View
-                style={[
-                  styles.modal,
-                  { backgroundColor: theme.cardBackground },
-                ]}
-              >
-                <View
-                  style={[
-                    styles.header,
-                    { borderBottomColor: theme.borderColor },
-                  ]}
-                >
-                  <Text
-                    style={[styles.title, { color: theme.textColor }]}
-                    numberOfLines={2}
-                  >
-                    {modalTitle}
-                  </Text>
-                  <TouchableOpacity
-                    onPress={onClose}
-                    style={styles.closeButton}
-                  >
-                    <Icon name="close" size={24} color={theme.iconColor} />
-                  </TouchableOpacity>
-                </View>
+        const current = await getTempPreset();
+        const currentPreset = current?.preset || {};
 
-                <ScrollView
-                  style={[styles.content, { height: scrollHeight }]}
-                  contentContainerStyle={styles.contentContainer}
-                  onContentSizeChange={handleContentSizeChange}
-                  nestedScrollEnabled={true}
-                  showsVerticalScrollIndicator={true}
-                >
-                  <View style={{ marginBottom: 16 }}>
-                    {showTagsSection && (
-                      <View style={styles.section}>
-                        <View style={styles.sectionHeader}>
-                          <Icon
-                            name="local-offer"
-                            size={18}
-                            color={theme.primaryColor}
-                          />
-                          <Text
-                            style={[
-                              styles.sectionTitle,
-                              { color: theme.textColor },
-                            ]}
-                          >
-                            {t('component_book_details_modal_tags')}
-                          </Text>
-                        </View>
-                        {book.tags && book.tags.length > 0 ? (
-                          <View style={styles.tagsContainer}>
-                            {((mode === 'summary' || mode === 'full') &&
-                            book.tags.length > MAX_TAGS_IN_SUMMARY_MODAL
-                              ? book.tags.slice(0, MAX_TAGS_IN_SUMMARY_MODAL)
-                              : book.tags
-                            ).map((tag, index) => (
-                              <TouchableOpacity
-                                key={index}
-                                style={[
-                                  styles.tag,
-                                  {
-                                    backgroundColor:
-                                      selected[tag] === 'include'
-                                        ? theme.tagSelectedBackground
-                                        : selected[tag] === 'exclude'
-                                        ? theme.tagExcludedBackground
-                                        : theme.tagBackground,
-                                  },
-                                ]}
-                                onPress={() => {
-                                  if (hasSelectedTags && mode === 'allTags') {
-                                    tagLongedPressed(tag);
-                                  } else {
-                                    tagShortPress(tag);
-                                  }
-                                }}
-                                onLongPress={() => tagLongedPressed(tag)}
-                                activeOpacity={0.7}
-                              >
-                                <Text
-                                  style={[
-                                    styles.tagText,
-                                    {
-                                      color:
-                                        selected[tag] === 'include'
-                                          ? theme.tagSelectedTextColor
-                                          : selected[tag] === 'exclude'
-                                          ? theme.tagExcludedTextColor
-                                          : theme.tagTextColor,
-                                    },
-                                  ]}
-                                >
-                                  {tag}
-                                </Text>
-                              </TouchableOpacity>
-                            ))}
-                            {(mode === 'summary' || mode === 'full') &&
-                              book.tags.length > MAX_TAGS_IN_SUMMARY_MODAL &&
-                              onShowAllTags && (
-                                <TouchableOpacity
-                                  style={[
-                                    styles.seeAllButton,
-                                    { borderColor: theme.primaryColor },
-                                  ]}
-                                  onPress={onShowAllTags}
-                                >
-                                  <Text
-                                    style={[
-                                      styles.seeAllText,
-                                      { color: theme.primaryColor },
-                                    ]}
-                                  >
-                                    {t(
-                                      'component_book_details_modal_see_all_tags',
-                                      { count: book.tags.length },
-                                    )}
-                                  </Text>
-                                </TouchableOpacity>
-                              )}
-                          </View>
-                        ) : (
-                          <Text
-                            style={[
-                              styles.noDataText,
-                              { color: theme.secondaryTextColor },
-                            ]}
-                          >
-                            {t('component_book_details_modal_no_tags')}
-                          </Text>
-                        )}
-                      </View>
-                    )}
+        // Normalize strings → objects and merge without duplicates (by name, case-insensitive)
+        const normalizeTag = item => {
+            if (typeof item === 'string') {
+                return { id: `custom-${item}`, name: item };
+            }
+            if (item && typeof item === 'object' && item.name) {
+                return item;
+            }
+            return null;
+        };
 
-                    {showWarningsSection && (
-                      <View style={styles.section}>
-                        <View style={styles.sectionHeader}>
-                          <Icon name="warning" size={18} color="#ef4444" />
-                          <Text
-                            style={[
-                              styles.sectionTitle,
-                              { color: theme.textColor },
-                            ]}
-                          >
-                            {t('component_book_details_modal_warnings')}
-                          </Text>
-                        </View>
-                        {book.warnings && book.warnings.length > 0 ? (
-                          <ScrollView
-                            horizontal
-                            nestedScrollEnabled={true}
-                            showsHorizontalScrollIndicator={false}
-                          >
-                            <View style={styles.warningsContainer}>
-                              {book.warnings.map((warning, index) => (
+        const mergeTagArrays = (existing = [], incoming = []) => {
+            const map = new Map();
+            [...existing, ...incoming].forEach(item => {
+                const normalized = normalizeTag(item);
+                if (normalized) {
+                    map.set(normalized.name.toLowerCase(), normalized);
+                }
+            });
+            return Array.from(map.values());
+        };
+
+        await setTempPreset({
+            timestamp: Date.now(),
+            preset: {
+                ...currentPreset,
+                additionalTags: mergeTagArrays(currentPreset.additionalTags, included),
+                excludedAdditionalTags: mergeTagArrays(
+                    currentPreset.excludedAdditionalTags,
+                    excluded,
+                ),
+            },
+        });
+
+        onClose();
+        openSearch();
+    }
+
+    const hasSelectedTags = Object.values(selected).some(
+        value => value === 'include' || value === 'exclude',
+    );
+
+    return (
+        <Modal visible={isOpen} animationType="slide" transparent={true} onRequestClose={onClose}>
+            {isOpen && (
+                <SafeAreaView style={styles.overlay}>
+                    <Pressable style={styles.backdrop} onPress={onClose} />
+
+                    <View style={styles.modalContainerWrapper} pointerEvents="box-none">
+                        <View style={styles.modalContainer}>
+                            <View style={[styles.modal, { backgroundColor: theme.cardBackground }]}>
                                 <View
-                                  key={index}
-                                  style={[
-                                    styles.warning,
-                                    {
-                                      backgroundColor: theme.warningBackground,
-                                    },
-                                  ]}
-                                >
-                                  <Text
                                     style={[
-                                      styles.warningText,
-                                      { color: theme.warningTextColor },
+                                        styles.header,
+                                        { borderBottomColor: theme.borderColor },
                                     ]}
-                                  >
-                                    {warning}
-                                  </Text>
+                                >
+                                    <Text
+                                        style={[styles.title, { color: theme.textColor }]}
+                                        numberOfLines={2}
+                                    >
+                                        {modalTitle}
+                                    </Text>
+                                    <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                                        <Icon name="close" size={24} color={theme.iconColor} />
+                                    </TouchableOpacity>
                                 </View>
-                              ))}
+
+                                <ScrollView
+                                    style={[styles.content, { height: scrollHeight }]}
+                                    contentContainerStyle={styles.contentContainer}
+                                    onContentSizeChange={handleContentSizeChange}
+                                    nestedScrollEnabled={true}
+                                    showsVerticalScrollIndicator={true}
+                                >
+                                    <View style={{ marginBottom: 16 }}>
+                                        {showTagsSection && (
+                                            <View style={styles.section}>
+                                                <View style={styles.sectionHeader}>
+                                                    <Icon
+                                                        name="local-offer"
+                                                        size={18}
+                                                        color={theme.primaryColor}
+                                                    />
+                                                    <Text
+                                                        style={[
+                                                            styles.sectionTitle,
+                                                            { color: theme.textColor },
+                                                        ]}
+                                                    >
+                                                        {t('component_book_details_modal_tags')}
+                                                    </Text>
+                                                </View>
+                                                {book.tags && book.tags.length > 0 ? (
+                                                    <View style={styles.tagsContainer}>
+                                                        {((mode === 'summary' || mode === 'full') &&
+                                                        book.tags.length > MAX_TAGS_IN_SUMMARY_MODAL
+                                                            ? book.tags.slice(
+                                                                  0,
+                                                                  MAX_TAGS_IN_SUMMARY_MODAL,
+                                                              )
+                                                            : book.tags
+                                                        ).map((tag, index) => (
+                                                            <TouchableOpacity
+                                                                key={index}
+                                                                style={[
+                                                                    styles.tag,
+                                                                    {
+                                                                        backgroundColor:
+                                                                            selected[tag] ===
+                                                                            'include'
+                                                                                ? theme.tagSelectedBackground
+                                                                                : selected[tag] ===
+                                                                                    'exclude'
+                                                                                  ? theme.tagExcludedBackground
+                                                                                  : theme.tagBackground,
+                                                                    },
+                                                                ]}
+                                                                onPress={() => {
+                                                                    if (
+                                                                        hasSelectedTags &&
+                                                                        mode === 'allTags'
+                                                                    ) {
+                                                                        tagLongedPressed(tag);
+                                                                    } else {
+                                                                        tagShortPress(tag);
+                                                                    }
+                                                                }}
+                                                                onLongPress={() =>
+                                                                    tagLongedPressed(tag)
+                                                                }
+                                                                activeOpacity={0.7}
+                                                            >
+                                                                <Text
+                                                                    style={[
+                                                                        styles.tagText,
+                                                                        {
+                                                                            color:
+                                                                                selected[tag] ===
+                                                                                'include'
+                                                                                    ? theme.tagSelectedTextColor
+                                                                                    : selected[
+                                                                                            tag
+                                                                                        ] ===
+                                                                                        'exclude'
+                                                                                      ? theme.tagExcludedTextColor
+                                                                                      : theme.tagTextColor,
+                                                                        },
+                                                                    ]}
+                                                                >
+                                                                    {tag}
+                                                                </Text>
+                                                            </TouchableOpacity>
+                                                        ))}
+                                                        {(mode === 'summary' || mode === 'full') &&
+                                                            book.tags.length >
+                                                                MAX_TAGS_IN_SUMMARY_MODAL &&
+                                                            onShowAllTags && (
+                                                                <TouchableOpacity
+                                                                    style={[
+                                                                        styles.seeAllButton,
+                                                                        {
+                                                                            borderColor:
+                                                                                theme.primaryColor,
+                                                                        },
+                                                                    ]}
+                                                                    onPress={onShowAllTags}
+                                                                >
+                                                                    <Text
+                                                                        style={[
+                                                                            styles.seeAllText,
+                                                                            {
+                                                                                color: theme.primaryColor,
+                                                                            },
+                                                                        ]}
+                                                                    >
+                                                                        {t(
+                                                                            'component_book_details_modal_see_all_tags',
+                                                                            {
+                                                                                count: book.tags
+                                                                                    .length,
+                                                                            },
+                                                                        )}
+                                                                    </Text>
+                                                                </TouchableOpacity>
+                                                            )}
+                                                    </View>
+                                                ) : (
+                                                    <Text
+                                                        style={[
+                                                            styles.noDataText,
+                                                            { color: theme.secondaryTextColor },
+                                                        ]}
+                                                    >
+                                                        {t('component_book_details_modal_no_tags')}
+                                                    </Text>
+                                                )}
+                                            </View>
+                                        )}
+
+                                        {showWarningsSection && (
+                                            <View style={styles.section}>
+                                                <View style={styles.sectionHeader}>
+                                                    <Icon
+                                                        name="warning"
+                                                        size={18}
+                                                        color="#ef4444"
+                                                    />
+                                                    <Text
+                                                        style={[
+                                                            styles.sectionTitle,
+                                                            { color: theme.textColor },
+                                                        ]}
+                                                    >
+                                                        {t('component_book_details_modal_warnings')}
+                                                    </Text>
+                                                </View>
+                                                {book.warnings && book.warnings.length > 0 ? (
+                                                    <ScrollView
+                                                        horizontal
+                                                        nestedScrollEnabled={true}
+                                                        showsHorizontalScrollIndicator={false}
+                                                    >
+                                                        <View style={styles.warningsContainer}>
+                                                            {book.warnings.map((warning, index) => (
+                                                                <View
+                                                                    key={index}
+                                                                    style={[
+                                                                        styles.warning,
+                                                                        {
+                                                                            backgroundColor:
+                                                                                theme.warningBackground,
+                                                                        },
+                                                                    ]}
+                                                                >
+                                                                    <Text
+                                                                        style={[
+                                                                            styles.warningText,
+                                                                            {
+                                                                                color: theme.warningTextColor,
+                                                                            },
+                                                                        ]}
+                                                                    >
+                                                                        {warning}
+                                                                    </Text>
+                                                                </View>
+                                                            ))}
+                                                        </View>
+                                                    </ScrollView>
+                                                ) : (
+                                                    <Text
+                                                        style={[
+                                                            styles.noDataText,
+                                                            { color: theme.secondaryTextColor },
+                                                        ]}
+                                                    >
+                                                        {t(
+                                                            'component_book_details_modal_no_warnings',
+                                                        )}
+                                                    </Text>
+                                                )}
+                                            </View>
+                                        )}
+
+                                        {showDescriptionSection && (
+                                            <View style={styles.section}>
+                                                <View style={styles.sectionHeader}>
+                                                    <Icon
+                                                        name="description"
+                                                        size={18}
+                                                        color={theme.iconColor}
+                                                    />
+                                                    <Text
+                                                        style={[
+                                                            styles.sectionTitle,
+                                                            { color: theme.textColor },
+                                                        ]}
+                                                    >
+                                                        {t('component_book_details_modal_desc')}
+                                                    </Text>
+                                                </View>
+                                                <Text
+                                                    style={[
+                                                        styles.description,
+                                                        { color: theme.textColor },
+                                                    ]}
+                                                >
+                                                    {book.description}
+                                                </Text>
+                                            </View>
+                                        )}
+
+                                        {showMetadataSection && (
+                                            <View style={styles.metadata}>
+                                                <View style={styles.metadataRow}>
+                                                    <Icon
+                                                        name="schedule"
+                                                        size={14}
+                                                        color={theme.iconColor}
+                                                    />
+                                                    <Text
+                                                        style={[
+                                                            styles.metadataText,
+                                                            { color: theme.secondaryTextColor },
+                                                        ]}
+                                                    >
+                                                        {t('component_generic_updated', {
+                                                            date: book.lastUpdated,
+                                                        })}
+                                                    </Text>
+                                                </View>
+                                                <View style={styles.metadataRow}>
+                                                    <Icon
+                                                        name="favorite"
+                                                        size={14}
+                                                        color="#ef4444"
+                                                    />
+                                                    <Text
+                                                        style={[
+                                                            styles.metadataText,
+                                                            { color: theme.secondaryTextColor },
+                                                        ]}
+                                                    >
+                                                        {t('component_generic_kudos', {
+                                                            count:
+                                                                book.likes?.toLocaleString() || '?',
+                                                        })}
+                                                    </Text>
+                                                </View>
+                                                <View style={styles.metadataRow}>
+                                                    <Icon name="book" size={14} color="#f97316" />
+                                                    <Text
+                                                        style={[
+                                                            styles.metadataText,
+                                                            { color: theme.secondaryTextColor },
+                                                        ]}
+                                                    >
+                                                        {t('component_generic_chapter', {
+                                                            chapters:
+                                                                book.currentChapter +
+                                                                '/' +
+                                                                (book.chapterCount || '?'),
+                                                        })}
+                                                    </Text>
+                                                </View>
+                                                <View style={styles.metadataRow}>
+                                                    <Icon
+                                                        name="bookmark"
+                                                        size={14}
+                                                        color="#eab308"
+                                                    />
+                                                    <Text
+                                                        style={[
+                                                            styles.metadataText,
+                                                            { color: theme.secondaryTextColor },
+                                                        ]}
+                                                    >
+                                                        {t('component_generic_bookmarks', {
+                                                            bookmarks:
+                                                                book.bookmarks?.toLocaleString() ||
+                                                                0,
+                                                        })}
+                                                    </Text>
+                                                </View>
+                                                <View style={styles.metadataRow}>
+                                                    <Icon
+                                                        name="visibility"
+                                                        size={14}
+                                                        color="#8b5cf6"
+                                                    />
+                                                    <Text
+                                                        style={[
+                                                            styles.metadataText,
+                                                            { color: theme.secondaryTextColor },
+                                                        ]}
+                                                    >
+                                                        {t('component_generic_views', {
+                                                            views:
+                                                                book.views?.toLocaleString() || 0,
+                                                        })}
+                                                    </Text>
+                                                </View>
+                                                <View style={styles.metadataRow}>
+                                                    <Icon
+                                                        name="text-snippet"
+                                                        size={14}
+                                                        color="#6e6e6e"
+                                                    />
+                                                    <Text
+                                                        style={[
+                                                            styles.metadataText,
+                                                            { color: theme.secondaryTextColor },
+                                                        ]}
+                                                    >
+                                                        {t('component_generic_words', {
+                                                            words:
+                                                                book.words?.toLocaleString() || 0,
+                                                        })}
+                                                    </Text>
+                                                </View>
+                                                <View style={styles.metadataRow}>
+                                                    <Icon
+                                                        name="language"
+                                                        size={14}
+                                                        color="#22c55e"
+                                                    />
+                                                    <Text
+                                                        style={[
+                                                            styles.metadataText,
+                                                            { color: theme.secondaryTextColor },
+                                                        ]}
+                                                    >
+                                                        {t('component_generic_language', {
+                                                            language:
+                                                                book.language ||
+                                                                t('general_unknown'),
+                                                        })}
+                                                    </Text>
+                                                </View>
+                                            </View>
+                                        )}
+                                    </View>
+                                </ScrollView>
+
+                                {hasSelectedTags && (
+                                    <View
+                                        style={[
+                                            styles.footer,
+                                            { borderTopColor: theme.borderColor },
+                                        ]}
+                                    >
+                                        <TouchableOpacity
+                                            style={[
+                                                styles.footerButton,
+                                                styles.clearButton,
+                                                { borderColor: theme.primaryColor },
+                                            ]}
+                                            onPress={() => setSelected({})}
+                                        >
+                                            <Text
+                                                style={[
+                                                    styles.footerButtonText,
+                                                    { color: theme.primaryColor },
+                                                ]}
+                                            >
+                                                {t('component_book_details_modal_clear', 'Clear')}
+                                            </Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            style={[
+                                                styles.footerButton,
+                                                styles.applyButton,
+                                                { backgroundColor: theme.primaryColor },
+                                            ]}
+                                            onPress={() => applyTag()}
+                                        >
+                                            <Text
+                                                style={[
+                                                    styles.footerButtonText,
+                                                    { color: theme.tagSelectedTextColor || '#fff' },
+                                                ]}
+                                            >
+                                                {t('component_book_details_modal_apply', 'Apply')}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                )}
                             </View>
-                          </ScrollView>
-                        ) : (
-                          <Text
-                            style={[
-                              styles.noDataText,
-                              { color: theme.secondaryTextColor },
-                            ]}
-                          >
-                            {t('component_book_details_modal_no_warnings')}
-                          </Text>
-                        )}
-                      </View>
-                    )}
-
-                    {showDescriptionSection && (
-                      <View style={styles.section}>
-                        <View style={styles.sectionHeader}>
-                          <Icon
-                            name="description"
-                            size={18}
-                            color={theme.iconColor}
-                          />
-                          <Text
-                            style={[
-                              styles.sectionTitle,
-                              { color: theme.textColor },
-                            ]}
-                          >
-                            {t('component_book_details_modal_desc')}
-                          </Text>
                         </View>
-                        <Text
-                          style={[
-                            styles.description,
-                            { color: theme.textColor },
-                          ]}
-                        >
-                          {book.description}
-                        </Text>
-                      </View>
-                    )}
-
-                    {showMetadataSection && (
-                      <View style={styles.metadata}>
-                        <View style={styles.metadataRow}>
-                          <Icon
-                            name="schedule"
-                            size={14}
-                            color={theme.iconColor}
-                          />
-                          <Text
-                            style={[
-                              styles.metadataText,
-                              { color: theme.secondaryTextColor },
-                            ]}
-                          >
-                            {t('component_generic_updated', {
-                              date: book.lastUpdated,
-                            })}
-                          </Text>
-                        </View>
-                        <View style={styles.metadataRow}>
-                          <Icon name="favorite" size={14} color="#ef4444" />
-                          <Text
-                            style={[
-                              styles.metadataText,
-                              { color: theme.secondaryTextColor },
-                            ]}
-                          >
-                            {t('component_generic_kudos', {
-                              count: book.likes?.toLocaleString() || '?',
-                            })}
-                          </Text>
-                        </View>
-                        <View style={styles.metadataRow}>
-                          <Icon name="book" size={14} color="#f97316" />
-                          <Text
-                            style={[
-                              styles.metadataText,
-                              { color: theme.secondaryTextColor },
-                            ]}
-                          >
-                            {t('component_generic_chapter', {
-                              chapters:
-                                book.currentChapter +
-                                '/' +
-                                (book.chapterCount || '?'),
-                            })}
-                          </Text>
-                        </View>
-                        <View style={styles.metadataRow}>
-                          <Icon name="bookmark" size={14} color="#eab308" />
-                          <Text
-                            style={[
-                              styles.metadataText,
-                              { color: theme.secondaryTextColor },
-                            ]}
-                          >
-                            {t('component_generic_bookmarks', {
-                              bookmarks: book.bookmarks?.toLocaleString() || 0,
-                            })}
-                          </Text>
-                        </View>
-                        <View style={styles.metadataRow}>
-                          <Icon name="visibility" size={14} color="#8b5cf6" />
-                          <Text
-                            style={[
-                              styles.metadataText,
-                              { color: theme.secondaryTextColor },
-                            ]}
-                          >
-                            {t('component_generic_views', {
-                              views: book.views?.toLocaleString() || 0,
-                            })}
-                          </Text>
-                        </View>
-                        <View style={styles.metadataRow}>
-                          <Icon name="text-snippet" size={14} color="#6e6e6e" />
-                          <Text
-                            style={[
-                              styles.metadataText,
-                              { color: theme.secondaryTextColor },
-                            ]}
-                          >
-                            {t('component_generic_words', {
-                              words: book.words?.toLocaleString() || 0,
-                            })}
-                          </Text>
-                        </View>
-                        <View style={styles.metadataRow}>
-                          <Icon name="language" size={14} color="#22c55e" />
-                          <Text
-                            style={[
-                              styles.metadataText,
-                              { color: theme.secondaryTextColor },
-                            ]}
-                          >
-                            {t('component_generic_language', {
-                              language: book.language || t('general_unknown'),
-                            })}
-                          </Text>
-                        </View>
-                      </View>
-                    )}
-                  </View>
-                </ScrollView>
-
-                {hasSelectedTags && (
-                  <View
-                    style={[
-                      styles.footer,
-                      { borderTopColor: theme.borderColor },
-                    ]}
-                  >
-                    <TouchableOpacity
-                      style={[
-                        styles.footerButton,
-                        styles.clearButton,
-                        { borderColor: theme.primaryColor },
-                      ]}
-                      onPress={() => setSelected({})}
-                    >
-                      <Text
-                        style={[
-                          styles.footerButtonText,
-                          { color: theme.primaryColor },
-                        ]}
-                      >
-                        {t('component_book_details_modal_clear', 'Clear')}
-                      </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[
-                        styles.footerButton,
-                        styles.applyButton,
-                        { backgroundColor: theme.primaryColor },
-                      ]}
-                      onPress={() => applyTag()}
-                    >
-                      <Text
-                        style={[
-                          styles.footerButtonText,
-                          { color: theme.tagSelectedTextColor || '#fff' },
-                        ]}
-                      >
-                        {t('component_book_details_modal_apply', 'Apply')}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </View>
-            </View>
-          </View>
-        </SafeAreaView>
-      )}
-    </Modal>
-  );
+                    </View>
+                </SafeAreaView>
+            )}
+        </Modal>
+    );
 };
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    position: 'relative',
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'transparent',
-  },
-  modalContainerWrapper: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingBottom: 60,
-  },
-  modalContainer: {
-    width: '90%',
-  },
-  modal: {
-    borderRadius: 12,
-    padding: 0,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    flex: 1,
-    marginRight: 12,
-  },
-  closeButton: {
-    padding: 4,
-  },
-  content: {
-    padding: 20,
-  },
-  contentContainer: {
-    flexGrow: 0,
-  },
-  section: {
-    marginBottom: 20,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-  tagsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  tag: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  tagText: {
-    fontSize: 12,
-  },
-  seeAllButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
-  },
-  seeAllText: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  warningsContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  warning: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  warningText: {
-    fontSize: 12,
-  },
-  description: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  metadataContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  metadata: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  metadataRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 16,
-    marginBottom: 8,
-  },
-  metadataText: {
-    fontSize: 12,
-    marginLeft: 4,
-  },
-  noDataText: {
-    fontSize: 14,
-    fontStyle: 'italic',
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 12,
-    padding: 16,
-    borderTopWidth: 1,
-  },
-  footerButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  clearButton: {
-    borderWidth: 1,
-    backgroundColor: 'transparent',
-  },
-  applyButton: {
-    borderWidth: 0,
-  },
-  footerButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
+    overlay: {
+        flex: 1,
+        position: 'relative',
+    },
+    backdrop: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'transparent',
+    },
+    modalContainerWrapper: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingBottom: 60,
+    },
+    modalContainer: {
+        width: '90%',
+    },
+    modal: {
+        borderRadius: 12,
+        padding: 0,
+        overflow: 'hidden',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
+    },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 20,
+        borderBottomWidth: 1,
+    },
+    title: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        flex: 1,
+        marginRight: 12,
+    },
+    closeButton: {
+        padding: 4,
+    },
+    content: {
+        padding: 20,
+    },
+    contentContainer: {
+        flexGrow: 0,
+    },
+    section: {
+        marginBottom: 20,
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    sectionTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        marginLeft: 8,
+    },
+    tagsContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    tag: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 16,
+    },
+    tagText: {
+        fontSize: 12,
+    },
+    seeAllButton: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 16,
+        borderWidth: 1,
+    },
+    seeAllText: {
+        fontSize: 12,
+        fontWeight: '500',
+    },
+    warningsContainer: {
+        flexDirection: 'row',
+        gap: 8,
+    },
+    warning: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 16,
+    },
+    warningText: {
+        fontSize: 12,
+    },
+    description: {
+        fontSize: 14,
+        lineHeight: 20,
+    },
+    metadataContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+    },
+    metadata: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+    },
+    metadataRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginRight: 16,
+        marginBottom: 8,
+    },
+    metadataText: {
+        fontSize: 12,
+        marginLeft: 4,
+    },
+    noDataText: {
+        fontSize: 14,
+        fontStyle: 'italic',
+    },
+    footer: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        gap: 12,
+        padding: 16,
+        borderTopWidth: 1,
+    },
+    footerButton: {
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        borderRadius: 8,
+    },
+    clearButton: {
+        borderWidth: 1,
+        backgroundColor: 'transparent',
+    },
+    applyButton: {
+        borderWidth: 0,
+    },
+    footerButtonText: {
+        fontSize: 14,
+        fontWeight: '600',
+    },
 });
 
 export default BookDetailsModal;

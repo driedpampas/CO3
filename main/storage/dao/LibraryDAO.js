@@ -1,124 +1,121 @@
 import { Work } from '../models/work';
 
 export class LibraryDAO {
-  constructor(db) {
-    this.db = db;
-  }
-
-  // Private helper to map database rows to the Work model
-  async _mapWorkRow(row) {
-    const workData = {
-      id: row.id,
-      title: row.title,
-      author: row.author,
-      kudos: row.kudos,
-      hits: row.hits,
-      language: row.language,
-      updated: row.updated,
-      bookmarks: row.bookmarks,
-      description: row.description,
-      descriptionHTML: row.descriptionHTML, // Correctly mapped here
-      currentChapter: row.currentChapter,
-      chapterCount: row.chapterCount,
-      rating: row.rating,
-      category: row.category,
-      warningStatus: row.warningStatus,
-      isCompleted: row.isCompleted ? Boolean(row.isCompleted) : null,
-    };
-
-    // Get tags and warnings for this work
-    workData.tags = await this.getTagsForWork(row.id);
-    workData.warnings = await this.getWarningsForWork(row.id);
-
-    const libraryData = {
-      dateAdded: row.dateAdded,
-      collection: row.collection,
-      readIndex: row.readIndex,
-    };
-
-    return {
-      work: new Work(workData),
-      library: libraryData,
-    };
-  }
-
-  async add(workId, collection = 'Default') {
-    if (!workId) {
-      throw new Error('Work ID is required');
+    constructor(db) {
+        this.db = db;
     }
 
-    const dateAdded = Date.now();
-    const readIndex = 0;
+    // Private helper to map database rows to the Work model
+    async _mapWorkRow(row) {
+        const workData = {
+            id: row.id,
+            title: row.title,
+            author: row.author,
+            kudos: row.kudos,
+            hits: row.hits,
+            language: row.language,
+            updated: row.updated,
+            bookmarks: row.bookmarks,
+            description: row.description,
+            descriptionHTML: row.descriptionHTML, // Correctly mapped here
+            currentChapter: row.currentChapter,
+            chapterCount: row.chapterCount,
+            rating: row.rating,
+            category: row.category,
+            warningStatus: row.warningStatus,
+            isCompleted: row.isCompleted ? Boolean(row.isCompleted) : null,
+        };
 
-    await this.db.executeSql(
-      `INSERT OR REPLACE INTO library (workId, dateAdded, collection, readIndex) VALUES (?, ?, ?, ?)`,
-      [workId, dateAdded, collection, readIndex],
-    );
+        // Get tags and warnings for this work
+        workData.tags = await this.getTagsForWork(row.id);
+        workData.warnings = await this.getWarningsForWork(row.id);
 
-    return { workId, dateAdded, collection, readIndex };
-  }
+        const libraryData = {
+            dateAdded: row.dateAdded,
+            collection: row.collection,
+            readIndex: row.readIndex,
+        };
 
-  async remove(workId) {
-    const [result] = await this.db.executeSql(
-      'DELETE FROM library WHERE workId = ?',
-      [workId],
-    );
-    return result.rowsAffected > 0;
-  }
-
-  async updateReadIndex(workId) {
-    const newReadIndex = Date.now();
-    await this.db.executeSql(
-      'UPDATE library SET readIndex = ? WHERE workId = ?',
-      [newReadIndex, workId],
-    );
-    return newReadIndex;
-  }
-
-  async getByPage(
-    page = 1,
-    pageSize = 20,
-    sortType = 'lastRead',
-    collection = null,
-    startDate = null,
-    endDate = null,
-  ) {
-    const offset = (page - 1) * pageSize;
-
-    let whereClause = '';
-    let whereParams = [];
-
-    if (collection) {
-      whereClause += ' AND l.collection = ?';
-      whereParams.push(collection);
+        return {
+            work: new Work(workData),
+            library: libraryData,
+        };
     }
 
-    if (startDate) {
-      whereClause += ' AND l.dateAdded >= ?';
-      whereParams.push(startDate);
+    async add(workId, collection = 'Default') {
+        if (!workId) {
+            throw new Error('Work ID is required');
+        }
+
+        const dateAdded = Date.now();
+        const readIndex = 0;
+
+        await this.db.executeSql(
+            `INSERT OR REPLACE INTO library (workId, dateAdded, collection, readIndex) VALUES (?, ?, ?, ?)`,
+            [workId, dateAdded, collection, readIndex],
+        );
+
+        return { workId, dateAdded, collection, readIndex };
     }
 
-    if (endDate) {
-      whereClause += ' AND l.dateAdded <= ?';
-      whereParams.push(endDate);
+    async remove(workId) {
+        const [result] = await this.db.executeSql('DELETE FROM library WHERE workId = ?', [workId]);
+        return result.rowsAffected > 0;
     }
 
-    let orderBy = '';
-    switch (sortType) {
-      case 'lastRead':
-        orderBy = 'ORDER BY l.readIndex DESC';
-        break;
-      case 'alphabetical':
-        orderBy = 'ORDER BY w.title ASC';
-        break;
-      case 'dateAdded':
-        orderBy = 'ORDER BY l.dateAdded DESC';
-        break;
-      default:
-        orderBy = 'ORDER BY l.readIndex DESC';
+    async updateReadIndex(workId) {
+        const newReadIndex = Date.now();
+        await this.db.executeSql('UPDATE library SET readIndex = ? WHERE workId = ?', [
+            newReadIndex,
+            workId,
+        ]);
+        return newReadIndex;
     }
 
-    const query = `
+    async getByPage(
+        page = 1,
+        pageSize = 20,
+        sortType = 'lastRead',
+        collection = null,
+        startDate = null,
+        endDate = null,
+    ) {
+        const offset = (page - 1) * pageSize;
+
+        let whereClause = '';
+        const whereParams = [];
+
+        if (collection) {
+            whereClause += ' AND l.collection = ?';
+            whereParams.push(collection);
+        }
+
+        if (startDate) {
+            whereClause += ' AND l.dateAdded >= ?';
+            whereParams.push(startDate);
+        }
+
+        if (endDate) {
+            whereClause += ' AND l.dateAdded <= ?';
+            whereParams.push(endDate);
+        }
+
+        let orderBy = '';
+        switch (sortType) {
+            case 'lastRead':
+                orderBy = 'ORDER BY l.readIndex DESC';
+                break;
+            case 'alphabetical':
+                orderBy = 'ORDER BY w.title ASC';
+                break;
+            case 'dateAdded':
+                orderBy = 'ORDER BY l.dateAdded DESC';
+                break;
+            default:
+                orderBy = 'ORDER BY l.readIndex DESC';
+        }
+
+        const query = `
       SELECT l.*, w.* FROM library l
       JOIN works w ON l.workId = w.id
       WHERE 1=1 ${whereClause}
@@ -126,99 +123,95 @@ export class LibraryDAO {
       LIMIT ? OFFSET ?
     `;
 
-    const [results] = await this.db.executeSql(query, [
-      ...whereParams,
-      pageSize,
-      offset,
-    ]);
-    const works = [];
+        const [results] = await this.db.executeSql(query, [...whereParams, pageSize, offset]);
+        const works = [];
 
-    for (let i = 0; i < results.rows.length; i++) {
-      const row = results.rows.item(i);
-      works.push(await this._mapWorkRow(row));
+        for (let i = 0; i < results.rows.length; i++) {
+            const row = results.rows.item(i);
+            works.push(await this._mapWorkRow(row));
+        }
+
+        return works;
     }
 
-    return works;
-  }
+    async deleteCollection(collection) {
+        if (collection === 'Default') {
+            throw new Error('Cannot delete the Default collection');
+        }
 
-  async deleteCollection(collection) {
-    if (collection === 'Default') {
-      throw new Error('Cannot delete the Default collection');
+        await this.db.executeSql('UPDATE library SET collection = ? WHERE collection = ?', [
+            'Default',
+            collection,
+        ]);
+
+        return true;
     }
 
-    await this.db.executeSql(
-      'UPDATE library SET collection = ? WHERE collection = ?',
-      ['Default', collection],
-    );
+    async renameCollection(oldName, newName) {
+        await this.db.executeSql('UPDATE library SET collection = ? WHERE collection = ?', [
+            newName,
+            oldName,
+        ]);
+        return true;
+    }
 
-    return true;
-  }
-
-  async renameCollection(oldName, newName) {
-    await this.db.executeSql(
-      'UPDATE library SET collection = ? WHERE collection = ?',
-      [newName, oldName],
-    );
-    return true;
-  }
-
-  async getCollectionsWithCounts() {
-    const [results] = await this.db.executeSql(`
+    async getCollectionsWithCounts() {
+        const [results] = await this.db.executeSql(`
       SELECT collection, COUNT(*) as count FROM library 
       GROUP BY collection 
       ORDER BY count DESC
     `);
-    return Array.from({ length: results.rows.length }, (_, i) => ({
-      name: results.rows.item(i).collection,
-      count: results.rows.item(i).count,
-    }));
-  }
-
-  async getTotalCount(collection = null, startDate = null, endDate = null) {
-    let whereClause = '';
-    let whereParams = [];
-
-    if (collection) {
-      whereClause += ' AND l.collection = ?';
-      whereParams.push(collection);
+        return Array.from({ length: results.rows.length }, (_, i) => ({
+            name: results.rows.item(i).collection,
+            count: results.rows.item(i).count,
+        }));
     }
 
-    if (startDate) {
-      whereClause += ' AND l.dateAdded >= ?';
-      whereParams.push(startDate);
-    }
+    async getTotalCount(collection = null, startDate = null, endDate = null) {
+        let whereClause = '';
+        const whereParams = [];
 
-    if (endDate) {
-      whereClause += ' AND l.dateAdded <= ?';
-      whereParams.push(endDate);
-    }
+        if (collection) {
+            whereClause += ' AND l.collection = ?';
+            whereParams.push(collection);
+        }
 
-    const query = `
+        if (startDate) {
+            whereClause += ' AND l.dateAdded >= ?';
+            whereParams.push(startDate);
+        }
+
+        if (endDate) {
+            whereClause += ' AND l.dateAdded <= ?';
+            whereParams.push(endDate);
+        }
+
+        const query = `
       SELECT COUNT(*) as total FROM library l
       JOIN works w ON l.workId = w.id
       WHERE 1=1 ${whereClause}
     `;
 
-    const [result] = await this.db.executeSql(query, whereParams);
-    return result.rows.item(0).total;
-  }
+        const [result] = await this.db.executeSql(query, whereParams);
+        return result.rows.item(0).total;
+    }
 
-  async search(
-    searchTerm,
-    page = 1,
-    pageSize = 20,
-    sortType = 'lastRead',
-    collection = null,
-    startDate = null,
-    endDate = null,
-  ) {
-    const offset = (page - 1) * pageSize;
+    async search(
+        searchTerm,
+        page = 1,
+        pageSize = 20,
+        sortType = 'lastRead',
+        collection = null,
+        startDate = null,
+        endDate = null,
+    ) {
+        const offset = (page - 1) * pageSize;
 
-    let whereClause = '';
-    let whereParams = [];
+        let whereClause = '';
+        const whereParams = [];
 
-    const searchPattern = `%${searchTerm}%`;
-    whereClause += ` AND (
+        const searchPattern = `%${searchTerm}%`;
+        whereClause += ` AND (
       w.title LIKE ? OR 
       w.author LIKE ? OR 
       w.description LIKE ? OR
@@ -228,48 +221,48 @@ export class LibraryDAO {
       EXISTS (SELECT 1 FROM work_tags wt JOIN tags t ON wt.tagId = t.id WHERE wt.workId = w.id AND t.name LIKE ?) OR
       EXISTS (SELECT 1 FROM work_warnings ww JOIN warnings wr ON ww.warningId = wr.id WHERE ww.workId = w.id AND wr.name LIKE ?)
     )`;
-    whereParams.push(
-      searchPattern,
-      searchPattern,
-      searchPattern,
-      searchPattern,
-      searchPattern,
-      searchPattern,
-      searchPattern,
-      searchPattern,
-    );
+        whereParams.push(
+            searchPattern,
+            searchPattern,
+            searchPattern,
+            searchPattern,
+            searchPattern,
+            searchPattern,
+            searchPattern,
+            searchPattern,
+        );
 
-    if (collection) {
-      whereClause += ' AND l.collection = ?';
-      whereParams.push(collection);
-    }
+        if (collection) {
+            whereClause += ' AND l.collection = ?';
+            whereParams.push(collection);
+        }
 
-    if (startDate) {
-      whereClause += ' AND l.dateAdded >= ?';
-      whereParams.push(startDate);
-    }
+        if (startDate) {
+            whereClause += ' AND l.dateAdded >= ?';
+            whereParams.push(startDate);
+        }
 
-    if (endDate) {
-      whereClause += ' AND l.dateAdded <= ?';
-      whereParams.push(endDate);
-    }
+        if (endDate) {
+            whereClause += ' AND l.dateAdded <= ?';
+            whereParams.push(endDate);
+        }
 
-    let orderBy = '';
-    switch (sortType) {
-      case 'lastRead':
-        orderBy = 'ORDER BY l.readIndex DESC';
-        break;
-      case 'alphabetical':
-        orderBy = 'ORDER BY w.title ASC';
-        break;
-      case 'dateAdded':
-        orderBy = 'ORDER BY l.dateAdded DESC';
-        break;
-      default:
-        orderBy = 'ORDER BY l.readIndex DESC';
-    }
+        let orderBy = '';
+        switch (sortType) {
+            case 'lastRead':
+                orderBy = 'ORDER BY l.readIndex DESC';
+                break;
+            case 'alphabetical':
+                orderBy = 'ORDER BY w.title ASC';
+                break;
+            case 'dateAdded':
+                orderBy = 'ORDER BY l.dateAdded DESC';
+                break;
+            default:
+                orderBy = 'ORDER BY l.readIndex DESC';
+        }
 
-    const query = `
+        const query = `
       SELECT l.*, w.* FROM library l
       JOIN works w ON l.workId = w.id
       WHERE 1=1 ${whereClause}
@@ -277,32 +270,23 @@ export class LibraryDAO {
       LIMIT ? OFFSET ?
     `;
 
-    const [results] = await this.db.executeSql(query, [
-      ...whereParams,
-      pageSize,
-      offset,
-    ]);
-    const works = [];
+        const [results] = await this.db.executeSql(query, [...whereParams, pageSize, offset]);
+        const works = [];
 
-    for (let i = 0; i < results.rows.length; i++) {
-      const row = results.rows.item(i);
-      works.push(await this._mapWorkRow(row));
+        for (let i = 0; i < results.rows.length; i++) {
+            const row = results.rows.item(i);
+            works.push(await this._mapWorkRow(row));
+        }
+
+        return works;
     }
 
-    return works;
-  }
+    async getSearchCount(searchTerm, collection = null, startDate = null, endDate = null) {
+        let whereClause = '';
+        const whereParams = [];
 
-  async getSearchCount(
-    searchTerm,
-    collection = null,
-    startDate = null,
-    endDate = null,
-  ) {
-    let whereClause = '';
-    let whereParams = [];
-
-    const searchPattern = `%${searchTerm}%`;
-    whereClause += ` AND (
+        const searchPattern = `%${searchTerm}%`;
+        whereClause += ` AND (
       w.title LIKE ? OR 
       w.author LIKE ? OR 
       w.description LIKE ? OR
@@ -312,113 +296,106 @@ export class LibraryDAO {
       EXISTS (SELECT 1 FROM work_tags wt JOIN tags t ON wt.tagId = t.id WHERE wt.workId = w.id AND t.name LIKE ?) OR
       EXISTS (SELECT 1 FROM work_warnings ww JOIN warnings wr ON ww.warningId = wr.id WHERE ww.workId = w.id AND wr.name LIKE ?)
     )`;
-    whereParams.push(
-      searchPattern,
-      searchPattern,
-      searchPattern,
-      searchPattern,
-      searchPattern,
-      searchPattern,
-      searchPattern,
-      searchPattern,
-    );
+        whereParams.push(
+            searchPattern,
+            searchPattern,
+            searchPattern,
+            searchPattern,
+            searchPattern,
+            searchPattern,
+            searchPattern,
+            searchPattern,
+        );
 
-    if (collection) {
-      whereClause += ' AND l.collection = ?';
-      whereParams.push(collection);
-    }
+        if (collection) {
+            whereClause += ' AND l.collection = ?';
+            whereParams.push(collection);
+        }
 
-    if (startDate) {
-      whereClause += ' AND l.dateAdded >= ?';
-      whereParams.push(startDate);
-    }
+        if (startDate) {
+            whereClause += ' AND l.dateAdded >= ?';
+            whereParams.push(startDate);
+        }
 
-    if (endDate) {
-      whereClause += ' AND l.dateAdded <= ?';
-      whereParams.push(endDate);
-    }
+        if (endDate) {
+            whereClause += ' AND l.dateAdded <= ?';
+            whereParams.push(endDate);
+        }
 
-    const query = `
+        const query = `
       SELECT COUNT(*) as total FROM library l
       JOIN works w ON l.workId = w.id
       WHERE 1=1 ${whereClause}
     `;
 
-    const [result] = await this.db.executeSql(query, whereParams);
-    return result.rows.item(0).total;
-  }
+        const [result] = await this.db.executeSql(query, whereParams);
+        return result.rows.item(0).total;
+    }
 
-  async getCollections() {
-    const [results] = await this.db.executeSql(
-      'SELECT DISTINCT collection FROM library ORDER BY collection',
-    );
-    return Array.from(
-      { length: results.rows.length },
-      (_, i) => results.rows.item(i).collection,
-    );
-  }
+    async getCollections() {
+        const [results] = await this.db.executeSql(
+            'SELECT DISTINCT collection FROM library ORDER BY collection',
+        );
+        return Array.from(
+            { length: results.rows.length },
+            (_, i) => results.rows.item(i).collection,
+        );
+    }
 
-  async getLibraryEntry(workId) {
-    const [results] = await this.db.executeSql(
-      'SELECT * FROM library WHERE workId = ?',
-      [workId],
-    );
+    async getLibraryEntry(workId) {
+        const [results] = await this.db.executeSql('SELECT * FROM library WHERE workId = ?', [
+            workId,
+        ]);
 
-    if (results.rows.length === 0) return null;
+        if (results.rows.length === 0) return null;
 
-    const row = results.rows.item(0);
-    return {
-      workId: row.workId,
-      dateAdded: row.dateAdded,
-      collection: row.collection,
-      readIndex: row.readIndex,
-    };
-  }
+        const row = results.rows.item(0);
+        return {
+            workId: row.workId,
+            dateAdded: row.dateAdded,
+            collection: row.collection,
+            readIndex: row.readIndex,
+        };
+    }
 
-  async updateCollection(workId, collection) {
-    await this.db.executeSql(
-      'UPDATE library SET collection = ? WHERE workId = ?',
-      [collection, workId],
-    );
-  }
+    async updateCollection(workId, collection) {
+        await this.db.executeSql('UPDATE library SET collection = ? WHERE workId = ?', [
+            collection,
+            workId,
+        ]);
+    }
 
-  async isInLibrary(workId) {
-    const [results] = await this.db.executeSql(
-      'SELECT COUNT(*) as count FROM library WHERE workId = ?',
-      [workId],
-    );
-    return results.rows.item(0).count > 0;
-  }
+    async isInLibrary(workId) {
+        const [results] = await this.db.executeSql(
+            'SELECT COUNT(*) as count FROM library WHERE workId = ?',
+            [workId],
+        );
+        return results.rows.item(0).count > 0;
+    }
 
-  async getTagsForWork(workId) {
-    const [results] = await this.db.executeSql(
-      `
+    async getTagsForWork(workId) {
+        const [results] = await this.db.executeSql(
+            `
         SELECT t.name FROM tags t
                              JOIN work_tags wt ON t.id = wt.tagId
         WHERE wt.workId = ?
       `,
-      [workId],
-    );
+            [workId],
+        );
 
-    return Array.from(
-      { length: results.rows.length },
-      (_, i) => results.rows.item(i).name,
-    );
-  }
+        return Array.from({ length: results.rows.length }, (_, i) => results.rows.item(i).name);
+    }
 
-  async getWarningsForWork(workId) {
-    const [results] = await this.db.executeSql(
-      `
+    async getWarningsForWork(workId) {
+        const [results] = await this.db.executeSql(
+            `
       SELECT w.name FROM warnings w
       JOIN work_warnings ww ON w.id = ww.warningId
       WHERE ww.workId = ?
     `,
-      [workId],
-    );
+            [workId],
+        );
 
-    return Array.from(
-      { length: results.rows.length },
-      (_, i) => results.rows.item(i).name,
-    );
-  }
+        return Array.from({ length: results.rows.length }, (_, i) => results.rows.item(i).name);
+    }
 }

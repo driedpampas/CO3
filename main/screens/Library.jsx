@@ -1,885 +1,839 @@
+import { useNavigation } from '@react-navigation/native';
 import React, { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
-  ActivityIndicator,
-  DeviceEventEmitter,
-  FlatList,
-  Modal,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    DeviceEventEmitter,
+    FlatList,
+    Modal,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import BookCard from '../components/Library/BookCard';
 import CategorySelectionModal from '../components/WorkScreen/CategorySelectionModal.jsx';
 import { getJsonSettings } from '../storage/jsonSettings';
-import { useTranslation } from 'react-i18next';
-import { useNavigation } from '@react-navigation/native';
 
 const SortIcon = ({ color, size }) => (
-  <View
-    style={{
-      width: size,
-      height: size,
-      justifyContent: 'center',
-      alignItems: 'center',
-    }}
-  >
     <View
-      style={{
-        width: size * 0.8,
-        height: size * 0.1,
-        backgroundColor: color,
-        borderRadius: size * 0.05,
-        marginBottom: size * 0.15,
-      }}
-    />
-    <View
-      style={{
-        width: size * 0.6,
-        height: size * 0.1,
-        backgroundColor: color,
-        borderRadius: size * 0.05,
-        marginBottom: size * 0.15,
-      }}
-    />
-    <View
-      style={{
-        width: size * 0.4,
-        height: size * 0.1,
-        backgroundColor: color,
-        borderRadius: size * 0.05,
-      }}
-    />
-  </View>
+        style={{
+            width: size,
+            height: size,
+            justifyContent: 'center',
+            alignItems: 'center',
+        }}
+    >
+        <View
+            style={{
+                width: size * 0.8,
+                height: size * 0.1,
+                backgroundColor: color,
+                borderRadius: size * 0.05,
+                marginBottom: size * 0.15,
+            }}
+        />
+        <View
+            style={{
+                width: size * 0.6,
+                height: size * 0.1,
+                backgroundColor: color,
+                borderRadius: size * 0.05,
+                marginBottom: size * 0.15,
+            }}
+        />
+        <View
+            style={{
+                width: size * 0.4,
+                height: size * 0.1,
+                backgroundColor: color,
+                borderRadius: size * 0.05,
+            }}
+        />
+    </View>
 );
 
 const LibraryScreen = ({
-                         searchTerm,
-                         setSearchTerm,
-                         currentTheme,
-                         viewMode,
-                         setIsAddWorkModalOpen,
-                         libraryDAO,
-                         workDAO,
-                         setScreens,
-                         screens,
-                         setActiveScreen,
-                         settingsDAO,
-                         historyDAO,
-                         progressDAO,
-                         kudoHistoryDAO,
-                         openTagSearch,
-                         chapterDAO,
-                         selectedCollection,
-                         setSelectedCollection
-                       }) => {
-  const [works, setWorks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [filterLoading, setFilterLoading] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState(null);
-  const [isSearching, setIsSearching] = useState(false);
+    searchTerm,
+    setSearchTerm,
+    currentTheme,
+    viewMode,
+    setIsAddWorkModalOpen,
+    libraryDAO,
+    workDAO,
+    setScreens,
+    screens,
+    setActiveScreen,
+    settingsDAO,
+    historyDAO,
+    progressDAO,
+    kudoHistoryDAO,
+    openTagSearch,
+    chapterDAO,
+    selectedCollection,
+    setSelectedCollection,
+}) => {
+    const [works, setWorks] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [filterLoading, setFilterLoading] = useState(false);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
+    const [error, setError] = useState(null);
+    const [isSearching, setIsSearching] = useState(false);
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const [hasMore, setHasMore] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
+    const [hasMore, setHasMore] = useState(false);
 
-  const [sortType, setSortType] = useState('lastRead');
-  const [collectionsWithCounts, setCollectionsWithCounts] = useState([]);
-  const [allCollections, setAllCollections] = useState([]);
-  const [showSortModal, setShowSortModal] = useState(false);
-  const [showAllCollectionsModal, setShowAllCollectionsModal] = useState(false);
+    const [sortType, setSortType] = useState('lastRead');
+    const [collectionsWithCounts, setCollectionsWithCounts] = useState([]);
+    const [allCollections, setAllCollections] = useState([]);
+    const [showSortModal, setShowSortModal] = useState(false);
+    const [showAllCollectionsModal, setShowAllCollectionsModal] = useState(false);
 
-  const [jsonSettings, setJsonSettings] = useState();
+    const [jsonSettings, setJsonSettings] = useState();
 
-  const pageSize = 20;
+    const pageSize = 20;
 
-  const { t } = useTranslation();
+    const { t } = useTranslation();
 
-  const navigation = useNavigation();
+    const navigation = useNavigation();
 
-  useEffect(() => {
-    const subscription = DeviceEventEmitter.addListener('doubleTap', (id) => {
-      navigation.push("ReadLaterScreen", {
-        setScreens: setScreens,
-        currentTheme: currentTheme,
-        workDAO: workDAO,
-        libraryDAO: libraryDAO,
-        historyDAO: historyDAO,
-        settingsDAO: settingsDAO,
-        progressDAO: progressDAO,
-        kudoHistoryDAO: kudoHistoryDAO,
-        screens: screens,
-        chapterDAO: chapterDAO,
-      });
-    })
-
-    return () => {
-      subscription.remove()
-    }
-  }, [])
-
-  useEffect(() => {
-    if (libraryDAO) {
-      loadCollections();
-    }
-  }, [libraryDAO]);
-
-  useEffect(() => {
-    if (libraryDAO && workDAO) {
-      loadWorks(true, true);
-    }
-  }, [searchTerm, sortType, selectedCollection, libraryDAO, workDAO]);
-
-  const loadCollections = async () => {
-    try {
-      const collections = await libraryDAO.getCollectionsWithCounts();
-      setAllCollections(collections.map(c => c.name));
-      setCollectionsWithCounts(collections);
-    } catch (err) {
-      console.error('Error loading collections:', err);
-    }
-  };
-
-  const loadWorks = async (reset = false, isFilter = false) => {
-    if (!reset && loadingMore) return;
-    if (!reset && !hasMore) return;
-
-    try {
-      if (reset && !isFilter) {
-        setLoading(true);
-      }
-      if (reset && isFilter) {
-        setFilterLoading(true);
-      }
-      if (reset) {
-        setCurrentPage(1);
-        setWorks([]);
-        setHasMore(true);
-        setError(null);
-      } else {
-        setLoadingMore(true);
-      }
-
-      const pageToLoad = reset ? 1 : currentPage + 1;
-
-      let libraryEntries;
-      let count;
-
-      if (searchTerm && searchTerm.trim()) {
-        setIsSearching(true);
-        libraryEntries = await libraryDAO.search(
-          searchTerm.trim(),
-          pageToLoad,
-          pageSize,
-          sortType,
-          selectedCollection
-        );
-        count = await libraryDAO.getSearchCount(
-          searchTerm.trim(),
-          selectedCollection
-        );
-      } else {
-        setIsSearching(false);
-        libraryEntries = await libraryDAO.getByPage(
-          pageToLoad,
-          pageSize,
-          sortType,
-          selectedCollection
-        );
-        count = await libraryDAO.getTotalCount(selectedCollection);
-      }
-
-      const worksWithLibraryData = [];
-      for (const entry of libraryEntries) {
-        try {
-          const work = await workDAO.get(entry.work.id);
-          if (work) {
-            worksWithLibraryData.push({
-              work: work,
-              library: entry.library
+    useEffect(() => {
+        const subscription = DeviceEventEmitter.addListener('doubleTap', id => {
+            navigation.push('ReadLaterScreen', {
+                setScreens: setScreens,
+                currentTheme: currentTheme,
+                workDAO: workDAO,
+                libraryDAO: libraryDAO,
+                historyDAO: historyDAO,
+                settingsDAO: settingsDAO,
+                progressDAO: progressDAO,
+                kudoHistoryDAO: kudoHistoryDAO,
+                screens: screens,
+                chapterDAO: chapterDAO,
             });
-          }
+        });
+
+        return () => {
+            subscription.remove();
+        };
+    }, []);
+
+    useEffect(() => {
+        if (libraryDAO) {
+            loadCollections();
+        }
+    }, [libraryDAO]);
+
+    useEffect(() => {
+        if (libraryDAO && workDAO) {
+            loadWorks(true, true);
+        }
+    }, [searchTerm, sortType, selectedCollection, libraryDAO, workDAO]);
+
+    const loadCollections = async () => {
+        try {
+            const collections = await libraryDAO.getCollectionsWithCounts();
+            setAllCollections(collections.map(c => c.name));
+            setCollectionsWithCounts(collections);
         } catch (err) {
-          console.error(`Error fetching work ${entry.work.id}:`, err);
+            console.error('Error loading collections:', err);
         }
-      }
-
-      if (reset) {
-        setWorks(worksWithLibraryData);
-        setTotalCount(count);
-      } else {
-        setWorks(prevWorks => [...prevWorks, ...worksWithLibraryData]);
-      }
-
-      setCurrentPage(pageToLoad);
-
-      const isLastPage = libraryEntries.length < pageSize;
-      setHasMore(!isLastPage);
-
-      setJsonSettings(await getJsonSettings())
-    } catch (err) {
-      console.error('Error loading works:', err);
-      setError({
-        message: err.message || 'Failed to load library',
-        details: err.toString()
-      });
-    } finally {
-      setLoading(false);
-      setFilterLoading(false);
-      setLoadingMore(false);
-      setRefreshing(false);
-    }
-  };
-
-  const handleRefresh = useCallback(() => {
-    setRefreshing(true);
-    loadWorks(true);
-  }, [searchTerm, sortType, selectedCollection]);
-
-  const handleLoadMore = useCallback(() => {
-    if (!loading && !loadingMore && hasMore && works.length > 0) {
-      loadWorks(false);
-    }
-  }, [loading, loadingMore, hasMore, works.length, loadWorks]);
-
-  const handleWorkUpdate = useCallback(() => {
-    loadWorks(true, true);
-  }, []);
-
-  const handleGoToBrowse = () => {
-    setActiveScreen('browse');
-  };
-
-  const formatWork = (workData) => {
-    const { work, library } = workData;
-    return {
-      id: work.id,
-      title: work.title,
-      author: work.author,
-      rating: work.rating,
-      category: work.category,
-      warningStatus: work.warningStatus,
-      isCompleted: work.isCompleted,
-      tags: work.tags,
-      warnings: work.warnings,
-      description: work.description,
-      descriptionHTML: work.descriptionHTML,
-      lastUpdated: work.updated ? new Date(work.updated).toLocaleDateString() : 'Unknown',
-      likes: work.kudos,
-      bookmarks: work.bookmarks,
-      words: work.words,
-      views: work.hits,
-      language: work.language,
-      currentChapter: work.currentChapter,
-      chapterCount: work.chapterCount,
-      dateAdded: library.dateAdded,
-      collection: library.collection,
-      readIndex: library.readIndex,
-      lastRead: library.readIndex ? new Date(library.readIndex).toLocaleDateString() : 'Never'
     };
-  };
 
-  const handleSortChange = (newSortType) => {
-    setSortType(newSortType);
-    setShowSortModal(false);
-  };
+    const loadWorks = async (reset = false, isFilter = false) => {
+        if (!reset && loadingMore) return;
+        if (!reset && !hasMore) return;
 
-  const handleCollectionFilter = (collection) => {
-    setSelectedCollection(collection === selectedCollection ? null : collection);
-  };
+        try {
+            if (reset && !isFilter) {
+                setLoading(true);
+            }
+            if (reset && isFilter) {
+                setFilterLoading(true);
+            }
+            if (reset) {
+                setCurrentPage(1);
+                setWorks([]);
+                setHasMore(true);
+                setError(null);
+            } else {
+                setLoadingMore(true);
+            }
 
-  const handleCollectionSelect = (collection) => {
-    setSelectedCollection(collection);
-    setShowAllCollectionsModal(false);
-  };
+            const pageToLoad = reset ? 1 : currentPage + 1;
 
-  const getSortDisplayName = (sort) => {
-    switch (sort) {
-      case 'lastRead': return t("screen_library_sort_selector_read");
-      case 'alphabetical': return t("screen_library_sort_selector_alphabetical");
-      case 'dateAdded': return t("screen_library_sort_selector_date");
-      default: return t("screen_library_select_category_modal_title");
-    }
-  };
+            let libraryEntries;
+            let count;
 
-  const getTopCollections = () => {
-    return collectionsWithCounts.slice(0, 3);
-  };
+            if (searchTerm && searchTerm.trim()) {
+                setIsSearching(true);
+                libraryEntries = await libraryDAO.search(
+                    searchTerm.trim(),
+                    pageToLoad,
+                    pageSize,
+                    sortType,
+                    selectedCollection,
+                );
+                count = await libraryDAO.getSearchCount(searchTerm.trim(), selectedCollection);
+            } else {
+                setIsSearching(false);
+                libraryEntries = await libraryDAO.getByPage(
+                    pageToLoad,
+                    pageSize,
+                    sortType,
+                    selectedCollection,
+                );
+                count = await libraryDAO.getTotalCount(selectedCollection);
+            }
 
-  const hasMoreThanThreeCollections = collectionsWithCounts.length > 3;
+            const worksWithLibraryData = [];
+            for (const entry of libraryEntries) {
+                try {
+                    const work = await workDAO.get(entry.work.id);
+                    if (work) {
+                        worksWithLibraryData.push({
+                            work: work,
+                            library: entry.library,
+                        });
+                    }
+                } catch (err) {
+                    console.error(`Error fetching work ${entry.work.id}:`, err);
+                }
+            }
 
-  const renderHeader = () => (
-    <View style={styles.headerContainer}>
-      <View style={styles.titleContainer}>
-        <View>
-          <Text style={[styles.title, { color: currentTheme.textColor }]}>
-            {t('screen_library_title')}
-          </Text>
-          <View style={styles.subtitleContainer}>
-            <Text
-              style={[
-                styles.subtitle,
-                { color: currentTheme.placeholderColor },
-              ]}
-            >
-              {totalCount <= 1
-                ? t('screen_library_subtitle', { count: totalCount })
-                : t('screen_library_subtitle_plural', { count: totalCount })}
-              {selectedCollection &&
-                t('screen_library_subtitle_collection', {
-                  collection: selectedCollection,
-                })}
-              {isSearching &&
-                t('screen_library_subtitle_match_filter', {
-                  query: searchTerm,
-                })}
-            </Text>
-          </View>
-        </View>
-        <TouchableOpacity
-          style={[
-            styles.sortButton,
-            {
-              backgroundColor: currentTheme.cardBackground,
-              borderColor: currentTheme.borderColor,
-            },
-          ]}
-          onPress={() => setShowSortModal(true)}
-        >
-          <SortIcon color={currentTheme.textColor} size={16} />
-          <Text
-            style={[styles.sortButtonText, { color: currentTheme.textColor }]}
-          >
-            {getSortDisplayName(sortType)}
-          </Text>
-        </TouchableOpacity>
-      </View>
+            if (reset) {
+                setWorks(worksWithLibraryData);
+                setTotalCount(count);
+            } else {
+                setWorks(prevWorks => [...prevWorks, ...worksWithLibraryData]);
+            }
 
-      {allCollections.length > 1 && (
-        <View style={styles.collectionsContainer}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.collectionsScroll}
-          >
-            <TouchableOpacity
-              style={[
-                styles.collectionChip,
-                {
-                  backgroundColor:
-                    selectedCollection === null
-                      ? currentTheme.primaryColor
-                      : currentTheme.cardBackground,
-                },
-                { borderColor: currentTheme.borderColor },
-              ]}
-              onPress={() => handleCollectionFilter(null)}
-            >
-              <Text
-                style={[
-                  styles.collectionChipText,
-                  {
-                    color:
-                      selectedCollection === null
-                        ? 'white'
-                        : currentTheme.textColor,
-                  },
-                ]}
-              >
-                All
-              </Text>
-            </TouchableOpacity>
+            setCurrentPage(pageToLoad);
 
-            {getTopCollections().map(collectionData => (
-              <TouchableOpacity
-                key={collectionData.name}
-                style={[
-                  styles.collectionChip,
-                  {
-                    backgroundColor:
-                      selectedCollection === collectionData.name
-                        ? currentTheme.primaryColor
-                        : currentTheme.cardBackground,
-                  },
-                  { borderColor: currentTheme.borderColor },
-                ]}
-                onPress={() => handleCollectionFilter(collectionData.name)}
-              >
-                <Text
-                  style={[
-                    styles.collectionChipText,
-                    {
-                      color:
-                        selectedCollection === collectionData.name
-                          ? 'white'
-                          : currentTheme.textColor,
-                    },
-                  ]}
-                >
-                  {collectionData.name}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            const isLastPage = libraryEntries.length < pageSize;
+            setHasMore(!isLastPage);
 
-            {hasMoreThanThreeCollections && (
-              <TouchableOpacity
-                style={[
-                  styles.collectionChip,
-                  { backgroundColor: currentTheme.cardBackground },
-                  { borderColor: currentTheme.borderColor },
-                ]}
-                onPress={() => setShowAllCollectionsModal(true)}
-              >
-                <Icon
-                  name="more-horiz"
-                  size={18}
-                  color={currentTheme.textColor}
-                />
-              </TouchableOpacity>
-            )}
-          </ScrollView>
-        </View>
-      )}
-    </View>
-  );
-
-  const renderFooter = () => {
-    if (loadingMore) {
-      return (
-        <View style={styles.footerLoader}>
-          <ActivityIndicator size="small" color={currentTheme.primaryColor} />
-          <Text
-            style={[
-              styles.footerText,
-              { color: currentTheme.secondaryTextColor },
-            ]}
-          >
-            {t('screen_library_loading_more')}
-          </Text>
-        </View>
-      );
-    }
-
-    if (!hasMore && works.length > 0) {
-      return (
-        <View style={styles.footerLoader}>
-          <Text
-            style={[
-              styles.footerText,
-              { color: currentTheme.placeholderColor },
-            ]}
-          >
-            {t('screen_library_end')}
-          </Text>
-        </View>
-      );
-    }
-
-    return null;
-  };
-
-  const renderEmpty = () => {
-    if (filterLoading) {
-      return (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={currentTheme.primaryColor} />
-        </View>
-      );
-    }
-
-    return (
-      <View style={styles.emptyContainer}>
-        <Icon
-          name="library-books"
-          size={64}
-          color={currentTheme.placeholderColor}
-        />
-        <Text style={[styles.emptyTitle, { color: currentTheme.textColor }]}>
-          {isSearching
-            ? t('screen_library_no_result')
-            : t('screen_library_empty')}
-        </Text>
-        <Text
-          style={[styles.emptyText, { color: currentTheme.secondaryTextColor }]}
-        >
-          {isSearching
-            ? t('screen_library_no_result_sub', { search_term: searchTerm })
-            : t('screen_library_empty_sub')}
-        </Text>
-        {!isSearching && (
-          <TouchableOpacity
-            style={[
-              styles.addFirstButton,
-              { backgroundColor: currentTheme.primaryColor },
-            ]}
-            onPress={handleGoToBrowse}
-          >
-            <Text style={styles.addFirstButtonText}>
-              {t('screen_library_browse_works_button')}
-            </Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    );
-  };
-
-  const renderItem = ({ item }) => (
-    <BookCard
-      book={formatWork(item)}
-      viewMode={viewMode}
-      theme={currentTheme}
-      onUpdate={handleWorkUpdate}
-      setScreens={setScreens}
-      screens={screens}
-      libraryDAO={libraryDAO}
-      workDAO={workDAO}
-      isInLibrary={true}
-      settingsDAO={settingsDAO}
-      historyDAO={historyDAO}
-      progressDAO={progressDAO}
-      kudoHistoryDAO={kudoHistoryDAO}
-      openTagSearch={openTagSearch}
-      jsonSettings={jsonSettings}
-      chapterDAO={chapterDAO}
-    />
-  );
-
-  const renderSortModal = () => (
-    <Modal
-      transparent={true}
-      visible={showSortModal}
-      onRequestClose={() => setShowSortModal(false)}
-    >
-      <TouchableOpacity
-        style={styles.modalOverlay}
-        activeOpacity={1}
-        onPress={() => setShowSortModal(false)}
-      >
-        <View
-          style={[
-            styles.sortModal,
-            {
-              backgroundColor: currentTheme.cardBackground,
-              borderColor: currentTheme.borderColor,
-            },
-          ]}
-        >
-          <Text
-            style={[styles.sortModalTitle, { color: currentTheme.textColor }]}
-          >
-            {t('screen_library_sort_menu_title')}
-          </Text>
-          {[
-            { key: 'lastRead', label: t('screen_library_sort_selector_read') },
-            {
-              key: 'alphabetical',
-              label: t('screen_library_sort_selector_alphabetical'),
-            },
-            { key: 'dateAdded', label: t('screen_library_sort_selector_date') },
-          ].map(option => (
-            <TouchableOpacity
-              key={option.key}
-              style={[
-                styles.sortOption,
-                {
-                  backgroundColor:
-                    sortType === option.key
-                      ? currentTheme.primaryColor + '20'
-                      : 'transparent',
-                },
-              ]}
-              onPress={() => handleSortChange(option.key)}
-            >
-              <Text
-                style={[
-                  styles.sortOptionText,
-                  {
-                    color:
-                      sortType === option.key
-                        ? currentTheme.primaryColor
-                        : currentTheme.textColor,
-                  },
-                ]}
-              >
-                {option.label}
-              </Text>
-              {sortType === option.key && (
-                <Icon
-                  name="check"
-                  size={20}
-                  color={currentTheme.primaryColor}
-                />
-              )}
-            </TouchableOpacity>
-          ))}
-        </View>
-      </TouchableOpacity>
-    </Modal>
-  );
-
-  if (loading) {
-    return (
-      <View
-        style={[
-          styles.centerContainer,
-          { backgroundColor: currentTheme.backgroundColor },
-        ]}
-      >
-        <ActivityIndicator size="large" color={currentTheme.primaryColor} />
-        <Text style={[styles.loadingText, { color: currentTheme.textColor }]}>
-          {t('screen_library_loading')}
-        </Text>
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View
-        style={[
-          styles.centerContainer,
-          { backgroundColor: currentTheme.backgroundColor },
-        ]}
-      >
-        <View
-          style={[
-            styles.errorContainer,
-            {
-              backgroundColor: currentTheme.cardBackground,
-              borderColor: currentTheme.borderColor,
-            },
-          ]}
-        >
-          <Text style={[styles.errorTitle, { color: currentTheme.textColor }]}>
-            {t('screen_library_loading_failed')}
-          </Text>
-          <Text
-            style={[
-              styles.errorMessage,
-              { color: currentTheme.secondaryTextColor },
-            ]}
-          >
-            {error.message}
-          </Text>
-          <TouchableOpacity
-            style={[
-              styles.retryButton,
-              { backgroundColor: currentTheme.primaryColor },
-            ]}
-            onPress={() => loadWorks(true)}
-          >
-            <Text style={styles.retryButtonText}>{t('general_retry')}</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  }
-
-  return (
-    <View style={{ flex: 1, backgroundColor: currentTheme.backgroundColor }}>
-      <FlatList
-        data={works}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.work.id}
-        contentContainerStyle={styles.contentContainer}
-        ListHeaderComponent={renderHeader}
-        ListFooterComponent={renderFooter}
-        ListEmptyComponent={renderEmpty}
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.1}
-        initialNumToRender={10}
-        maxToRenderPerBatch={10}
-        windowSize={5}
-        maintainVisibleContentPosition={{
-          minIndexForVisible: 0,
-        }}
-        scrollEventThrottle={0}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            colors={[currentTheme.primaryColor]}
-            tintColor={currentTheme.primaryColor}
-          />
+            setJsonSettings(await getJsonSettings());
+        } catch (err) {
+            console.error('Error loading works:', err);
+            setError({
+                message: err.message || 'Failed to load library',
+                details: err.toString(),
+            });
+        } finally {
+            setLoading(false);
+            setFilterLoading(false);
+            setLoadingMore(false);
+            setRefreshing(false);
         }
-      />
+    };
 
-      {renderSortModal()}
+    const handleRefresh = useCallback(() => {
+        setRefreshing(true);
+        loadWorks(true);
+    }, [searchTerm, sortType, selectedCollection]);
 
-      <CategorySelectionModal
-        visible={showAllCollectionsModal}
-        categories={allCollections}
-        onSelect={handleCollectionSelect}
-        onCancel={() => setShowAllCollectionsModal(false)}
-        theme={currentTheme}
-        title={t("screen_library_select_category_modal_title")}
-      />
-    </View>
-  );
+    const handleLoadMore = useCallback(() => {
+        if (!loading && !loadingMore && hasMore && works.length > 0) {
+            loadWorks(false);
+        }
+    }, [loading, loadingMore, hasMore, works.length, loadWorks]);
+
+    const handleWorkUpdate = useCallback(() => {
+        loadWorks(true, true);
+    }, []);
+
+    const handleGoToBrowse = () => {
+        setActiveScreen('browse');
+    };
+
+    const formatWork = workData => {
+        const { work, library } = workData;
+        return {
+            id: work.id,
+            title: work.title,
+            author: work.author,
+            rating: work.rating,
+            category: work.category,
+            warningStatus: work.warningStatus,
+            isCompleted: work.isCompleted,
+            tags: work.tags,
+            warnings: work.warnings,
+            description: work.description,
+            descriptionHTML: work.descriptionHTML,
+            lastUpdated: work.updated ? new Date(work.updated).toLocaleDateString() : 'Unknown',
+            likes: work.kudos,
+            bookmarks: work.bookmarks,
+            words: work.words,
+            views: work.hits,
+            language: work.language,
+            currentChapter: work.currentChapter,
+            chapterCount: work.chapterCount,
+            dateAdded: library.dateAdded,
+            collection: library.collection,
+            readIndex: library.readIndex,
+            lastRead: library.readIndex
+                ? new Date(library.readIndex).toLocaleDateString()
+                : 'Never',
+        };
+    };
+
+    const handleSortChange = newSortType => {
+        setSortType(newSortType);
+        setShowSortModal(false);
+    };
+
+    const handleCollectionFilter = collection => {
+        setSelectedCollection(collection === selectedCollection ? null : collection);
+    };
+
+    const handleCollectionSelect = collection => {
+        setSelectedCollection(collection);
+        setShowAllCollectionsModal(false);
+    };
+
+    const getSortDisplayName = sort => {
+        switch (sort) {
+            case 'lastRead':
+                return t('screen_library_sort_selector_read');
+            case 'alphabetical':
+                return t('screen_library_sort_selector_alphabetical');
+            case 'dateAdded':
+                return t('screen_library_sort_selector_date');
+            default:
+                return t('screen_library_select_category_modal_title');
+        }
+    };
+
+    const getTopCollections = () => {
+        return collectionsWithCounts.slice(0, 3);
+    };
+
+    const hasMoreThanThreeCollections = collectionsWithCounts.length > 3;
+
+    const renderHeader = () => (
+        <View style={styles.headerContainer}>
+            <View style={styles.titleContainer}>
+                <View>
+                    <Text style={[styles.title, { color: currentTheme.textColor }]}>
+                        {t('screen_library_title')}
+                    </Text>
+                    <View style={styles.subtitleContainer}>
+                        <Text style={[styles.subtitle, { color: currentTheme.placeholderColor }]}>
+                            {totalCount <= 1
+                                ? t('screen_library_subtitle', { count: totalCount })
+                                : t('screen_library_subtitle_plural', { count: totalCount })}
+                            {selectedCollection &&
+                                t('screen_library_subtitle_collection', {
+                                    collection: selectedCollection,
+                                })}
+                            {isSearching &&
+                                t('screen_library_subtitle_match_filter', {
+                                    query: searchTerm,
+                                })}
+                        </Text>
+                    </View>
+                </View>
+                <TouchableOpacity
+                    style={[
+                        styles.sortButton,
+                        {
+                            backgroundColor: currentTheme.cardBackground,
+                            borderColor: currentTheme.borderColor,
+                        },
+                    ]}
+                    onPress={() => setShowSortModal(true)}
+                >
+                    <SortIcon color={currentTheme.textColor} size={16} />
+                    <Text style={[styles.sortButtonText, { color: currentTheme.textColor }]}>
+                        {getSortDisplayName(sortType)}
+                    </Text>
+                </TouchableOpacity>
+            </View>
+
+            {allCollections.length > 1 && (
+                <View style={styles.collectionsContainer}>
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        style={styles.collectionsScroll}
+                    >
+                        <TouchableOpacity
+                            style={[
+                                styles.collectionChip,
+                                {
+                                    backgroundColor:
+                                        selectedCollection === null
+                                            ? currentTheme.primaryColor
+                                            : currentTheme.cardBackground,
+                                },
+                                { borderColor: currentTheme.borderColor },
+                            ]}
+                            onPress={() => handleCollectionFilter(null)}
+                        >
+                            <Text
+                                style={[
+                                    styles.collectionChipText,
+                                    {
+                                        color:
+                                            selectedCollection === null
+                                                ? 'white'
+                                                : currentTheme.textColor,
+                                    },
+                                ]}
+                            >
+                                All
+                            </Text>
+                        </TouchableOpacity>
+
+                        {getTopCollections().map(collectionData => (
+                            <TouchableOpacity
+                                key={collectionData.name}
+                                style={[
+                                    styles.collectionChip,
+                                    {
+                                        backgroundColor:
+                                            selectedCollection === collectionData.name
+                                                ? currentTheme.primaryColor
+                                                : currentTheme.cardBackground,
+                                    },
+                                    { borderColor: currentTheme.borderColor },
+                                ]}
+                                onPress={() => handleCollectionFilter(collectionData.name)}
+                            >
+                                <Text
+                                    style={[
+                                        styles.collectionChipText,
+                                        {
+                                            color:
+                                                selectedCollection === collectionData.name
+                                                    ? 'white'
+                                                    : currentTheme.textColor,
+                                        },
+                                    ]}
+                                >
+                                    {collectionData.name}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+
+                        {hasMoreThanThreeCollections && (
+                            <TouchableOpacity
+                                style={[
+                                    styles.collectionChip,
+                                    { backgroundColor: currentTheme.cardBackground },
+                                    { borderColor: currentTheme.borderColor },
+                                ]}
+                                onPress={() => setShowAllCollectionsModal(true)}
+                            >
+                                <Icon name="more-horiz" size={18} color={currentTheme.textColor} />
+                            </TouchableOpacity>
+                        )}
+                    </ScrollView>
+                </View>
+            )}
+        </View>
+    );
+
+    const renderFooter = () => {
+        if (loadingMore) {
+            return (
+                <View style={styles.footerLoader}>
+                    <ActivityIndicator size="small" color={currentTheme.primaryColor} />
+                    <Text style={[styles.footerText, { color: currentTheme.secondaryTextColor }]}>
+                        {t('screen_library_loading_more')}
+                    </Text>
+                </View>
+            );
+        }
+
+        if (!hasMore && works.length > 0) {
+            return (
+                <View style={styles.footerLoader}>
+                    <Text style={[styles.footerText, { color: currentTheme.placeholderColor }]}>
+                        {t('screen_library_end')}
+                    </Text>
+                </View>
+            );
+        }
+
+        return null;
+    };
+
+    const renderEmpty = () => {
+        if (filterLoading) {
+            return (
+                <View style={styles.centerContainer}>
+                    <ActivityIndicator size="large" color={currentTheme.primaryColor} />
+                </View>
+            );
+        }
+
+        return (
+            <View style={styles.emptyContainer}>
+                <Icon name="library-books" size={64} color={currentTheme.placeholderColor} />
+                <Text style={[styles.emptyTitle, { color: currentTheme.textColor }]}>
+                    {isSearching ? t('screen_library_no_result') : t('screen_library_empty')}
+                </Text>
+                <Text style={[styles.emptyText, { color: currentTheme.secondaryTextColor }]}>
+                    {isSearching
+                        ? t('screen_library_no_result_sub', { search_term: searchTerm })
+                        : t('screen_library_empty_sub')}
+                </Text>
+                {!isSearching && (
+                    <TouchableOpacity
+                        style={[
+                            styles.addFirstButton,
+                            { backgroundColor: currentTheme.primaryColor },
+                        ]}
+                        onPress={handleGoToBrowse}
+                    >
+                        <Text style={styles.addFirstButtonText}>
+                            {t('screen_library_browse_works_button')}
+                        </Text>
+                    </TouchableOpacity>
+                )}
+            </View>
+        );
+    };
+
+    const renderItem = ({ item }) => (
+        <BookCard
+            book={formatWork(item)}
+            viewMode={viewMode}
+            theme={currentTheme}
+            onUpdate={handleWorkUpdate}
+            setScreens={setScreens}
+            screens={screens}
+            libraryDAO={libraryDAO}
+            workDAO={workDAO}
+            isInLibrary={true}
+            settingsDAO={settingsDAO}
+            historyDAO={historyDAO}
+            progressDAO={progressDAO}
+            kudoHistoryDAO={kudoHistoryDAO}
+            openTagSearch={openTagSearch}
+            jsonSettings={jsonSettings}
+            chapterDAO={chapterDAO}
+        />
+    );
+
+    const renderSortModal = () => (
+        <Modal
+            transparent={true}
+            visible={showSortModal}
+            onRequestClose={() => setShowSortModal(false)}
+        >
+            <TouchableOpacity
+                style={styles.modalOverlay}
+                activeOpacity={1}
+                onPress={() => setShowSortModal(false)}
+            >
+                <View
+                    style={[
+                        styles.sortModal,
+                        {
+                            backgroundColor: currentTheme.cardBackground,
+                            borderColor: currentTheme.borderColor,
+                        },
+                    ]}
+                >
+                    <Text style={[styles.sortModalTitle, { color: currentTheme.textColor }]}>
+                        {t('screen_library_sort_menu_title')}
+                    </Text>
+                    {[
+                        { key: 'lastRead', label: t('screen_library_sort_selector_read') },
+                        {
+                            key: 'alphabetical',
+                            label: t('screen_library_sort_selector_alphabetical'),
+                        },
+                        { key: 'dateAdded', label: t('screen_library_sort_selector_date') },
+                    ].map(option => (
+                        <TouchableOpacity
+                            key={option.key}
+                            style={[
+                                styles.sortOption,
+                                {
+                                    backgroundColor:
+                                        sortType === option.key
+                                            ? currentTheme.primaryColor + '20'
+                                            : 'transparent',
+                                },
+                            ]}
+                            onPress={() => handleSortChange(option.key)}
+                        >
+                            <Text
+                                style={[
+                                    styles.sortOptionText,
+                                    {
+                                        color:
+                                            sortType === option.key
+                                                ? currentTheme.primaryColor
+                                                : currentTheme.textColor,
+                                    },
+                                ]}
+                            >
+                                {option.label}
+                            </Text>
+                            {sortType === option.key && (
+                                <Icon name="check" size={20} color={currentTheme.primaryColor} />
+                            )}
+                        </TouchableOpacity>
+                    ))}
+                </View>
+            </TouchableOpacity>
+        </Modal>
+    );
+
+    if (loading) {
+        return (
+            <View
+                style={[styles.centerContainer, { backgroundColor: currentTheme.backgroundColor }]}
+            >
+                <ActivityIndicator size="large" color={currentTheme.primaryColor} />
+                <Text style={[styles.loadingText, { color: currentTheme.textColor }]}>
+                    {t('screen_library_loading')}
+                </Text>
+            </View>
+        );
+    }
+
+    if (error) {
+        return (
+            <View
+                style={[styles.centerContainer, { backgroundColor: currentTheme.backgroundColor }]}
+            >
+                <View
+                    style={[
+                        styles.errorContainer,
+                        {
+                            backgroundColor: currentTheme.cardBackground,
+                            borderColor: currentTheme.borderColor,
+                        },
+                    ]}
+                >
+                    <Text style={[styles.errorTitle, { color: currentTheme.textColor }]}>
+                        {t('screen_library_loading_failed')}
+                    </Text>
+                    <Text style={[styles.errorMessage, { color: currentTheme.secondaryTextColor }]}>
+                        {error.message}
+                    </Text>
+                    <TouchableOpacity
+                        style={[styles.retryButton, { backgroundColor: currentTheme.primaryColor }]}
+                        onPress={() => loadWorks(true)}
+                    >
+                        <Text style={styles.retryButtonText}>{t('general_retry')}</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        );
+    }
+
+    return (
+        <View style={{ flex: 1, backgroundColor: currentTheme.backgroundColor }}>
+            <FlatList
+                data={works}
+                renderItem={renderItem}
+                keyExtractor={item => item.work.id}
+                contentContainerStyle={styles.contentContainer}
+                ListHeaderComponent={renderHeader}
+                ListFooterComponent={renderFooter}
+                ListEmptyComponent={renderEmpty}
+                onEndReached={handleLoadMore}
+                onEndReachedThreshold={0.1}
+                initialNumToRender={10}
+                maxToRenderPerBatch={10}
+                windowSize={5}
+                maintainVisibleContentPosition={{
+                    minIndexForVisible: 0,
+                }}
+                scrollEventThrottle={0}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={handleRefresh}
+                        colors={[currentTheme.primaryColor]}
+                        tintColor={currentTheme.primaryColor}
+                    />
+                }
+            />
+
+            {renderSortModal()}
+
+            <CategorySelectionModal
+                visible={showAllCollectionsModal}
+                categories={allCollections}
+                onSelect={handleCollectionSelect}
+                onCancel={() => setShowAllCollectionsModal(false)}
+                theme={currentTheme}
+                title={t('screen_library_select_category_modal_title')}
+            />
+        </View>
+    );
 };
 
 const styles = StyleSheet.create({
-  contentContainer: {
-    padding: 16,
-    paddingBottom: 150,
-  },
-  headerContainer: {
-    marginBottom: 20,
-  },
-  titleContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  subtitleContainer: {
-    marginTop: 4,
-  },
-  subtitle: {
-    fontSize: 16,
-  },
-  sortButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    gap: 6,
-  },
-  sortButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  collectionsContainer: {
-    marginBottom: 8,
-  },
-  collectionsScroll: {
-    flexDirection: 'row',
-  },
-  collectionChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginRight: 8,
-    borderWidth: 1,
-  },
-  collectionChipText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16,
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-  },
-  errorContainer: {
-    padding: 24,
-    borderRadius: 8,
-    borderWidth: 1,
-    alignItems: 'center',
-    maxWidth: '90%',
-  },
-  errorTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  errorMessage: {
-    fontSize: 14,
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  retryButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 6,
-  },
-  retryButtonText: {
-    color: 'white',
-    fontWeight: '600',
-  },
-  emptyContainer: {
-    padding: 40,
-    alignItems: 'center',
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyText: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  addFirstButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  addFirstButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  footerLoader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 20,
-    marginBottom: 20,
-  },
-  footerText: {
-    marginLeft: 10,
-    fontSize: 14,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sortModal: {
-    width: '80%',
-    maxWidth: 300,
-    borderRadius: 12,
-    padding: 20,
-    borderWidth: 1,
-  },
-  sortModalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  sortOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  sortOptionText: {
-    fontSize: 16,
-  },
+    contentContainer: {
+        padding: 16,
+        paddingBottom: 150,
+    },
+    headerContainer: {
+        marginBottom: 20,
+    },
+    titleContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: 16,
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+    },
+    subtitleContainer: {
+        marginTop: 4,
+    },
+    subtitle: {
+        fontSize: 16,
+    },
+    sortButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 8,
+        borderWidth: 1,
+        gap: 6,
+    },
+    sortButtonText: {
+        fontSize: 14,
+        fontWeight: '500',
+    },
+    collectionsContainer: {
+        marginBottom: 8,
+    },
+    collectionsScroll: {
+        flexDirection: 'row',
+    },
+    collectionChip: {
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 20,
+        marginRight: 8,
+        borderWidth: 1,
+    },
+    collectionChipText: {
+        fontSize: 14,
+        fontWeight: '500',
+    },
+    centerContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 16,
+    },
+    loadingText: {
+        marginTop: 16,
+        fontSize: 16,
+    },
+    errorContainer: {
+        padding: 24,
+        borderRadius: 8,
+        borderWidth: 1,
+        alignItems: 'center',
+        maxWidth: '90%',
+    },
+    errorTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 8,
+    },
+    errorMessage: {
+        fontSize: 14,
+        textAlign: 'center',
+        marginBottom: 16,
+    },
+    retryButton: {
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        borderRadius: 6,
+    },
+    retryButtonText: {
+        color: 'white',
+        fontWeight: '600',
+    },
+    emptyContainer: {
+        padding: 40,
+        alignItems: 'center',
+    },
+    emptyTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginTop: 16,
+        marginBottom: 8,
+    },
+    emptyText: {
+        fontSize: 16,
+        textAlign: 'center',
+        marginBottom: 24,
+    },
+    addFirstButton: {
+        paddingHorizontal: 24,
+        paddingVertical: 12,
+        borderRadius: 8,
+    },
+    addFirstButtonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    footerLoader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 20,
+        marginBottom: 20,
+    },
+    footerText: {
+        marginLeft: 10,
+        fontSize: 14,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    sortModal: {
+        width: '80%',
+        maxWidth: 300,
+        borderRadius: 12,
+        padding: 20,
+        borderWidth: 1,
+    },
+    sortModalTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 16,
+        textAlign: 'center',
+    },
+    sortOption: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderRadius: 8,
+        marginBottom: 8,
+    },
+    sortOptionText: {
+        fontSize: 16,
+    },
 });
 
 export default LibraryScreen;

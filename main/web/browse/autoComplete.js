@@ -18,7 +18,7 @@ export const fetchAutocompleteSuggestions = async (type, term) => {
         const response = await fetch(url, {
             method: 'GET',
             headers: {
-                'Accept': 'application/json',
+                Accept: 'application/json',
                 'Content-Type': 'application/json',
             },
         });
@@ -41,7 +41,7 @@ export const fetchAutocompleteSuggestions = async (type, term) => {
  * @param {string} term - Character name to search for
  * @returns {Promise<Array>} Array of character suggestions
  */
-export const fetchCharacterSuggestions = (term) => {
+export const fetchCharacterSuggestions = term => {
     return fetchAutocompleteSuggestions('character', term);
 };
 
@@ -50,7 +50,7 @@ export const fetchCharacterSuggestions = (term) => {
  * @param {string} term - Relationship to search for
  * @returns {Promise<Array>} Array of relationship suggestions
  */
-export const fetchRelationshipSuggestions = (term) => {
+export const fetchRelationshipSuggestions = term => {
     return fetchAutocompleteSuggestions('relationship', term);
 };
 
@@ -59,7 +59,7 @@ export const fetchRelationshipSuggestions = (term) => {
  * @param {string} term - Tag to search for
  * @returns {Promise<Array>} Array of freeform tag suggestions
  */
-export const fetchFreeformSuggestions = (term) => {
+export const fetchFreeformSuggestions = term => {
     return fetchAutocompleteSuggestions('freeform', term);
 };
 
@@ -68,7 +68,7 @@ export const fetchFreeformSuggestions = (term) => {
  * @param {string} term - Fandom to search for
  * @returns {Promise<Array>} Array of fandom suggestions
  */
-export const fetchFandomSuggestions = (term) => {
+export const fetchFandomSuggestions = term => {
     return fetchAutocompleteSuggestions('fandom', term);
 };
 
@@ -91,7 +91,7 @@ export const debounce = (func, delay) => {
  * @param {string} input - User input string
  * @returns {Object} Object with fullInput and lastTerm
  */
-export const parseInputForAutocomplete = (input) => {
+export const parseInputForAutocomplete = input => {
     const trimmed = input.trim();
     const lastCommaIndex = trimmed.lastIndexOf(',');
 
@@ -99,7 +99,7 @@ export const parseInputForAutocomplete = (input) => {
         return {
             fullInput: trimmed,
             lastTerm: trimmed,
-            prefix: ''
+            prefix: '',
         };
     }
 
@@ -109,7 +109,7 @@ export const parseInputForAutocomplete = (input) => {
     return {
         fullInput: trimmed,
         lastTerm,
-        prefix: prefix ? prefix + ' ' : ''
+        prefix: prefix ? prefix + ' ' : '',
     };
 };
 
@@ -132,5 +132,5 @@ export default {
     fetchAutocompleteSuggestions,
     debounce,
     parseInputForAutocomplete,
-    replaceLastTerm
+    replaceLastTerm,
 };

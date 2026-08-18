@@ -1,598 +1,719 @@
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import SmallBookCard from '../components/common/SmallBookCard';
+import { searchJsonPreset } from '../storage/jsonSearches';
 import autoComplete from '../web/browse/autoComplete';
 import { fetchFilteredWorks } from '../web/browse/fetchWorks';
-import SmallBookCard from '../components/common/SmallBookCard';
-import Toast from 'react-native-toast-message';
-import { searchJsonPreset } from '../storage/jsonSearches';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useTranslation } from 'react-i18next';
-import { useNavigation } from '@react-navigation/native';
 
 const SECTION_META = {
-  categories: { icon: 'bookmark-box-multiple-outline' },
-  presets: { icon: 'layers-search' },
-  library: { icon: 'bookmark-outline' },
-  works: { icon: 'book-outline' },
-  all_tags: { icon: 'tag-outline' },
-  fandoms: { icon: 'television-play' },
-  relationships: { icon: 'heart-outline' },
-  characters: { icon: 'account-outline' },
-  freeform: { icon: 'text-box-outline' },
+    categories: { icon: 'bookmark-box-multiple-outline' },
+    presets: { icon: 'layers-search' },
+    library: { icon: 'bookmark-outline' },
+    works: { icon: 'book-outline' },
+    all_tags: { icon: 'tag-outline' },
+    fandoms: { icon: 'television-play' },
+    relationships: { icon: 'heart-outline' },
+    characters: { icon: 'account-outline' },
+    freeform: { icon: 'text-box-outline' },
 };
 
 function SearchItem({ value, onPress, currentTheme }) {
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      style={[
-        styles.item,
-        {
-          backgroundColor: currentTheme.inputBackground,
-          borderColor: currentTheme.borderColor,
-        },
-      ]}
-      activeOpacity={0.7}
-    >
-      <Icon
-        name="pound"
-        size={13}
-        color={currentTheme.primaryColor}
-        style={styles.itemIcon}
-      />
-      <Text
-        style={[styles.itemText, { color: currentTheme.textColor }]}
-        numberOfLines={1}
-      >
-        {value.name}
-      </Text>
-      <Icon
-        name="chevron-right"
-        size={16}
-        color={currentTheme.iconColor}
-      />
-    </TouchableOpacity>
-  );
+    return (
+        <TouchableOpacity
+            onPress={onPress}
+            style={[
+                styles.item,
+                {
+                    backgroundColor: currentTheme.inputBackground,
+                    borderColor: currentTheme.borderColor,
+                },
+            ]}
+            activeOpacity={0.7}
+        >
+            <Icon
+                name="pound"
+                size={13}
+                color={currentTheme.primaryColor}
+                style={styles.itemIcon}
+            />
+            <Text style={[styles.itemText, { color: currentTheme.textColor }]} numberOfLines={1}>
+                {value.name}
+            </Text>
+            <Icon name="chevron-right" size={16} color={currentTheme.iconColor} />
+        </TouchableOpacity>
+    );
 }
 
 function PresetItem({ value, onPress, currentTheme }) {
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      style={[
-        styles.item,
-        {
-          backgroundColor: currentTheme.inputBackground,
-          borderColor: currentTheme.borderColor,
-        },
-      ]}
-      activeOpacity={0.7}
-    >
-      <Icon
-        name="layers-search"
-        size={13}
-        color={currentTheme.primaryColor}
-        style={styles.itemIcon}
-      />
-      <Text
-        style={[styles.itemText, { color: currentTheme.textColor }]}
-        numberOfLines={1}
-      >
-        {value.name}
-      </Text>
-      <Icon
-        name="chevron-right"
-        size={16}
-        color={currentTheme.iconColor}
-      />
-    </TouchableOpacity>
-  );
+    return (
+        <TouchableOpacity
+            onPress={onPress}
+            style={[
+                styles.item,
+                {
+                    backgroundColor: currentTheme.inputBackground,
+                    borderColor: currentTheme.borderColor,
+                },
+            ]}
+            activeOpacity={0.7}
+        >
+            <Icon
+                name="layers-search"
+                size={13}
+                color={currentTheme.primaryColor}
+                style={styles.itemIcon}
+            />
+            <Text style={[styles.itemText, { color: currentTheme.textColor }]} numberOfLines={1}>
+                {value.name}
+            </Text>
+            <Icon name="chevron-right" size={16} color={currentTheme.iconColor} />
+        </TouchableOpacity>
+    );
 }
 
 function CategoryItem({ value, onPress, currentTheme }) {
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      style={[
-        styles.item,
-        {
-          backgroundColor: currentTheme.inputBackground,
-          borderColor: currentTheme.borderColor,
-        },
-      ]}
-      activeOpacity={0.7}
-    >
-      <Icon
-        name="bookmark"
-        size={13}
-        color={currentTheme.primaryColor}
-        style={styles.itemIcon}
-      />
-      <Text
-        style={[styles.itemText, { color: currentTheme.textColor }]}
-        numberOfLines={1}
-      >
-        {value}
-      </Text>
-      <Icon
-        name="chevron-right"
-        size={16}
-        color={currentTheme.iconColor}
-      />
-    </TouchableOpacity>
-  );
+    return (
+        <TouchableOpacity
+            onPress={onPress}
+            style={[
+                styles.item,
+                {
+                    backgroundColor: currentTheme.inputBackground,
+                    borderColor: currentTheme.borderColor,
+                },
+            ]}
+            activeOpacity={0.7}
+        >
+            <Icon
+                name="bookmark"
+                size={13}
+                color={currentTheme.primaryColor}
+                style={styles.itemIcon}
+            />
+            <Text style={[styles.itemText, { color: currentTheme.textColor }]} numberOfLines={1}>
+                {value}
+            </Text>
+            <Icon name="chevron-right" size={16} color={currentTheme.iconColor} />
+        </TouchableOpacity>
+    );
 }
 
 function SectionHeader({ sectionKey, title, count, currentTheme }) {
-  const meta = SECTION_META[sectionKey] ?? { icon: 'magnify' };
-  return (
-    <View style={styles.sectionHeader}>
-      <View style={[styles.sectionIconWrap, { backgroundColor: currentTheme.tagBackground }]}>
-        <Icon name={meta.icon} size={15} color={currentTheme.primaryColor} />
-      </View>
-      <Text style={[styles.sectionTitle, { color: currentTheme.textColor }]}>
-        {title}
-      </Text>
-      {count > 0 && (
-        <View style={[styles.countBadge, { backgroundColor: currentTheme.tagBackground }]}>
-          <Text style={[styles.countText, { color: currentTheme.primaryColor }]}>
-            {Math.min(count, 5)}
-          </Text>
+    const meta = SECTION_META[sectionKey] ?? { icon: 'magnify' };
+    return (
+        <View style={styles.sectionHeader}>
+            <View style={[styles.sectionIconWrap, { backgroundColor: currentTheme.tagBackground }]}>
+                <Icon name={meta.icon} size={15} color={currentTheme.primaryColor} />
+            </View>
+            <Text style={[styles.sectionTitle, { color: currentTheme.textColor }]}>{title}</Text>
+            {count > 0 && (
+                <View style={[styles.countBadge, { backgroundColor: currentTheme.tagBackground }]}>
+                    <Text style={[styles.countText, { color: currentTheme.primaryColor }]}>
+                        {Math.min(count, 5)}
+                    </Text>
+                </View>
+            )}
         </View>
-      )}
-    </View>
-  );
+    );
 }
 
-function WorksList({ sectionKey, title, values, currentTheme, libraryDAO, workDAO, setScreens, settingsDAO, historyDAO, progressDAO, kudoHistoryDAO, chapterDAO}) {
-  if (!values || values?.length === 0) return null;
+function WorksList({
+    sectionKey,
+    title,
+    values,
+    currentTheme,
+    libraryDAO,
+    workDAO,
+    setScreens,
+    settingsDAO,
+    historyDAO,
+    progressDAO,
+    kudoHistoryDAO,
+    chapterDAO,
+}) {
+    if (!values || values?.length === 0) return null;
 
-  const navigation = useNavigation();
+    const navigation = useNavigation();
 
-  return (
-    <View style={styles.section}>
-      <SectionHeader sectionKey={sectionKey} title={title} count={values.length} currentTheme={currentTheme} />
-      <View style={[styles.itemsCard, { borderColor: currentTheme.borderColor }]}>
-        {values.slice(0, 5).map((v, i) => (
-          <View key={i}>
-            <SmallBookCard
-              work={v}
-              theme={currentTheme}
-              onPress={() => {
-                navigation.push("Work", {
-                  workId: v.id,
-                  currentTheme: currentTheme,
-                  settingsDAO: settingsDAO,
-                  workDAO: workDAO,
-                  libraryDAO: libraryDAO,
-                  setScreens: setScreens,
-                  historyDAO: historyDAO,
-                  progressDAO: progressDAO,
-                  kudoHistoryDAO: kudoHistoryDAO,
-                  chapterDAO: chapterDAO,
-                })
-              }}
+    return (
+        <View style={styles.section}>
+            <SectionHeader
+                sectionKey={sectionKey}
+                title={title}
+                count={values.length}
+                currentTheme={currentTheme}
             />
-            {i < Math.min(values.length, 5) - 1 && (
-              <View style={[styles.divider, { backgroundColor: currentTheme.borderColor }]} />
-            )}
-          </View>
-        ))}
-      </View>
-    </View>
-  );
+            <View style={[styles.itemsCard, { borderColor: currentTheme.borderColor }]}>
+                {values.slice(0, 5).map((v, i) => (
+                    <View key={i}>
+                        <SmallBookCard
+                            work={v}
+                            theme={currentTheme}
+                            onPress={() => {
+                                navigation.push('Work', {
+                                    workId: v.id,
+                                    currentTheme: currentTheme,
+                                    settingsDAO: settingsDAO,
+                                    workDAO: workDAO,
+                                    libraryDAO: libraryDAO,
+                                    setScreens: setScreens,
+                                    historyDAO: historyDAO,
+                                    progressDAO: progressDAO,
+                                    kudoHistoryDAO: kudoHistoryDAO,
+                                    chapterDAO: chapterDAO,
+                                });
+                            }}
+                        />
+                        {i < Math.min(values.length, 5) - 1 && (
+                            <View
+                                style={[
+                                    styles.divider,
+                                    { backgroundColor: currentTheme.borderColor },
+                                ]}
+                            />
+                        )}
+                    </View>
+                ))}
+            </View>
+        </View>
+    );
 }
 
 function ItemsList({ sectionKey, title, values, currentTheme, setScreens, openTagSearch }) {
-  if (values.length === 0) return null;
+    if (values.length === 0) return null;
 
-  return (
-    <View style={styles.section}>
-      <SectionHeader sectionKey={sectionKey} title={title} count={values.length} currentTheme={currentTheme} />
-      <View style={[styles.itemsCard, { borderColor: currentTheme.borderColor }]}>
-        {values.slice(0, 5).map((v, i) => (
-          <View key={i}>
-            <SearchItem
-              value={v}
-              currentTheme={currentTheme}
-              onPress={() => {
-                openTagSearch(v.id)
-              }}
+    return (
+        <View style={styles.section}>
+            <SectionHeader
+                sectionKey={sectionKey}
+                title={title}
+                count={values.length}
+                currentTheme={currentTheme}
             />
-            {i < Math.min(values.length, 5) - 1 && (
-              <View style={[styles.divider, { backgroundColor: currentTheme.borderColor }]} />
-            )}
-          </View>
-        ))}
-      </View>
-    </View>
-  );
+            <View style={[styles.itemsCard, { borderColor: currentTheme.borderColor }]}>
+                {values.slice(0, 5).map((v, i) => (
+                    <View key={i}>
+                        <SearchItem
+                            value={v}
+                            currentTheme={currentTheme}
+                            onPress={() => {
+                                openTagSearch(v.id);
+                            }}
+                        />
+                        {i < Math.min(values.length, 5) - 1 && (
+                            <View
+                                style={[
+                                    styles.divider,
+                                    { backgroundColor: currentTheme.borderColor },
+                                ]}
+                            />
+                        )}
+                    </View>
+                ))}
+            </View>
+        </View>
+    );
 }
 
 function CategoryList({ sectionKey, title, values, currentTheme, setActiveScreen, openCategory }) {
-  if (values.length === 0) return null;
+    if (values.length === 0) return null;
 
-  return (
-    <View style={styles.section}>
-      <SectionHeader sectionKey={sectionKey} title={title} count={values.length} currentTheme={currentTheme} />
-      <View style={[styles.itemsCard, { borderColor: currentTheme.borderColor }]}>
-        {values.slice(0, 5).map((v, i) => (
-          <View key={i}>
-            <CategoryItem
-              value={v}
-              currentTheme={currentTheme}
-              onPress={() => {
-                openCategory(v)
-                setActiveScreen("library")
-              }}
+    return (
+        <View style={styles.section}>
+            <SectionHeader
+                sectionKey={sectionKey}
+                title={title}
+                count={values.length}
+                currentTheme={currentTheme}
             />
-            {i < Math.min(values.length, 5) - 1 && (
-              <View style={[styles.divider, { backgroundColor: currentTheme.borderColor }]} />
-            )}
-          </View>
-        ))}
-      </View>
-    </View>
-  );
+            <View style={[styles.itemsCard, { borderColor: currentTheme.borderColor }]}>
+                {values.slice(0, 5).map((v, i) => (
+                    <View key={i}>
+                        <CategoryItem
+                            value={v}
+                            currentTheme={currentTheme}
+                            onPress={() => {
+                                openCategory(v);
+                                setActiveScreen('library');
+                            }}
+                        />
+                        {i < Math.min(values.length, 5) - 1 && (
+                            <View
+                                style={[
+                                    styles.divider,
+                                    { backgroundColor: currentTheme.borderColor },
+                                ]}
+                            />
+                        )}
+                    </View>
+                ))}
+            </View>
+        </View>
+    );
 }
 
 function PresetList({ sectionKey, title, values, currentTheme, setActiveScreen, openPreset }) {
-  if (values.length === 0) return null;
+    if (values.length === 0) return null;
 
-  return (
-    <View style={styles.section}>
-      <SectionHeader sectionKey={sectionKey} title={title} count={values.length} currentTheme={currentTheme} />
-      <View style={[styles.itemsCard, { borderColor: currentTheme.borderColor }]}>
-        {values.slice(0, 5).map((v, i) => (
-          <View key={i}>
-            <PresetItem
-              value={v}
-              currentTheme={currentTheme}
-              onPress={() => {
-                openPreset(v.name)
-                setActiveScreen("browse")
-              }}
+    return (
+        <View style={styles.section}>
+            <SectionHeader
+                sectionKey={sectionKey}
+                title={title}
+                count={values.length}
+                currentTheme={currentTheme}
             />
-            {i < Math.min(values.length, 5) - 1 && (
-              <View style={[styles.divider, { backgroundColor: currentTheme.borderColor }]} />
-            )}
-          </View>
-        ))}
-      </View>
-    </View>
-  );
+            <View style={[styles.itemsCard, { borderColor: currentTheme.borderColor }]}>
+                {values.slice(0, 5).map((v, i) => (
+                    <View key={i}>
+                        <PresetItem
+                            value={v}
+                            currentTheme={currentTheme}
+                            onPress={() => {
+                                openPreset(v.name);
+                                setActiveScreen('browse');
+                            }}
+                        />
+                        {i < Math.min(values.length, 5) - 1 && (
+                            <View
+                                style={[
+                                    styles.divider,
+                                    { backgroundColor: currentTheme.borderColor },
+                                ]}
+                            />
+                        )}
+                    </View>
+                ))}
+            </View>
+        </View>
+    );
 }
 
 function EmptyState({ currentTheme, t }) {
-  return (
-    <View style={styles.emptyState}>
-      <Icon name="magnify" size={48} color={currentTheme.iconColor} style={{ opacity: 0.4 }} />
-      <Text style={[styles.emptyTitle, { color: currentTheme.textColor }]}>
-        {t('global_search_start_searching')}
-      </Text>
-      <Text style={[styles.emptySubtitle, { color: currentTheme.secondaryTextColor }]}>
-        {t('global_search_search_across')}
-      </Text>
-    </View>
-  );
+    return (
+        <View style={styles.emptyState}>
+            <Icon
+                name="magnify"
+                size={48}
+                color={currentTheme.iconColor}
+                style={{ opacity: 0.4 }}
+            />
+            <Text style={[styles.emptyTitle, { color: currentTheme.textColor }]}>
+                {t('global_search_start_searching')}
+            </Text>
+            <Text style={[styles.emptySubtitle, { color: currentTheme.secondaryTextColor }]}>
+                {t('global_search_search_across')}
+            </Text>
+        </View>
+    );
 }
 
-export default function GlobalSearchScreen({ currentTheme, searchTerm, setActiveScreen, libraryDAO, setScreens, settingsDAO, workDAO, historyDAO, progressDAO, kudoHistoryDAO, chapterDAO, openTagSearch, setSelectedPreset, setSelectedCollection }) {
-  const { t } = useTranslation();
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+export default function GlobalSearchScreen({
+    currentTheme,
+    searchTerm,
+    setActiveScreen,
+    libraryDAO,
+    setScreens,
+    settingsDAO,
+    workDAO,
+    historyDAO,
+    progressDAO,
+    kudoHistoryDAO,
+    chapterDAO,
+    openTagSearch,
+    setSelectedPreset,
+    setSelectedCollection,
+}) {
+    const { t } = useTranslation();
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
 
-  const [categoriesResults, setCategoriesResults] = useState();
-  const [presetResults, setPresetResults] = useState([]);
-  const [libraryResults, setLibraryResults] = useState([]);
-  const [worksResult, setWorksResultResult] = useState([]);
-  const [tags, setTags] = useState([]);
-  const [fandoms, setFandoms] = useState([]);
-  const [ships, setShips] = useState([]);
-  const [chars, setChars] = useState([]);
-  const [freeform, setFreeform] = useState([]);
-  const [categories, setCategories] = useState([]);
+    const [categoriesResults, setCategoriesResults] = useState();
+    const [presetResults, setPresetResults] = useState([]);
+    const [libraryResults, setLibraryResults] = useState([]);
+    const [worksResult, setWorksResultResult] = useState([]);
+    const [tags, setTags] = useState([]);
+    const [fandoms, setFandoms] = useState([]);
+    const [ships, setShips] = useState([]);
+    const [chars, setChars] = useState([]);
+    const [freeform, setFreeform] = useState([]);
+    const [categories, setCategories] = useState([]);
 
-  async function loadCategories() {
-    try {
-      const res = await AsyncStorage.getItem('Categories');
-      if (res) {
-        setCategories(JSON.parse(res));
-      } else {
-        setCategories(['default']);
-      }
-    } catch (error) {
-      console.error('Error loading categories:', error);
+    async function loadCategories() {
+        try {
+            const res = await AsyncStorage.getItem('Categories');
+            if (res) {
+                setCategories(JSON.parse(res));
+            } else {
+                setCategories(['default']);
+            }
+        } catch (error) {
+            console.error('Error loading categories:', error);
+        }
     }
-  }
 
-  useEffect(() => {
-    loadCategories();
-  }, []);
+    useEffect(() => {
+        loadCategories();
+    }, []);
 
-  async function searchCategories(term) {
-    return categories.filter(s => s.toLowerCase().includes(term.toLowerCase()))
-  }
+    async function searchCategories(term) {
+        return categories.filter(s => s.toLowerCase().includes(term.toLowerCase()));
+    }
 
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            const term = searchTerm.trim();
+            setDebouncedSearchTerm(term);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const term = searchTerm.trim();
-      setDebouncedSearchTerm(term);
+            if (!term) {
+                setTags([]);
+                setFandoms([]);
+                setShips([]);
+                setChars([]);
+                setFreeform([]);
+                return;
+            }
 
-      if (!term) {
-        setTags([]); setFandoms([]); setShips([]); setChars([]); setFreeform([]);
-        return;
-      }
+            searchCategories(term).then(setCategoriesResults);
+            console.log(categories);
+            searchJsonPreset(term).then(setPresetResults);
+            libraryDAO.search(term).then(setLibraryResults);
+            fetchFilteredWorks({ 'work_search[query]': term, 'work_search[sort_column]': 'hits' })
+                .then(setWorksResultResult)
+                .catch(e =>
+                    Toast.show({
+                        type: 'error',
+                        text1: 'Error fetching works',
+                        text2: e.message,
+                        position: 'bottom',
+                        bottomOffset: 100,
+                    }),
+                );
+            autoComplete
+                .fetchAutocompleteSuggestions('tag', term)
+                .then(setTags)
+                .catch(e =>
+                    Toast.show({
+                        type: 'error',
+                        text1: 'Error fetching tags',
+                        text2: e.message,
+                        position: 'bottom',
+                        bottomOffset: 100,
+                    }),
+                );
+            autoComplete
+                .fetchFandomSuggestions(term)
+                .then(setFandoms)
+                .catch(e =>
+                    Toast.show({
+                        type: 'error',
+                        text1: 'Error fetching fandoms',
+                        text2: e.message,
+                        position: 'bottom',
+                        bottomOffset: 100,
+                    }),
+                );
+            autoComplete
+                .fetchRelationshipSuggestions(term)
+                .then(setShips)
+                .catch(e =>
+                    Toast.show({
+                        type: 'error',
+                        text1: 'Error fetching ships',
+                        text2: e.message,
+                        position: 'bottom',
+                        bottomOffset: 100,
+                    }),
+                );
+            autoComplete
+                .fetchCharacterSuggestions(term)
+                .then(setChars)
+                .catch(e =>
+                    Toast.show({
+                        type: 'error',
+                        text1: 'Error fetching characters',
+                        text2: e.message,
+                        position: 'bottom',
+                        bottomOffset: 100,
+                    }),
+                );
+            autoComplete
+                .fetchFreeformSuggestions(term)
+                .then(setFreeform)
+                .catch(e =>
+                    Toast.show({
+                        type: 'error',
+                        text1: 'Error fetching freeforms',
+                        text2: e.message,
+                        position: 'bottom',
+                        bottomOffset: 100,
+                    }),
+                );
+        }, 500);
 
-      searchCategories(term).then(setCategoriesResults)
-      console.log(categories);
-      searchJsonPreset(term).then(setPresetResults)
-      libraryDAO.search(term).then(setLibraryResults)
-      fetchFilteredWorks({"work_search[query]": term, "work_search[sort_column]": "hits"})
-        .then(setWorksResultResult)
-        .catch(e => Toast.show({ type: "error", text1: "Error fetching works", text2: e.message, position: "bottom", bottomOffset: 100 }))
-      autoComplete.fetchAutocompleteSuggestions('tag', term)
-        .then(setTags)
-        .catch(e => Toast.show({ type: "error", text1: "Error fetching tags", text2: e.message, position: "bottom", bottomOffset: 100 }));
-      autoComplete.fetchFandomSuggestions(term)
-        .then(setFandoms)
-        .catch(e => Toast.show({ type: "error", text1: "Error fetching fandoms", text2: e.message, position: "bottom", bottomOffset: 100 }));
-      autoComplete.fetchRelationshipSuggestions(term)
-        .then(setShips)
-        .catch(e => Toast.show({ type: "error", text1: "Error fetching ships", text2: e.message, position: "bottom", bottomOffset: 100 }));
-      autoComplete.fetchCharacterSuggestions(term)
-        .then(setChars)
-        .catch(e => Toast.show({ type: "error", text1: "Error fetching characters", text2: e.message, position: "bottom", bottomOffset: 100 }));
-      autoComplete.fetchFreeformSuggestions(term)
-        .then(setFreeform)
-        .catch(e => Toast.show({ type: "error", text1: "Error fetching freeforms", text2: e.message, position: "bottom", bottomOffset: 100 }));
-    }, 500);
+        return () => clearTimeout(timer);
+    }, [libraryDAO, searchTerm]);
 
-    return () => clearTimeout(timer);
-  }, [libraryDAO, searchTerm]);
+    const hasResults =
+        (worksResult?.works?.length ?? 0) > 0 ||
+        libraryResults.length > 0 ||
+        presetResults.length > 0 ||
+        tags.length > 0 ||
+        fandoms.length > 0 ||
+        ships.length > 0 ||
+        chars.length > 0 ||
+        freeform.length > 0;
 
-  const hasResults =
-    (worksResult?.works?.length ?? 0) > 0 ||
-    libraryResults.length > 0 ||
-    presetResults.length > 0 ||
-    tags.length > 0 ||
-    fandoms.length > 0 ||
-    ships.length > 0 ||
-    chars.length > 0 ||
-    freeform.length > 0;
+    return (
+        <ScrollView
+            style={{ backgroundColor: currentTheme.backgroundColor }}
+            contentContainerStyle={styles.container}
+            keyboardShouldPersistTaps="handled"
+        >
+            <TouchableOpacity
+                style={[
+                    styles.libraryRow,
+                    {
+                        backgroundColor: currentTheme.cardBackground,
+                        borderColor: currentTheme.borderColor,
+                    },
+                ]}
+                activeOpacity={0.7}
+                onPress={() => setActiveScreen('library')}
+            >
+                <View
+                    style={[
+                        styles.sectionIconWrap,
+                        { backgroundColor: currentTheme.tagBackground },
+                    ]}
+                >
+                    <Icon name="book-search-outline" size={15} color={currentTheme.primaryColor} />
+                </View>
+                <Text style={[styles.libraryText, { color: currentTheme.textColor }]}>
+                    {t('global_search_search_in_library')}
+                </Text>
+                {searchTerm ? (
+                    <Text
+                        style={[styles.libraryQuery, { color: currentTheme.secondaryTextColor }]}
+                        numberOfLines={1}
+                    >
+                        "{searchTerm.trim()}"
+                    </Text>
+                ) : null}
+                <Icon name="chevron-right" size={18} color={currentTheme.iconColor} />
+            </TouchableOpacity>
 
-  return (
-    <ScrollView
-      style={{ backgroundColor: currentTheme.backgroundColor }}
-      contentContainerStyle={styles.container}
-      keyboardShouldPersistTaps="handled"
-    >
-      <TouchableOpacity
-        style={[styles.libraryRow, { backgroundColor: currentTheme.cardBackground, borderColor: currentTheme.borderColor }]}
-        activeOpacity={0.7}
-        onPress={() => setActiveScreen("library")}
-      >
-        <View style={[styles.sectionIconWrap, { backgroundColor: currentTheme.tagBackground }]}>
-          <Icon name="book-search-outline" size={15} color={currentTheme.primaryColor} />
-        </View>
-        <Text style={[styles.libraryText, { color: currentTheme.textColor }]}>
-          {t('global_search_search_in_library')}
-        </Text>
-        {searchTerm ? (
-          <Text style={[styles.libraryQuery, { color: currentTheme.secondaryTextColor }]} numberOfLines={1}>
-            "{searchTerm.trim()}"
-          </Text>
-        ) : null}
-        <Icon name="chevron-right" size={18} color={currentTheme.iconColor} />
-      </TouchableOpacity>
+            {!debouncedSearchTerm ? (
+                <EmptyState currentTheme={currentTheme} t={t} />
+            ) : !hasResults ? (
+                <View style={styles.emptyState}>
+                    <Icon
+                        name="magnify-close"
+                        size={48}
+                        color={currentTheme.iconColor}
+                        style={{ opacity: 0.4 }}
+                    />
+                    <Text style={[styles.emptyTitle, { color: currentTheme.textColor }]}>
+                        {t('global_search_no_results')}
+                    </Text>
+                    <Text
+                        style={[styles.emptySubtitle, { color: currentTheme.secondaryTextColor }]}
+                    >
+                        {t('global_search_nothing_found', { term: debouncedSearchTerm })}
+                    </Text>
+                </View>
+            ) : (
+                <>
+                    <CategoryList
+                        sectionKey="categories"
+                        title={t('global_search_section_categories')}
+                        values={categoriesResults}
+                        currentTheme={currentTheme}
+                        setActiveScreen={setActiveScreen}
+                        openCategory={setSelectedCollection}
+                    />
+                    <PresetList
+                        sectionKey="presets"
+                        title={t('global_search_section_presets')}
+                        values={presetResults}
+                        currentTheme={currentTheme}
+                        setActiveScreen={setActiveScreen}
+                        openPreset={setSelectedPreset}
+                    />
+                    <WorksList
+                        sectionKey="library"
+                        title={t('global_search_section_library')}
+                        values={libraryResults.map(r => r.work)}
+                        currentTheme={currentTheme}
+                        settingsDAO={settingsDAO}
+                        workDAO={workDAO}
+                        libraryDAO={libraryDAO}
+                        setScreens={setScreens}
+                        historyDAO={historyDAO}
+                        progressDAO={progressDAO}
+                        kudoHistoryDAO={kudoHistoryDAO}
+                        chapterDAO={chapterDAO}
+                    />
+                    <WorksList
+                        sectionKey="works"
+                        title={t('global_search_section_works')}
+                        values={worksResult?.works}
+                        currentTheme={currentTheme}
+                        settingsDAO={settingsDAO}
+                        workDAO={workDAO}
+                        libraryDAO={libraryDAO}
+                        setScreens={setScreens}
+                        historyDAO={historyDAO}
+                        progressDAO={progressDAO}
+                        kudoHistoryDAO={kudoHistoryDAO}
+                        chapterDAO={chapterDAO}
+                    />
+                    <ItemsList
+                        sectionKey="all_tags"
+                        title={t('global_search_section_all_tags')}
+                        values={tags}
+                        currentTheme={currentTheme}
+                        openTagSearch={openTagSearch}
+                    />
+                    <ItemsList
+                        sectionKey="fandoms"
+                        title={t('global_search_section_fandoms')}
+                        values={fandoms}
+                        currentTheme={currentTheme}
+                        openTagSearch={openTagSearch}
+                    />
+                    <ItemsList
+                        sectionKey="relationships"
+                        title={t('global_search_section_relationships')}
+                        values={ships}
+                        currentTheme={currentTheme}
+                        openTagSearch={openTagSearch}
+                    />
+                    <ItemsList
+                        sectionKey="characters"
+                        title={t('global_search_section_characters')}
+                        values={chars}
+                        currentTheme={currentTheme}
+                        openTagSearch={openTagSearch}
+                    />
+                    <ItemsList
+                        sectionKey="freeform"
+                        title={t('global_search_section_freeform')}
+                        values={freeform}
+                        currentTheme={currentTheme}
+                        openTagSearch={openTagSearch}
+                    />
 
-      {!debouncedSearchTerm ? (
-        <EmptyState currentTheme={currentTheme} t={t} />
-      ) : !hasResults ? (
-        <View style={styles.emptyState}>
-          <Icon name="magnify-close" size={48} color={currentTheme.iconColor} style={{ opacity: 0.4 }} />
-          <Text style={[styles.emptyTitle, { color: currentTheme.textColor }]}>
-            {t('global_search_no_results')}
-          </Text>
-          <Text style={[styles.emptySubtitle, { color: currentTheme.secondaryTextColor }]}>
-            {t('global_search_nothing_found', { term: debouncedSearchTerm })}
-          </Text>
-        </View>
-      ) : (
-        <>
-          <CategoryList
-            sectionKey="categories"
-            title={t('global_search_section_categories')}
-            values={categoriesResults}
-            currentTheme={currentTheme}
-            setActiveScreen={setActiveScreen}
-            openCategory={setSelectedCollection}
-          />
-          <PresetList
-            sectionKey="presets"
-            title={t('global_search_section_presets')}
-            values={presetResults}
-            currentTheme={currentTheme}
-            setActiveScreen={setActiveScreen}
-            openPreset={setSelectedPreset}
-          />
-          <WorksList
-            sectionKey="library"
-            title={t('global_search_section_library')}
-            values={libraryResults.map(r => r.work)}
-            currentTheme={currentTheme}
-            settingsDAO={settingsDAO}
-            workDAO={workDAO}
-            libraryDAO={libraryDAO}
-            setScreens={setScreens}
-            historyDAO={historyDAO}
-            progressDAO={progressDAO}
-            kudoHistoryDAO={kudoHistoryDAO}
-            chapterDAO={chapterDAO}
-          />
-          <WorksList
-            sectionKey="works"
-            title={t('global_search_section_works')}
-            values={worksResult?.works}
-            currentTheme={currentTheme}
-            settingsDAO={settingsDAO}
-            workDAO={workDAO}
-            libraryDAO={libraryDAO}
-            setScreens={setScreens}
-            historyDAO={historyDAO}
-            progressDAO={progressDAO}
-            kudoHistoryDAO={kudoHistoryDAO}
-            chapterDAO={chapterDAO}
-          />
-          <ItemsList
-            sectionKey="all_tags"
-            title={t('global_search_section_all_tags')}
-            values={tags}
-            currentTheme={currentTheme}
-            openTagSearch={openTagSearch}
-          />
-          <ItemsList
-            sectionKey="fandoms"
-            title={t('global_search_section_fandoms')}
-            values={fandoms}
-            currentTheme={currentTheme}
-            openTagSearch={openTagSearch}
-          />
-          <ItemsList
-            sectionKey="relationships"
-            title={t('global_search_section_relationships')}
-            values={ships}
-            currentTheme={currentTheme}
-            openTagSearch={openTagSearch}
-          />
-          <ItemsList
-            sectionKey="characters"
-            title={t('global_search_section_characters')}
-            values={chars}
-            currentTheme={currentTheme}
-            openTagSearch={openTagSearch}
-          />
-          <ItemsList
-            sectionKey="freeform"
-            title={t('global_search_section_freeform')}
-            values={freeform}
-            currentTheme={currentTheme}
-            openTagSearch={openTagSearch}
-          />
-
-          <Text style={{color: currentTheme.placeholderColor}}>
-            {t('global_search_end')}
-          </Text>
-        </>
-      )}
-    </ScrollView>
-  );
+                    <Text style={{ color: currentTheme.placeholderColor }}>
+                        {t('global_search_end')}
+                    </Text>
+                </>
+            )}
+        </ScrollView>
+    );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-    paddingBottom: 40,
-  },
+    container: {
+        padding: 16,
+        paddingBottom: 40,
+    },
 
-  libraryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    marginBottom: 20,
-  },
-  libraryText: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  libraryQuery: {
-    fontSize: 13,
-    maxWidth: 120,
-  },
+    libraryRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        padding: 12,
+        borderRadius: 12,
+        borderWidth: 1,
+        marginBottom: 20,
+    },
+    libraryText: {
+        flex: 1,
+        fontSize: 15,
+        fontWeight: '500',
+    },
+    libraryQuery: {
+        fontSize: 13,
+        maxWidth: 120,
+    },
 
-  section: {
-    marginBottom: 20,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-    gap: 8,
-  },
-  sectionIconWrap: {
-    width: 26,
-    height: 26,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sectionTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    flex: 1,
-    letterSpacing: 0.1,
-  },
-  countBadge: {
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 10,
-  },
-  countText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
+    section: {
+        marginBottom: 20,
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 8,
+        gap: 8,
+    },
+    sectionIconWrap: {
+        width: 26,
+        height: 26,
+        borderRadius: 6,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    sectionTitle: {
+        fontSize: 15,
+        fontWeight: '600',
+        flex: 1,
+        letterSpacing: 0.1,
+    },
+    countBadge: {
+        paddingHorizontal: 7,
+        paddingVertical: 2,
+        borderRadius: 10,
+    },
+    countText: {
+        fontSize: 12,
+        fontWeight: '600',
+    },
 
-  itemsCard: {
-    borderRadius: 12,
-    borderWidth: 1,
-    overflow: 'hidden',
-  },
+    itemsCard: {
+        borderRadius: 12,
+        borderWidth: 1,
+        overflow: 'hidden',
+    },
 
-  item: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-    gap: 8,
-  },
-  itemIcon: {
-    marginTop: 1,
-  },
-  itemText: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '400',
-  },
-  divider: {
-    height: 1,
-  },
+    item: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 14,
+        paddingVertical: 11,
+        gap: 8,
+    },
+    itemIcon: {
+        marginTop: 1,
+    },
+    itemText: {
+        flex: 1,
+        fontSize: 14,
+        fontWeight: '400',
+    },
+    divider: {
+        height: 1,
+    },
 
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 80,
-    gap: 10,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginTop: 8,
-  },
-  emptySubtitle: {
-    fontSize: 14,
-    textAlign: 'center',
-    maxWidth: 260,
-    lineHeight: 20,
-  },
+    emptyState: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingTop: 80,
+        gap: 10,
+    },
+    emptyTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        marginTop: 8,
+    },
+    emptySubtitle: {
+        fontSize: 14,
+        textAlign: 'center',
+        maxWidth: 260,
+        lineHeight: 20,
+    },
 });

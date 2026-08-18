@@ -1,61 +1,51 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { StackActions, useNavigation } from '@react-navigation/native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
-  ActivityIndicator,
-  DeviceEventEmitter,
-  FlatList,
-  Linking,
-  Modal,
-  Pressable,
-  RefreshControl,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    DeviceEventEmitter,
+    FlatList,
+    Linking,
+    Modal,
+    Pressable,
+    RefreshControl,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
+import RNFS from 'react-native-fs';
+import InAppBrowser from 'react-native-inappbrowser-reborn';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import BookDetailsModal from '../components/Library/BookDetailsModal';
-import { fetchWorkFromWorkID } from '../web/worksScreen/fetchWork';
-import { fetchChapterWithTheme } from '../web/worksScreen/fetchChapter';
-import ChapterReader from './chapterReader';
-import {
-  navigateToNextChapter,
-  navigateToPreviousChapter,
-} from '../utils/ChapterNavigationHelpers';
-import sendKudo from '../web/other/kudoRequest';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import CategorySelectionModal from '../components/WorkScreen/CategorySelectionModal';
-import { markForLater } from '../web/other/markedLater';
-import Toast from 'react-native-toast-message';
-import { bookmark } from '../web/other/bookmarks';
+import { WorkDescription } from '../components/WorkScreen/DescriptionComponent';
+import { deleteDownloaded, isDownloaded } from '../downloads/Downloader';
+import { processQueue } from '../downloads/DownloadManager';
+import { addToDownloadQueue, getDownloadQueue } from '../downloads/DownloadQueue';
 import { normalizeWorkData } from '../storage/dao/WorkDAO';
 import { getJsonSettings } from '../storage/jsonSettings';
-import { processQueue } from '../downloads/DownloadManager';
 import {
-  addToDownloadQueue,
-  getDownloadQueue,
-} from '../downloads/DownloadQueue';
-import { deleteDownloaded, isDownloaded } from '../downloads/Downloader';
-import { WorkDescription } from '../components/WorkScreen/DescriptionComponent';
-import RNFS from 'react-native-fs';
-import { useTranslation } from 'react-i18next';
-import { StackActions, useNavigation } from '@react-navigation/native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import InAppBrowser from 'react-native-inappbrowser-reborn';
+    navigateToNextChapter,
+    navigateToPreviousChapter,
+} from '../utils/ChapterNavigationHelpers';
+import { bookmark } from '../web/other/bookmarks';
+import sendKudo from '../web/other/kudoRequest';
+import { markForLater } from '../web/other/markedLater';
+import { fetchChapterWithTheme } from '../web/worksScreen/fetchChapter';
+import { fetchWorkFromWorkID } from '../web/worksScreen/fetchWork';
+import ChapterReader from './chapterReader';
 
 const NATIVE_DOWNLOAD_FORMATS = ['azw3', 'epub', 'mobi', 'pdf', 'html'];
 
 const ITEM_HEIGHT_COMPACT = 56;
 const ITEM_HEIGHT_EXPANDED = 72;
 
-const ChapterItem = React.memo(
-  ({ chapter, index, currentTheme, onPress, showDate }) => {
+const ChapterItem = React.memo(({ chapter, index, currentTheme, onPress, showDate }) => {
     const { t } = useTranslation();
     const [isInQueue, setIsInQueue] = useState(false);
     const [hasFailed, setHasFailed] = useState(false);
@@ -63,2027 +53,1818 @@ const ChapterItem = React.memo(
     const [showDelete, setShowDelete] = useState(false);
     const isMounted = useRef(true);
 
-    const hasProgress =
-      chapter.progress !== undefined && chapter.progress !== null;
+    const hasProgress = chapter.progress !== undefined && chapter.progress !== null;
     const isRead = hasProgress && chapter.progress >= 0.98;
 
     const dateText = chapter.date || '';
-    const progressText = hasProgress
-      ? `${(chapter.progress * 100).toFixed(0)}%`
-      : '';
+    const progressText = hasProgress ? `${(chapter.progress * 100).toFixed(0)}%` : '';
 
     const subtitleParts = [];
     if (dateText) {
-      const date = new Date(parseInt(dateText, 10));
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      const year = date.getFullYear();
-      subtitleParts.push(`${month}/${day}/${year}`);
+        const date = new Date(parseInt(dateText, 10));
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const year = date.getFullYear();
+        subtitleParts.push(`${month}/${day}/${year}`);
     }
     if (showDate && hasProgress) subtitleParts.push(progressText);
     const subtitleToRender = subtitleParts.join(' | ');
 
     useEffect(() => {
-      isMounted.current = true;
-      const checkStatus = async () => {
-        if (!chapter.workId || !chapter.id) return;
-        const queue = await getDownloadQueue();
-        const failedJson = await AsyncStorage.getItem('failedDownloads');
-        const failedList = failedJson ? JSON.parse(failedJson) : [];
-        const exists = await isDownloaded(chapter.workId, chapter.id);
+        isMounted.current = true;
+        const checkStatus = async () => {
+            if (!chapter.workId || !chapter.id) return;
+            const queue = await getDownloadQueue();
+            const failedJson = await AsyncStorage.getItem('failedDownloads');
+            const failedList = failedJson ? JSON.parse(failedJson) : [];
+            const exists = await isDownloaded(chapter.workId, chapter.id);
 
-        if (isMounted.current) {
-          setIsInQueue(
-            queue.some(q => String(q.chapterId) === String(chapter.id)),
-          );
-          setHasFailed(
-            failedList.some(f => String(f.chapterId) === String(chapter.id)),
-          );
-          setIsDownloadedFile(exists);
-        }
-      };
-      checkStatus();
+            if (isMounted.current) {
+                setIsInQueue(queue.some(q => String(q.chapterId) === String(chapter.id)));
+                setHasFailed(failedList.some(f => String(f.chapterId) === String(chapter.id)));
+                setIsDownloadedFile(exists);
+            }
+        };
+        checkStatus();
 
-      const qSub = DeviceEventEmitter.addListener('queue_updated', q => {
-        if (isMounted.current) {
-          setIsInQueue(
-            q.some(item => String(item.chapterId) === String(chapter.id)),
-          );
-        }
-      });
+        const qSub = DeviceEventEmitter.addListener('queue_updated', q => {
+            if (isMounted.current) {
+                setIsInQueue(q.some(item => String(item.chapterId) === String(chapter.id)));
+            }
+        });
 
-      const fSub = DeviceEventEmitter.addListener('failures_updated', f => {
-        if (isMounted.current) {
-          setHasFailed(
-            f.some(item => String(item.chapterId) === String(chapter.id)),
-          );
-        }
-      });
+        const fSub = DeviceEventEmitter.addListener('failures_updated', f => {
+            if (isMounted.current) {
+                setHasFailed(f.some(item => String(item.chapterId) === String(chapter.id)));
+            }
+        });
 
-      const cSub = DeviceEventEmitter.addListener(
-        'download_completed',
-        data => {
-          if (
-            isMounted.current &&
-            String(data.chapterId) === String(chapter.id)
-          ) {
-            setIsInQueue(false);
-            setIsDownloadedFile(data.success);
-            if (!data.success) setHasFailed(true);
-          }
-        },
-      );
+        const cSub = DeviceEventEmitter.addListener('download_completed', data => {
+            if (isMounted.current && String(data.chapterId) === String(chapter.id)) {
+                setIsInQueue(false);
+                setIsDownloadedFile(data.success);
+                if (!data.success) setHasFailed(true);
+            }
+        });
 
-      const rSub = DeviceEventEmitter.addListener('chapter_deleted', data => {
-        if (
-          isMounted.current &&
-          String(data.chapterId) === String(chapter.id)
-        ) {
-          setIsInQueue(false);
-          setIsDownloadedFile(!data.success);
-          if (!data.success) setHasFailed(true);
-        }
-      });
+        const rSub = DeviceEventEmitter.addListener('chapter_deleted', data => {
+            if (isMounted.current && String(data.chapterId) === String(chapter.id)) {
+                setIsInQueue(false);
+                setIsDownloadedFile(!data.success);
+                if (!data.success) setHasFailed(true);
+            }
+        });
 
-      return () => {
-        isMounted.current = false;
-        qSub.remove();
-        fSub.remove();
-        cSub.remove();
-        rSub.remove();
-      };
+        return () => {
+            isMounted.current = false;
+            qSub.remove();
+            fSub.remove();
+            cSub.remove();
+            rSub.remove();
+        };
     }, [chapter.id, chapter.workId]);
 
     const handleDownloadPress = async () => {
-      if (isInQueue) return;
-      if (isDownloadedFile) {
-        if (showDelete) {
-          try {
-            setIsInQueue(true);
-            await deleteDownloaded(chapter.workId, chapter.id);
-            setIsDownloadedFile(false);
-            setShowDelete(false);
-          } catch (error) {
-            Toast.show({
-              type: 'error',
-              text1: t('screen_work_toast_error_deleting'),
-              text2: error.message,
-            });
-          } finally {
-            if (isMounted.current) setIsInQueue(false);
-          }
-        } else {
-          setShowDelete(true);
-          setTimeout(() => {
-            if (isMounted.current) setShowDelete(false);
-          }, 3000);
+        if (isInQueue) return;
+        if (isDownloadedFile) {
+            if (showDelete) {
+                try {
+                    setIsInQueue(true);
+                    await deleteDownloaded(chapter.workId, chapter.id);
+                    setIsDownloadedFile(false);
+                    setShowDelete(false);
+                } catch (error) {
+                    Toast.show({
+                        type: 'error',
+                        text1: t('screen_work_toast_error_deleting'),
+                        text2: error.message,
+                    });
+                } finally {
+                    if (isMounted.current) setIsInQueue(false);
+                }
+            } else {
+                setShowDelete(true);
+                setTimeout(() => {
+                    if (isMounted.current) setShowDelete(false);
+                }, 3000);
+            }
+            return;
         }
-        return;
-      }
 
-      if (hasFailed) {
-        const failedJson = await AsyncStorage.getItem('failedDownloads');
-        const failedList = failedJson ? JSON.parse(failedJson) : [];
-        const newList = failedList.filter(
-          f => String(f.chapterId) !== String(chapter.id),
-        );
-        await AsyncStorage.setItem('failedDownloads', JSON.stringify(newList));
-        setHasFailed(false);
-        DeviceEventEmitter.emit('failures_updated', newList);
-      }
+        if (hasFailed) {
+            const failedJson = await AsyncStorage.getItem('failedDownloads');
+            const failedList = failedJson ? JSON.parse(failedJson) : [];
+            const newList = failedList.filter(f => String(f.chapterId) !== String(chapter.id));
+            await AsyncStorage.setItem('failedDownloads', JSON.stringify(newList));
+            setHasFailed(false);
+            DeviceEventEmitter.emit('failures_updated', newList);
+        }
 
-      setIsInQueue(true);
-      await addToDownloadQueue({
-        workId: chapter.workId,
-        chapterId: chapter.id,
-      });
-      processQueue();
+        setIsInQueue(true);
+        await addToDownloadQueue({
+            workId: chapter.workId,
+            chapterId: chapter.id,
+        });
+        processQueue();
     };
 
     const renderDownloadIcon = () => {
-      if (isInQueue)
-        return (
-          <ActivityIndicator size="small" color={currentTheme.primaryColor} />
-        );
-      if (isDownloadedFile && showDelete)
-        return (
-          <Icon
-            name="delete"
-            size={24}
-            color={currentTheme.warningBackground}
-          />
-        );
-      if (isDownloadedFile)
-        return (
-          <Icon
-            name="check-circle"
-            size={24}
-            color={currentTheme.primaryColor}
-          />
-        );
-      if (hasFailed)
-        return <Icon name="error-outline" size={24} color="#ef4444" />;
-      return (
-        <Icon
-          name="download"
-          size={24}
-          color={currentTheme.secondaryTextColor}
-        />
-      );
+        if (isInQueue) return <ActivityIndicator size="small" color={currentTheme.primaryColor} />;
+        if (isDownloadedFile && showDelete)
+            return <Icon name="delete" size={24} color={currentTheme.warningBackground} />;
+        if (isDownloadedFile)
+            return <Icon name="check-circle" size={24} color={currentTheme.primaryColor} />;
+        if (hasFailed) return <Icon name="error-outline" size={24} color="#ef4444" />;
+        return <Icon name="download" size={24} color={currentTheme.secondaryTextColor} />;
     };
 
     return (
-      <TouchableOpacity
-        style={[
-          styles.chapterItem,
-          {
-            borderBottomColor: currentTheme.inputBackground,
-            borderBottomWidth: 1,
-            height: showDate ? ITEM_HEIGHT_EXPANDED : ITEM_HEIGHT_COMPACT,
-          },
-        ]}
-        onPress={onPress}
-      >
-        <View style={styles.chapterContent}>
-          <Text
-            numberOfLines={1}
+        <TouchableOpacity
             style={[
-              styles.chapterTitle,
-              {
-                color: isRead
-                  ? currentTheme.secondaryTextColor
-                  : currentTheme.textColor,
-              },
+                styles.chapterItem,
+                {
+                    borderBottomColor: currentTheme.inputBackground,
+                    borderBottomWidth: 1,
+                    height: showDate ? ITEM_HEIGHT_EXPANDED : ITEM_HEIGHT_COMPACT,
+                },
             ]}
-          >
-            {chapter.name || `Chapter ${index + 1}`}
-          </Text>
-          {showDate && (
-            <Text
-              numberOfLines={1}
-              style={[
-                styles.chapterDate,
-                { color: currentTheme.secondaryTextColor },
-              ]}
-            >
-              {subtitleToRender || ' '}
-            </Text>
-          )}
-        </View>
+            onPress={onPress}
+        >
+            <View style={styles.chapterContent}>
+                <Text
+                    numberOfLines={1}
+                    style={[
+                        styles.chapterTitle,
+                        {
+                            color: isRead
+                                ? currentTheme.secondaryTextColor
+                                : currentTheme.textColor,
+                        },
+                    ]}
+                >
+                    {chapter.name || `Chapter ${index + 1}`}
+                </Text>
+                {showDate && (
+                    <Text
+                        numberOfLines={1}
+                        style={[styles.chapterDate, { color: currentTheme.secondaryTextColor }]}
+                    >
+                        {subtitleToRender || ' '}
+                    </Text>
+                )}
+            </View>
 
-        <View style={styles.rightActionContainer}>
-          {!showDate && hasProgress && (
-            <Text
-              style={[
-                styles.progressRight,
-                { color: currentTheme.secondaryTextColor },
-              ]}
-            >
-              {progressText}
-            </Text>
-          )}
+            <View style={styles.rightActionContainer}>
+                {!showDate && hasProgress && (
+                    <Text
+                        style={[styles.progressRight, { color: currentTheme.secondaryTextColor }]}
+                    >
+                        {progressText}
+                    </Text>
+                )}
 
-          <TouchableOpacity
-            hitSlop={{ top: 20, bottom: 20, left: 10, right: 10 }}
-            onPress={handleDownloadPress}
-            disabled={isInQueue}
-            style={styles.downloadIconWrapper}
-          >
-            {renderDownloadIcon()}
-          </TouchableOpacity>
+                <TouchableOpacity
+                    hitSlop={{ top: 20, bottom: 20, left: 10, right: 10 }}
+                    onPress={handleDownloadPress}
+                    disabled={isInQueue}
+                    style={styles.downloadIconWrapper}
+                >
+                    {renderDownloadIcon()}
+                </TouchableOpacity>
 
-          <Icon
-            name="chevron-right"
-            size={20}
-            color={currentTheme.iconColor}
-            style={styles.chevron}
-          />
-        </View>
-      </TouchableOpacity>
+                <Icon
+                    name="chevron-right"
+                    size={20}
+                    color={currentTheme.iconColor}
+                    style={styles.chevron}
+                />
+            </View>
+        </TouchableOpacity>
     );
-  },
-);
+});
 
 export const ReaderWrapper = ({ route }) => {
-  const {
-    initialChapterData,
-    currentTheme,
-    setScreens,
-    screens,
-    chapterList,
-    historyDAO,
-    progressDAO,
-    settingsDAO,
-    jsonSettings,
-    libraryDAO,
-    chapterDAO,
-    kudoHistoryDAO,
-    workDAO,
-  } = route.params;
-
-  const { t } = useTranslation();
-  const [chapterData, setChapterData] = useState(initialChapterData);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(undefined);
-
-  useEffect(() => {
-    libraryDAO.updateReadIndex(chapterData.workId);
-  }, [chapterData.workId, libraryDAO]);
-
-  const handleChapterChange = newChapterData => {
-    setError(false);
-    if (newChapterData) {
-      setChapterData(prevData => ({
-        ...newChapterData,
-        workTitle: prevData.workTitle,
-      }));
-    }
-    setLoading(false);
-  };
-
-  const handleNextChapter = useCallback(async () => {
-    try {
-      if (loading || !chapterData.hasNextChapter) return;
-      setError();
-      setLoading(true);
-      await navigateToNextChapter({
-        workId: chapterData.workId,
-        chapterList: chapterList,
-        currentChapterIndex: chapterData.chapterIndex,
-        currentTheme: currentTheme,
-        onChapterChange: handleChapterChange,
+    const {
+        initialChapterData,
+        currentTheme,
+        setScreens,
+        screens,
+        chapterList,
         historyDAO,
+        progressDAO,
         settingsDAO,
-      });
+        jsonSettings,
+        libraryDAO,
+        chapterDAO,
+        kudoHistoryDAO,
+        workDAO,
+    } = route.params;
 
-      if (!jsonSettings) {
-        jsonSettings = await getJsonSettings(chapterData);
-      }
+    const { t } = useTranslation();
+    const [chapterData, setChapterData] = useState(initialChapterData);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(undefined);
 
-      if (
-        jsonSettings?.downloadWhileReading &&
-        (await libraryDAO.isInLibrary(chapterData.workId))
-      ) {
-        for (let i = 0; i < jsonSettings?.downloadWhileReading; i++) {
-          const index = chapterData.chapterIndex + 2 + i;
-          if (chapterList.length <= index) break;
-          await addToDownloadQueue({
-            workId: chapterData.workId,
-            chapterId: chapterList[index].id,
-          });
+    useEffect(() => {
+        libraryDAO.updateReadIndex(chapterData.workId);
+    }, [chapterData.workId, libraryDAO]);
+
+    const handleChapterChange = newChapterData => {
+        setError(false);
+        if (newChapterData) {
+            setChapterData(prevData => ({
+                ...newChapterData,
+                workTitle: prevData.workTitle,
+            }));
         }
-        processQueue();
-      }
-    } catch (error) {
-      console.log(error);
-      setError(error);
-    }
-  }, [
-    loading,
-    chapterData,
-    chapterList,
-    currentTheme,
-    historyDAO,
-    settingsDAO,
-  ]);
+        setLoading(false);
+    };
 
-  const handlePreviousChapter = useCallback(async () => {
-    try {
-      if (loading || !chapterData.hasPreviousChapter) return;
-      setLoading(true);
-      await navigateToPreviousChapter({
-        workId: chapterData.workId,
-        chapterList: chapterList,
-        currentChapterIndex: chapterData.chapterIndex,
-        currentTheme: currentTheme,
-        onChapterChange: handleChapterChange,
-        historyDAO,
-        settingsDAO,
-      });
-    } catch (error) {
-      console.log(error);
-      setError(error);
-    }
-  }, [
-    loading,
-    chapterData,
-    chapterList,
-    currentTheme,
-    historyDAO,
-    settingsDAO,
-  ]);
+    const handleNextChapter = useCallback(async () => {
+        try {
+            if (loading || !chapterData.hasNextChapter) return;
+            setError();
+            setLoading(true);
+            await navigateToNextChapter({
+                workId: chapterData.workId,
+                chapterList: chapterList,
+                currentChapterIndex: chapterData.chapterIndex,
+                currentTheme: currentTheme,
+                onChapterChange: handleChapterChange,
+                historyDAO,
+                settingsDAO,
+            });
 
-  if (error) {
+            if (!jsonSettings) {
+                jsonSettings = await getJsonSettings(chapterData);
+            }
+
+            if (
+                jsonSettings?.downloadWhileReading &&
+                (await libraryDAO.isInLibrary(chapterData.workId))
+            ) {
+                for (let i = 0; i < jsonSettings?.downloadWhileReading; i++) {
+                    const index = chapterData.chapterIndex + 2 + i;
+                    if (chapterList.length <= index) break;
+                    await addToDownloadQueue({
+                        workId: chapterData.workId,
+                        chapterId: chapterList[index].id,
+                    });
+                }
+                processQueue();
+            }
+        } catch (error) {
+            console.log(error);
+            setError(error);
+        }
+    }, [loading, chapterData, chapterList, currentTheme, historyDAO, settingsDAO]);
+
+    const handlePreviousChapter = useCallback(async () => {
+        try {
+            if (loading || !chapterData.hasPreviousChapter) return;
+            setLoading(true);
+            await navigateToPreviousChapter({
+                workId: chapterData.workId,
+                chapterList: chapterList,
+                currentChapterIndex: chapterData.chapterIndex,
+                currentTheme: currentTheme,
+                onChapterChange: handleChapterChange,
+                historyDAO,
+                settingsDAO,
+            });
+        } catch (error) {
+            console.log(error);
+            setError(error);
+        }
+    }, [loading, chapterData, chapterList, currentTheme, historyDAO, settingsDAO]);
+
+    if (error) {
+        return (
+            <SafeAreaView
+                style={[styles.container, { backgroundColor: currentTheme.backgroundColor }]}
+            >
+                <View style={styles.errorContainer}>
+                    <Icon name="error-outline" size={48} color={currentTheme.iconColor} />
+                    <Text style={[styles.errorText, { color: currentTheme.textColor }]}>
+                        {error.toString()}
+                    </Text>
+                    <TouchableOpacity
+                        style={[styles.retryButton, { backgroundColor: currentTheme.primaryColor }]}
+                        onPress={() => handleChapterChange(chapterData)}
+                    >
+                        <Text style={styles.retryButtonText}>{t('general_back')}</Text>
+                    </TouchableOpacity>
+                </View>
+            </SafeAreaView>
+        );
+    }
+
     return (
-      <SafeAreaView
-        style={[
-          styles.container,
-          { backgroundColor: currentTheme.backgroundColor },
-        ]}
-      >
-        <View style={styles.errorContainer}>
-          <Icon name="error-outline" size={48} color={currentTheme.iconColor} />
-          <Text style={[styles.errorText, { color: currentTheme.textColor }]}>
-            {error.toString()}
-          </Text>
-          <TouchableOpacity
-            style={[
-              styles.retryButton,
-              { backgroundColor: currentTheme.primaryColor },
-            ]}
-            onPress={() => handleChapterChange(chapterData)}
-          >
-            <Text style={styles.retryButtonText}>{t('general_back')}</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+        <SafeAreaView style={[styles.container, { backgroundColor: currentTheme.backgroundColor }]}>
+            <StatusBar backgroundColor={currentTheme.headerBackground} />
+            {loading ? (
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color={currentTheme.primaryColor} />
+                </View>
+            ) : (
+                <ChapterReader
+                    currentTheme={currentTheme}
+                    workId={chapterData.workId}
+                    workTitle={chapterData.workTitle}
+                    chapterTitle={chapterData.chapterTitle}
+                    chapterID={chapterData.chapterId}
+                    htmlContent={chapterData.htmlContent}
+                    currentChapterIndex={chapterData.chapterIndex}
+                    totalChapters={chapterList.length}
+                    hasNextChapter={chapterData.hasNextChapter}
+                    hasPreviousChapter={chapterData.hasPreviousChapter}
+                    onNextChapter={handleNextChapter}
+                    onPreviousChapter={handlePreviousChapter}
+                    settingsDAO={settingsDAO}
+                    progressDAO={progressDAO}
+                    historyDAO={historyDAO}
+                    chapterDAO={chapterDAO}
+                    kudoHistoryDAO={kudoHistoryDAO}
+                    libraryDAO={libraryDAO}
+                    setScreens={setScreens}
+                    workDAO={workDAO}
+                />
+            )}
+        </SafeAreaView>
     );
-  }
-
-  return (
-    <SafeAreaView
-      style={[
-        styles.container,
-        { backgroundColor: currentTheme.backgroundColor },
-      ]}
-    >
-      <StatusBar backgroundColor={currentTheme.headerBackground} />
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={currentTheme.primaryColor} />
-        </View>
-      ) : (
-        <ChapterReader
-          currentTheme={currentTheme}
-          workId={chapterData.workId}
-          workTitle={chapterData.workTitle}
-          chapterTitle={chapterData.chapterTitle}
-          chapterID={chapterData.chapterId}
-          htmlContent={chapterData.htmlContent}
-          currentChapterIndex={chapterData.chapterIndex}
-          totalChapters={chapterList.length}
-          hasNextChapter={chapterData.hasNextChapter}
-          hasPreviousChapter={chapterData.hasPreviousChapter}
-          onNextChapter={handleNextChapter}
-          onPreviousChapter={handlePreviousChapter}
-          settingsDAO={settingsDAO}
-          progressDAO={progressDAO}
-          historyDAO={historyDAO}
-          chapterDAO={chapterDAO}
-          kudoHistoryDAO={kudoHistoryDAO}
-          libraryDAO={libraryDAO}
-          setScreens={setScreens}
-          workDAO={workDAO}
-        />
-      )}
-    </SafeAreaView>
-  );
 };
 
 const ChapterInfoScreen = ({ route }) => {
-  const {
-    workId,
-    currentTheme,
-    libraryDAO,
-    workDAO,
-    setScreens,
-    settingsDAO,
-    historyDAO,
-    progressDAO,
-    loadChapter,
-    kudoHistoryDAO,
-    openTagSearch,
-    url,
-    chapterDAO,
-  } = route.params;
+    const {
+        workId,
+        currentTheme,
+        libraryDAO,
+        workDAO,
+        setScreens,
+        settingsDAO,
+        historyDAO,
+        progressDAO,
+        loadChapter,
+        kudoHistoryDAO,
+        openTagSearch,
+        url,
+        chapterDAO,
+    } = route.params;
 
-  const navigation = useNavigation();
+    const navigation = useNavigation();
 
-  const { t } = useTranslation();
-  const [work, setWork] = useState(null);
-  const [chapters, setChapters] = useState([]);
-  const [chapterProgress, setChapterProgress] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [modalMode, setModalMode] = useState('summary');
-  const [inLibrary, setInLibrary] = useState(false);
-  const [liked, setLiked] = useState(false);
-  const [likeLoading, setLikeLoading] = useState(false);
-  const [isLoadingContinue, setIsLoadingContinue] = useState(false);
-  const [categories, setCategories] = useState(['Default']);
-  const [showCategoryModal, setShowCategoryModal] = useState(false);
-  const [categoryAction, setCategoryAction] = useState(null);
-  const [menuVisible, setMenuVisible] = useState(false);
-  const [downloadMenuVisible, setDownloadMenuVisible] = useState(false);
-  const [nativeDownloadModalVisible, setNativeDownloadModalVisible] =
-    useState(false);
-  const [nativeDownloadingFormat, setNativeDownloadingFormat] = useState(null);
-  const [showDate, setShowDate] = useState(false);
-  const [loadChapterRef, setLoadChapterRef] = useState(loadChapter);
+    const { t } = useTranslation();
+    const [work, setWork] = useState(null);
+    const [chapters, setChapters] = useState([]);
+    const [chapterProgress, setChapterProgress] = useState({});
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [modalMode, setModalMode] = useState('summary');
+    const [inLibrary, setInLibrary] = useState(false);
+    const [liked, setLiked] = useState(false);
+    const [likeLoading, setLikeLoading] = useState(false);
+    const [isLoadingContinue, setIsLoadingContinue] = useState(false);
+    const [categories, setCategories] = useState(['Default']);
+    const [showCategoryModal, setShowCategoryModal] = useState(false);
+    const [categoryAction, setCategoryAction] = useState(null);
+    const [menuVisible, setMenuVisible] = useState(false);
+    const [downloadMenuVisible, setDownloadMenuVisible] = useState(false);
+    const [nativeDownloadModalVisible, setNativeDownloadModalVisible] = useState(false);
+    const [nativeDownloadingFormat, setNativeDownloadingFormat] = useState(null);
+    const [showDate, setShowDate] = useState(false);
+    const [loadChapterRef, setLoadChapterRef] = useState(loadChapter);
 
-  const [jsonSettings, setJsonSettings] = useState();
+    const [jsonSettings, setJsonSettings] = useState();
 
-  const showToast = (message, type = 'error') => {
-    Toast.show({
-      type: type,
-      text1: type === 'success' ? t('general_success') : t('general_error'),
-      text2: message,
-      position: 'bottom',
-      bottomOffset: 80,
-    });
-  };
-  useEffect(() => {
-    loadCategories();
-    getJsonSettings().then(settings => {
-      if (settings?.showChapterDate !== undefined) {
-        setShowDate(settings.showChapterDate);
-      }
-      setJsonSettings(settings);
-    });
-  }, []);
-
-  const loadCategories = async () => {
-    try {
-      const res = await AsyncStorage.getItem('Categories');
-      if (res) {
-        const loadedCategories = JSON.parse(res);
-        if (!loadedCategories.includes('Default')) {
-          setCategories(['Default', ...loadedCategories]);
-        } else {
-          setCategories(loadedCategories);
-        }
-      } else {
-        setCategories(['Default']);
-      }
-    } catch (error) {
-      console.error('Error loading categories:', error);
-      setCategories(['Default']);
-    }
-  };
-
-  const showCategorySelection = async (action = 'add') => {
-    if (action === 'remove') {
-      await libraryDAO.remove(workId);
-      setInLibrary(false);
-      showToast(t('screen_work_toast_removed_from_library'), 'success');
-      return;
-    }
-
-    if (categories.length === 1) {
-      await addToLibrary(categories[0]);
-      return;
-    }
-
-    setCategoryAction('add');
-    setShowCategoryModal(true);
-  };
-
-  const handleCategorySelect = async collection => {
-    setShowCategoryModal(false);
-    await addToLibrary(collection);
-  };
-
-  const addToLibrary = async collection => {
-    try {
-      const existingWork = await workDAO.get(workId);
-      if (!existingWork) {
-        await workDAO.add(normalizeWorkData(work));
-      }
-
-      await libraryDAO.add(workId, collection);
-
-      setInLibrary(true);
-      const message =
-        collection !== 'Default'
-          ? t('screen_work_toast_added_to_library_in_collection', {
-              collection,
-            })
-          : t('screen_work_toast_added_to_library');
-      showToast(message, 'success');
-    } catch (error) {
-      console.error('Error adding to library:', error);
-      showToast(t('screen_work_toast_failed_to_add_to_library'));
-    }
-  };
-
-  useEffect(() => {
-    loadWorkData();
-  }, [workId]);
-
-  const loadWorkData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const [workData, progressData] = await Promise.all([
-        fetchWorkFromWorkID(workId, workDAO, chapterDAO),
-        progressDAO.getProgressList(workId),
-      ]);
-
-      if (!workData) throw new Error('Could not fetch work data');
-
-      setWork(workData);
-      setChapters(workData.chapters);
-
-      const progressMap = progressData.reduce((acc, item) => {
-        acc[item.chapterID] = item.progress;
-        return acc;
-      }, {});
-      setChapterProgress(progressMap);
-
-      const hasLoadChapterIndex = typeof loadChapter === 'number';
-      const chapterUrlMatch = url ? url.match(/\/chapters\/(\d+)/) : null;
-      const hasUrlTrigger = !!chapterUrlMatch;
-
-      if (
-        (hasLoadChapterIndex &&
-          workData.chapters &&
-          workData.chapters[loadChapter]) ||
-        hasUrlTrigger
-      ) {
-        let chapterToLoad;
-        let actualIndex = -1;
-
-        if (hasLoadChapterIndex) {
-          chapterToLoad = workData.chapters[loadChapter];
-          actualIndex = loadChapter;
-        } else if (hasUrlTrigger) {
-          const chapterId = chapterUrlMatch[1];
-          chapterToLoad = workData.chapters.find(
-            ch => String(ch.id) === String(chapterId),
-          );
-          actualIndex = workData.chapters.findIndex(
-            ch => String(ch.id) === String(chapterId),
-          );
-
-          console.log('URL Load Debug:', {
-            url,
-            extractedId: chapterId,
-            found: !!chapterToLoad,
-          });
-        }
-
-        if (chapterToLoad && actualIndex !== -1 && actualIndex !== 0) {
-          const chapterContent = await fetchChapterWithTheme(
-            workId,
-            chapterToLoad.id,
-            currentTheme,
-            settingsDAO,
-          );
-
-          if (chapterContent) {
-            const initialChapterData = {
-              workId: workId,
-              workTitle: workData.title,
-              chapterId: chapterToLoad.id,
-              chapterTitle: chapterToLoad.name,
-              htmlContent: chapterContent,
-              chapterIndex: actualIndex,
-              hasNextChapter: actualIndex < workData.chapters.length - 1,
-              hasPreviousChapter: actualIndex > 0,
-            };
-
-            const chapterListForNav = workData.chapters.map(c => ({
-              id: c.id,
-              title: c.name,
-            }));
-
-            navigation.dispatch(
-              StackActions.replace('Work', {
-                workId,
-                currentTheme,
-                libraryDAO,
-                workDAO,
-                settingsDAO,
-                historyDAO,
-                progressDAO,
-                kudoHistoryDAO,
-                openTagSearch,
-                chapterDAO,
-                loadChapter: null,
-                url: null,
-              }),
-            );
-
-            navigation.dispatch(
-              StackActions.push('Reader', {
-                initialChapterData,
-                currentTheme,
-                chapterList: chapterListForNav,
-                settingsDAO,
-                historyDAO,
-                progressDAO,
-                jsonSettings,
-                libraryDAO,
-                chapterDAO,
-                kudoHistoryDAO,
-                workDAO,
-              }),
-            );
-
-            return;
-          }
-        } else {
-          console.log(
-            'Could not find chapter from URL. Staying on Info Screen.',
-          );
-        }
-      }
-    } catch (err) {
-      console.error('Error loading work data:', err);
-      setError(err.message || 'Failed to load work data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    const checkLibraryStatus = async () => {
-      try {
-        const isInLib = await libraryDAO.isInLibrary(workId);
-        setInLibrary(isInLib);
-      } catch (error) {
-        console.error('Error checking library status:', error);
-      }
+    const showToast = (message, type = 'error') => {
+        Toast.show({
+            type: type,
+            text1: type === 'success' ? t('general_success') : t('general_error'),
+            text2: message,
+            position: 'bottom',
+            bottomOffset: 80,
+        });
     };
-    checkLibraryStatus();
-  }, [workId, libraryDAO]);
+    useEffect(() => {
+        loadCategories();
+        getJsonSettings().then(settings => {
+            if (settings?.showChapterDate !== undefined) {
+                setShowDate(settings.showChapterDate);
+            }
+            setJsonSettings(settings);
+        });
+    }, []);
 
-  const handleAddToLibrary = useCallback(async () => {
-    if (inLibrary) {
-      await showCategorySelection('remove');
-    } else {
-      await showCategorySelection('add');
-    }
-  }, [inLibrary, workId, libraryDAO, work, categories]);
+    const loadCategories = async () => {
+        try {
+            const res = await AsyncStorage.getItem('Categories');
+            if (res) {
+                const loadedCategories = JSON.parse(res);
+                if (!loadedCategories.includes('Default')) {
+                    setCategories(['Default', ...loadedCategories]);
+                } else {
+                    setCategories(loadedCategories);
+                }
+            } else {
+                setCategories(['Default']);
+            }
+        } catch (error) {
+            console.error('Error loading categories:', error);
+            setCategories(['Default']);
+        }
+    };
 
-  const handleLike = useCallback(async () => {
-    if (likeLoading) return;
+    const showCategorySelection = async (action = 'add') => {
+        if (action === 'remove') {
+            await libraryDAO.remove(workId);
+            setInLibrary(false);
+            showToast(t('screen_work_toast_removed_from_library'), 'success');
+            return;
+        }
 
-    setLikeLoading(true);
-    try {
-      const success = await sendKudo(workId);
-      if (success) {
-        setLiked(true);
+        if (categories.length === 1) {
+            await addToLibrary(categories[0]);
+            return;
+        }
 
-        const kudoEntry = {
-          workId: workId,
-          date: Date.now(),
-        };
-        await kudoHistoryDAO.add(kudoEntry);
+        setCategoryAction('add');
+        setShowCategoryModal(true);
+    };
 
-        showToast(t('screen_work_toast_kudo_sent'), 'success');
-      } else {
-        showToast(t('screen_work_toast_failed_to_send_kudo'));
-      }
-    } catch (error) {
-      console.error('Error sending kudo:', error);
-      showToast(t('screen_work_toast_failed_to_send_kudo'));
-      setLiked(false);
-    } finally {
-      setLikeLoading(false);
-    }
-  }, [workId, likeLoading, kudoHistoryDAO, t]);
+    const handleCategorySelect = async collection => {
+        setShowCategoryModal(false);
+        await addToLibrary(collection);
+    };
 
-  const handleMoreInfo = useCallback(() => {
-    setModalMode('full');
-    setModalVisible(true);
-  }, []);
+    const addToLibrary = async collection => {
+        try {
+            const existingWork = await workDAO.get(workId);
+            if (!existingWork) {
+                await workDAO.add(normalizeWorkData(work));
+            }
 
-  const handleShowAllTags = useCallback(() => {
-    setModalMode('allTags');
-    setModalVisible(true);
-  }, []);
+            await libraryDAO.add(workId, collection);
 
-  const handleOpenWebView = useCallback(() => {
-    InAppBrowser.open('https://archiveofourown.org/works/' + workId, {
-      // Android
-      showTitle: true,
-      toolbarColor: currentTheme.backgroundColor,
-      enableUrlBarHiding: true,
-      enableDefaultShare: true,
-      forceCloseOnRedirection: false,
-      // iOS
-      dismissButtonStyle: 'close',
-      preferredBarTintColor: currentTheme.backgroundColor,
-      preferredControlTintColor: 'white',
-    });
+            setInLibrary(true);
+            const message =
+                collection !== 'Default'
+                    ? t('screen_work_toast_added_to_library_in_collection', {
+                          collection,
+                      })
+                    : t('screen_work_toast_added_to_library');
+            showToast(message, 'success');
+        } catch (error) {
+            console.error('Error adding to library:', error);
+            showToast(t('screen_work_toast_failed_to_add_to_library'));
+        }
+    };
+
+    useEffect(() => {
+        loadWorkData();
     }, [workId]);
 
-  const handleBookmark = async () => {
-    setMenuVisible(false);
-    bookmark(work)
-      .then(() => {
-        showToast(t('screen_work_toast_added_to_bookmarks'), 'success');
-      })
-      .catch(error => {
-        showToast(error, 'error');
-      });
-  };
+    const loadWorkData = async () => {
+        try {
+            setLoading(true);
+            setError(null);
 
-  const handleMarkForLater = async () => {
-    setMenuVisible(false);
-    markForLater(work)
-      .then(() => {
-        showToast(t('screen_work_toast_marked_for_later'), 'success');
-      })
-      .catch(error => {
-        showToast(error, 'error');
-      });
-  };
+            const [workData, progressData] = await Promise.all([
+                fetchWorkFromWorkID(workId, workDAO, chapterDAO),
+                progressDAO.getProgressList(workId),
+            ]);
 
-  const handleChapterPress = useCallback(
-    async (chapter, originalIndex) => {
-      try {
-        const existingWork = await workDAO.get(workId);
-        if (!existingWork) {
-          await workDAO.add(work);
+            if (!workData) throw new Error('Could not fetch work data');
+
+            setWork(workData);
+            setChapters(workData.chapters);
+
+            const progressMap = progressData.reduce((acc, item) => {
+                acc[item.chapterID] = item.progress;
+                return acc;
+            }, {});
+            setChapterProgress(progressMap);
+
+            const hasLoadChapterIndex = typeof loadChapter === 'number';
+            const chapterUrlMatch = url ? url.match(/\/chapters\/(\d+)/) : null;
+            const hasUrlTrigger = !!chapterUrlMatch;
+
+            if (
+                (hasLoadChapterIndex && workData.chapters && workData.chapters[loadChapter]) ||
+                hasUrlTrigger
+            ) {
+                let chapterToLoad;
+                let actualIndex = -1;
+
+                if (hasLoadChapterIndex) {
+                    chapterToLoad = workData.chapters[loadChapter];
+                    actualIndex = loadChapter;
+                } else if (hasUrlTrigger) {
+                    const chapterId = chapterUrlMatch[1];
+                    chapterToLoad = workData.chapters.find(
+                        ch => String(ch.id) === String(chapterId),
+                    );
+                    actualIndex = workData.chapters.findIndex(
+                        ch => String(ch.id) === String(chapterId),
+                    );
+
+                    console.log('URL Load Debug:', {
+                        url,
+                        extractedId: chapterId,
+                        found: !!chapterToLoad,
+                    });
+                }
+
+                if (chapterToLoad && actualIndex !== -1 && actualIndex !== 0) {
+                    const chapterContent = await fetchChapterWithTheme(
+                        workId,
+                        chapterToLoad.id,
+                        currentTheme,
+                        settingsDAO,
+                    );
+
+                    if (chapterContent) {
+                        const initialChapterData = {
+                            workId: workId,
+                            workTitle: workData.title,
+                            chapterId: chapterToLoad.id,
+                            chapterTitle: chapterToLoad.name,
+                            htmlContent: chapterContent,
+                            chapterIndex: actualIndex,
+                            hasNextChapter: actualIndex < workData.chapters.length - 1,
+                            hasPreviousChapter: actualIndex > 0,
+                        };
+
+                        const chapterListForNav = workData.chapters.map(c => ({
+                            id: c.id,
+                            title: c.name,
+                        }));
+
+                        navigation.dispatch(
+                            StackActions.replace('Work', {
+                                workId,
+                                currentTheme,
+                                libraryDAO,
+                                workDAO,
+                                settingsDAO,
+                                historyDAO,
+                                progressDAO,
+                                kudoHistoryDAO,
+                                openTagSearch,
+                                chapterDAO,
+                                loadChapter: null,
+                                url: null,
+                            }),
+                        );
+
+                        navigation.dispatch(
+                            StackActions.push('Reader', {
+                                initialChapterData,
+                                currentTheme,
+                                chapterList: chapterListForNav,
+                                settingsDAO,
+                                historyDAO,
+                                progressDAO,
+                                jsonSettings,
+                                libraryDAO,
+                                chapterDAO,
+                                kudoHistoryDAO,
+                                workDAO,
+                            }),
+                        );
+
+                        return;
+                    }
+                } else {
+                    console.log('Could not find chapter from URL. Staying on Info Screen.');
+                }
+            }
+        } catch (err) {
+            console.error('Error loading work data:', err);
+            setError(err.message || 'Failed to load work data');
+        } finally {
+            setLoading(false);
         }
+    };
 
-        let chapterContent;
-        chapterContent = await fetchChapterWithTheme(
-          workId,
-          chapter.id,
-          currentTheme,
-          settingsDAO,
-        );
-
-        if (!chapterContent) {
-          showToast(t('screen_work_toast_failed_to_load_chapter'), 'error');
-          return;
-        }
-
-        const initialChapterData = {
-          workId: workId,
-          workTitle: work.title,
-          chapterId: chapter.id,
-          chapterTitle: chapter.name,
-          htmlContent: chapterContent,
-          chapterIndex: originalIndex,
-          hasNextChapter: originalIndex < chapters.length - 1,
-          hasPreviousChapter: originalIndex > 0,
+    useEffect(() => {
+        const checkLibraryStatus = async () => {
+            try {
+                const isInLib = await libraryDAO.isInLibrary(workId);
+                setInLibrary(isInLib);
+            } catch (error) {
+                console.error('Error checking library status:', error);
+            }
         };
+        checkLibraryStatus();
+    }, [workId, libraryDAO]);
 
-        const chapterListForNav = chapters.map(c => ({
-          id: c.id,
-          title: c.name,
-        }));
-
-        navigation.push('Reader', {
-          key: chapter.id,
-          initialChapterData: initialChapterData,
-          currentTheme: currentTheme,
-          setScreens: setScreens,
-          chapterList: chapterListForNav,
-          settingsDAO: settingsDAO,
-          historyDAO: historyDAO,
-          progressDAO: progressDAO,
-          jsonSettings: jsonSettings,
-          libraryDAO: libraryDAO,
-          chapterDAO: chapterDAO,
-          kudoHistoryDAO: kudoHistoryDAO,
-          workDAO: workDAO,
-        });
-      } catch (error) {
-        console.error('Error opening chapter reader:', error);
-      }
-    },
-    [
-      workId,
-      work,
-      chapters,
-      currentTheme,
-      setScreens,
-      settingsDAO,
-      historyDAO,
-      progressDAO,
-      workDAO,
-      t,
-    ],
-  );
-
-  const formatWork = useCallback(
-    work => ({
-      id: work.id,
-      title: work.title,
-      author: work.author,
-      rating: work.rating,
-      category: work.category,
-      warningStatus: work.warningStatus,
-      isCompleted: work.isCompleted,
-      tags: work.tags,
-      warnings: work.warnings,
-      description: work.description,
-      descriptionHTML: work.descriptionHTML,
-      lastUpdated: work.updated
-        ? new Date(work.updated).toLocaleDateString()
-        : t('general_unknown'),
-      likes: work.kudos,
-      bookmarks: work.bookmarks,
-      words: work.words,
-      views: work.hits,
-      language: work.language,
-    }),
-    [],
-  );
-
-  function getTextForNb(nb) {
-    switch (nb) {
-      case 1:
-        return t('screen_work_next_chapter');
-      case -1:
-        return t('screen_work_unread');
-      case -2:
-        return t('screen_work_all');
-      default:
-        return t('screen_work_next_x_chapters', { count: nb });
-    }
-  }
-
-  const menuDownloadButton = nb => {
-    return (
-      <TouchableOpacity
-        style={styles.menuItem}
-        onPress={() => downloadNextChapters(nb)}
-        key={nb}
-      >
-        <Icon name="download" size={20} color={currentTheme.textColor} />
-        <Text style={[styles.menuItemText, { color: currentTheme.textColor }]}>
-          {getTextForNb(nb)}
-        </Text>
-      </TouchableOpacity>
-    );
-  };
-
-  const renderHeaderMenu = () => (
-    <Modal
-      transparent={true}
-      visible={menuVisible}
-      onRequestClose={() => setMenuVisible(false)}
-      animationType="fade"
-    >
-      <Pressable
-        style={styles.menuOverlay}
-        onPress={() => setMenuVisible(false)}
-      >
-        <View
-          style={[
-            styles.menuContainer,
-            {
-              backgroundColor: currentTheme.headerBackground,
-              borderColor: currentTheme.borderColor,
-            },
-          ]}
-        >
-          <TouchableOpacity style={styles.menuItem} onPress={handleBookmark}>
-            <Icon
-              name="bookmark-add"
-              size={20}
-              color={currentTheme.textColor}
-            />
-            <Text
-              style={[styles.menuItemText, { color: currentTheme.textColor }]}
-            >
-              {t('screen_work_bookmark')}
-            </Text>
-          </TouchableOpacity>
-
-          <View
-            style={[
-              styles.menuDivider,
-              { backgroundColor: currentTheme.borderColor },
-            ]}
-          />
-
-          <TouchableOpacity
-            style={styles.menuItem}
-            onPress={handleMarkForLater}
-          >
-            <Icon name="watch-later" size={20} color={currentTheme.textColor} />
-            <Text
-              style={[styles.menuItemText, { color: currentTheme.textColor }]}
-            >
-              {t('screen_work_mark_for_later')}
-            </Text>
-          </TouchableOpacity>
-
-          <View
-            style={[
-              styles.menuDivider,
-              { backgroundColor: currentTheme.borderColor },
-            ]}
-          />
-
-          <TouchableOpacity style={styles.menuItem} onPress={handleRefresh}>
-            <Icon name="refresh" size={20} color={currentTheme.textColor} />
-            <Text
-              style={[styles.menuItemText, { color: currentTheme.textColor }]}
-            >
-              {t('screen_work_refresh')}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </Pressable>
-    </Modal>
-  );
-
-  const renderDownloadHeaderMenu = () => (
-    <Modal
-      transparent={true}
-      visible={downloadMenuVisible}
-      onRequestClose={() => setDownloadMenuVisible(false)}
-      animationType="fade"
-    >
-      <Pressable
-        style={styles.menuOverlay}
-        onPress={() => setDownloadMenuVisible(false)}
-      >
-        <View
-          style={[
-            styles.menuContainer,
-            {
-              backgroundColor: currentTheme.headerBackground,
-              borderColor: currentTheme.borderColor,
-            },
-          ]}
-        >
-          {[1, 5, 10, 25, -1, -2].map(menuDownloadButton)}
-
-          <View
-            style={[
-              styles.menuDivider,
-              { backgroundColor: currentTheme.borderColor },
-            ]}
-          />
-
-          <TouchableOpacity
-            style={styles.menuItem}
-            onPress={() => {
-              setDownloadMenuVisible(false);
-              setNativeDownloadModalVisible(true);
-            }}
-          >
-            <Icon name="download" size={20} color={currentTheme.primaryColor} />
-            <Text
-              style={[
-                styles.menuItemText,
-                { color: currentTheme.primaryColor },
-              ]}
-            >
-              {t('screen_work_native_download')}
-            </Text>
-          </TouchableOpacity>
-
-          <View
-            style={[
-              styles.menuDivider,
-              { backgroundColor: currentTheme.borderColor },
-            ]}
-          />
-
-          <TouchableOpacity style={styles.menuItem} onPress={deleteAllChapters}>
-            <Icon name="delete" size={20} color={currentTheme.textColor} />
-            <Text
-              style={[styles.menuItemText, { color: currentTheme.textColor }]}
-            >
-              {t('screen_work_delete_all')}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </Pressable>
-    </Modal>
-  );
-
-  const renderNativeDownloadModal = () => (
-    <Modal
-      transparent={true}
-      visible={nativeDownloadModalVisible}
-      onRequestClose={() =>
-        !nativeDownloadingFormat && setNativeDownloadModalVisible(false)
-      }
-      animationType="fade"
-    >
-      <Pressable
-        style={styles.nativeModalOverlay}
-        onPress={() =>
-          !nativeDownloadingFormat && setNativeDownloadModalVisible(false)
+    const handleAddToLibrary = useCallback(async () => {
+        if (inLibrary) {
+            await showCategorySelection('remove');
+        } else {
+            await showCategorySelection('add');
         }
-      >
-        <Pressable
-          style={[
-            styles.nativeModalCard,
-            {
-              backgroundColor: currentTheme.headerBackground,
-              borderColor: currentTheme.borderColor,
-            },
-          ]}
-        >
-          <Text
-            style={[styles.nativeModalTitle, { color: currentTheme.textColor }]}
-          >
-            {t('screen_work_save_as_file')}
-          </Text>
-          <Text
-            style={[
-              styles.nativeModalSubtitle,
-              { color: currentTheme.secondaryTextColor },
-            ]}
-          >
-            {t('screen_work_choose_format')}
-          </Text>
+    }, [inLibrary, workId, libraryDAO, work, categories]);
 
-          {NATIVE_DOWNLOAD_FORMATS.map(format => {
-            const isDownloading = nativeDownloadingFormat === format;
-            return (
-              <TouchableOpacity
-                key={format}
-                style={[
-                  styles.nativeFormatRow,
-                  { borderColor: currentTheme.borderColor },
-                  isDownloading && { opacity: 0.7 },
-                ]}
-                onPress={() => handleNativeDownload(format)}
-                disabled={!!nativeDownloadingFormat}
-              >
+    const handleLike = useCallback(async () => {
+        if (likeLoading) return;
+
+        setLikeLoading(true);
+        try {
+            const success = await sendKudo(workId);
+            if (success) {
+                setLiked(true);
+
+                const kudoEntry = {
+                    workId: workId,
+                    date: Date.now(),
+                };
+                await kudoHistoryDAO.add(kudoEntry);
+
+                showToast(t('screen_work_toast_kudo_sent'), 'success');
+            } else {
+                showToast(t('screen_work_toast_failed_to_send_kudo'));
+            }
+        } catch (error) {
+            console.error('Error sending kudo:', error);
+            showToast(t('screen_work_toast_failed_to_send_kudo'));
+            setLiked(false);
+        } finally {
+            setLikeLoading(false);
+        }
+    }, [workId, likeLoading, kudoHistoryDAO, t]);
+
+    const handleMoreInfo = useCallback(() => {
+        setModalMode('full');
+        setModalVisible(true);
+    }, []);
+
+    const handleShowAllTags = useCallback(() => {
+        setModalMode('allTags');
+        setModalVisible(true);
+    }, []);
+
+    const handleOpenWebView = useCallback(() => {
+        InAppBrowser.open('https://archiveofourown.org/works/' + workId, {
+            // Android
+            showTitle: true,
+            toolbarColor: currentTheme.backgroundColor,
+            enableUrlBarHiding: true,
+            enableDefaultShare: true,
+            forceCloseOnRedirection: false,
+            // iOS
+            dismissButtonStyle: 'close',
+            preferredBarTintColor: currentTheme.backgroundColor,
+            preferredControlTintColor: 'white',
+        });
+    }, [workId]);
+
+    const handleBookmark = async () => {
+        setMenuVisible(false);
+        bookmark(work)
+            .then(() => {
+                showToast(t('screen_work_toast_added_to_bookmarks'), 'success');
+            })
+            .catch(error => {
+                showToast(error, 'error');
+            });
+    };
+
+    const handleMarkForLater = async () => {
+        setMenuVisible(false);
+        markForLater(work)
+            .then(() => {
+                showToast(t('screen_work_toast_marked_for_later'), 'success');
+            })
+            .catch(error => {
+                showToast(error, 'error');
+            });
+    };
+
+    const handleChapterPress = useCallback(
+        async (chapter, originalIndex) => {
+            try {
+                const existingWork = await workDAO.get(workId);
+                if (!existingWork) {
+                    await workDAO.add(work);
+                }
+
+                let chapterContent;
+                chapterContent = await fetchChapterWithTheme(
+                    workId,
+                    chapter.id,
+                    currentTheme,
+                    settingsDAO,
+                );
+
+                if (!chapterContent) {
+                    showToast(t('screen_work_toast_failed_to_load_chapter'), 'error');
+                    return;
+                }
+
+                const initialChapterData = {
+                    workId: workId,
+                    workTitle: work.title,
+                    chapterId: chapter.id,
+                    chapterTitle: chapter.name,
+                    htmlContent: chapterContent,
+                    chapterIndex: originalIndex,
+                    hasNextChapter: originalIndex < chapters.length - 1,
+                    hasPreviousChapter: originalIndex > 0,
+                };
+
+                const chapterListForNav = chapters.map(c => ({
+                    id: c.id,
+                    title: c.name,
+                }));
+
+                navigation.push('Reader', {
+                    key: chapter.id,
+                    initialChapterData: initialChapterData,
+                    currentTheme: currentTheme,
+                    setScreens: setScreens,
+                    chapterList: chapterListForNav,
+                    settingsDAO: settingsDAO,
+                    historyDAO: historyDAO,
+                    progressDAO: progressDAO,
+                    jsonSettings: jsonSettings,
+                    libraryDAO: libraryDAO,
+                    chapterDAO: chapterDAO,
+                    kudoHistoryDAO: kudoHistoryDAO,
+                    workDAO: workDAO,
+                });
+            } catch (error) {
+                console.error('Error opening chapter reader:', error);
+            }
+        },
+        [
+            workId,
+            work,
+            chapters,
+            currentTheme,
+            setScreens,
+            settingsDAO,
+            historyDAO,
+            progressDAO,
+            workDAO,
+            t,
+        ],
+    );
+
+    const formatWork = useCallback(
+        work => ({
+            id: work.id,
+            title: work.title,
+            author: work.author,
+            rating: work.rating,
+            category: work.category,
+            warningStatus: work.warningStatus,
+            isCompleted: work.isCompleted,
+            tags: work.tags,
+            warnings: work.warnings,
+            description: work.description,
+            descriptionHTML: work.descriptionHTML,
+            lastUpdated: work.updated
+                ? new Date(work.updated).toLocaleDateString()
+                : t('general_unknown'),
+            likes: work.kudos,
+            bookmarks: work.bookmarks,
+            words: work.words,
+            views: work.hits,
+            language: work.language,
+        }),
+        [],
+    );
+
+    function getTextForNb(nb) {
+        switch (nb) {
+            case 1:
+                return t('screen_work_next_chapter');
+            case -1:
+                return t('screen_work_unread');
+            case -2:
+                return t('screen_work_all');
+            default:
+                return t('screen_work_next_x_chapters', { count: nb });
+        }
+    }
+
+    const menuDownloadButton = nb => {
+        return (
+            <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => downloadNextChapters(nb)}
+                key={nb}
+            >
+                <Icon name="download" size={20} color={currentTheme.textColor} />
+                <Text style={[styles.menuItemText, { color: currentTheme.textColor }]}>
+                    {getTextForNb(nb)}
+                </Text>
+            </TouchableOpacity>
+        );
+    };
+
+    const renderHeaderMenu = () => (
+        <Modal
+            transparent={true}
+            visible={menuVisible}
+            onRequestClose={() => setMenuVisible(false)}
+            animationType="fade"
+        >
+            <Pressable style={styles.menuOverlay} onPress={() => setMenuVisible(false)}>
+                <View
+                    style={[
+                        styles.menuContainer,
+                        {
+                            backgroundColor: currentTheme.headerBackground,
+                            borderColor: currentTheme.borderColor,
+                        },
+                    ]}
+                >
+                    <TouchableOpacity style={styles.menuItem} onPress={handleBookmark}>
+                        <Icon name="bookmark-add" size={20} color={currentTheme.textColor} />
+                        <Text style={[styles.menuItemText, { color: currentTheme.textColor }]}>
+                            {t('screen_work_bookmark')}
+                        </Text>
+                    </TouchableOpacity>
+
+                    <View
+                        style={[styles.menuDivider, { backgroundColor: currentTheme.borderColor }]}
+                    />
+
+                    <TouchableOpacity style={styles.menuItem} onPress={handleMarkForLater}>
+                        <Icon name="watch-later" size={20} color={currentTheme.textColor} />
+                        <Text style={[styles.menuItemText, { color: currentTheme.textColor }]}>
+                            {t('screen_work_mark_for_later')}
+                        </Text>
+                    </TouchableOpacity>
+
+                    <View
+                        style={[styles.menuDivider, { backgroundColor: currentTheme.borderColor }]}
+                    />
+
+                    <TouchableOpacity style={styles.menuItem} onPress={handleRefresh}>
+                        <Icon name="refresh" size={20} color={currentTheme.textColor} />
+                        <Text style={[styles.menuItemText, { color: currentTheme.textColor }]}>
+                            {t('screen_work_refresh')}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+            </Pressable>
+        </Modal>
+    );
+
+    const renderDownloadHeaderMenu = () => (
+        <Modal
+            transparent={true}
+            visible={downloadMenuVisible}
+            onRequestClose={() => setDownloadMenuVisible(false)}
+            animationType="fade"
+        >
+            <Pressable style={styles.menuOverlay} onPress={() => setDownloadMenuVisible(false)}>
+                <View
+                    style={[
+                        styles.menuContainer,
+                        {
+                            backgroundColor: currentTheme.headerBackground,
+                            borderColor: currentTheme.borderColor,
+                        },
+                    ]}
+                >
+                    {[1, 5, 10, 25, -1, -2].map(menuDownloadButton)}
+
+                    <View
+                        style={[styles.menuDivider, { backgroundColor: currentTheme.borderColor }]}
+                    />
+
+                    <TouchableOpacity
+                        style={styles.menuItem}
+                        onPress={() => {
+                            setDownloadMenuVisible(false);
+                            setNativeDownloadModalVisible(true);
+                        }}
+                    >
+                        <Icon name="download" size={20} color={currentTheme.primaryColor} />
+                        <Text style={[styles.menuItemText, { color: currentTheme.primaryColor }]}>
+                            {t('screen_work_native_download')}
+                        </Text>
+                    </TouchableOpacity>
+
+                    <View
+                        style={[styles.menuDivider, { backgroundColor: currentTheme.borderColor }]}
+                    />
+
+                    <TouchableOpacity style={styles.menuItem} onPress={deleteAllChapters}>
+                        <Icon name="delete" size={20} color={currentTheme.textColor} />
+                        <Text style={[styles.menuItemText, { color: currentTheme.textColor }]}>
+                            {t('screen_work_delete_all')}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+            </Pressable>
+        </Modal>
+    );
+
+    const renderNativeDownloadModal = () => (
+        <Modal
+            transparent={true}
+            visible={nativeDownloadModalVisible}
+            onRequestClose={() => !nativeDownloadingFormat && setNativeDownloadModalVisible(false)}
+            animationType="fade"
+        >
+            <Pressable
+                style={styles.nativeModalOverlay}
+                onPress={() => !nativeDownloadingFormat && setNativeDownloadModalVisible(false)}
+            >
+                <Pressable
+                    style={[
+                        styles.nativeModalCard,
+                        {
+                            backgroundColor: currentTheme.headerBackground,
+                            borderColor: currentTheme.borderColor,
+                        },
+                    ]}
+                >
+                    <Text style={[styles.nativeModalTitle, { color: currentTheme.textColor }]}>
+                        {t('screen_work_save_as_file')}
+                    </Text>
+                    <Text
+                        style={[
+                            styles.nativeModalSubtitle,
+                            { color: currentTheme.secondaryTextColor },
+                        ]}
+                    >
+                        {t('screen_work_choose_format')}
+                    </Text>
+
+                    {NATIVE_DOWNLOAD_FORMATS.map(format => {
+                        const isDownloading = nativeDownloadingFormat === format;
+                        return (
+                            <TouchableOpacity
+                                key={format}
+                                style={[
+                                    styles.nativeFormatRow,
+                                    { borderColor: currentTheme.borderColor },
+                                    isDownloading && { opacity: 0.7 },
+                                ]}
+                                onPress={() => handleNativeDownload(format)}
+                                disabled={!!nativeDownloadingFormat}
+                            >
+                                <Icon
+                                    name={
+                                        format === 'pdf'
+                                            ? 'picture-as-pdf'
+                                            : format === 'html'
+                                              ? 'code'
+                                              : 'menu-book'
+                                    }
+                                    size={22}
+                                    color={currentTheme.primaryColor}
+                                    style={styles.nativeFormatIcon}
+                                />
+                                <Text
+                                    style={[
+                                        styles.nativeFormatLabel,
+                                        { color: currentTheme.textColor },
+                                    ]}
+                                >
+                                    {format.toUpperCase()}
+                                </Text>
+                                {isDownloading && (
+                                    <ActivityIndicator
+                                        size="small"
+                                        color={currentTheme.primaryColor}
+                                        style={styles.nativeFormatSpinner}
+                                    />
+                                )}
+                            </TouchableOpacity>
+                        );
+                    })}
+
+                    {!nativeDownloadingFormat && (
+                        <TouchableOpacity
+                            style={[
+                                styles.nativeCancelButton,
+                                { borderColor: currentTheme.borderColor },
+                            ]}
+                            onPress={() => setNativeDownloadModalVisible(false)}
+                        >
+                            <Text
+                                style={[
+                                    styles.nativeCancelText,
+                                    { color: currentTheme.secondaryTextColor },
+                                ]}
+                            >
+                                {t('general_cancel')}
+                            </Text>
+                        </TouchableOpacity>
+                    )}
+                </Pressable>
+            </Pressable>
+        </Modal>
+    );
+
+    const renderActionButtons = () => (
+        <View style={styles.actionButtonsContainer}>
+            <TouchableOpacity style={styles.actionButton} onPress={handleAddToLibrary}>
                 <Icon
-                  name={
-                    format === 'pdf'
-                      ? 'picture-as-pdf'
-                      : format === 'html'
-                      ? 'code'
-                      : 'menu-book'
-                  }
-                  size={22}
-                  color={currentTheme.primaryColor}
-                  style={styles.nativeFormatIcon}
+                    name={inLibrary ? 'bookmark' : 'bookmark-border'}
+                    size={48}
+                    color={inLibrary ? currentTheme.primaryColor : currentTheme.iconColor}
                 />
                 <Text
-                  style={[
-                    styles.nativeFormatLabel,
-                    { color: currentTheme.textColor },
-                  ]}
+                    style={[
+                        styles.actionButtonText,
+                        {
+                            color: inLibrary ? currentTheme.primaryColor : currentTheme.textColor,
+                        },
+                    ]}
                 >
-                  {format.toUpperCase()}
+                    {inLibrary ? t('screen_work_in_library') : t('screen_work_add_to_library')}
                 </Text>
-                {isDownloading && (
-                  <ActivityIndicator
-                    size="small"
-                    color={currentTheme.primaryColor}
-                    style={styles.nativeFormatSpinner}
-                  />
-                )}
-              </TouchableOpacity>
-            );
-          })}
-
-          {!nativeDownloadingFormat && (
-            <TouchableOpacity
-              style={[
-                styles.nativeCancelButton,
-                { borderColor: currentTheme.borderColor },
-              ]}
-              onPress={() => setNativeDownloadModalVisible(false)}
-            >
-              <Text
-                style={[
-                  styles.nativeCancelText,
-                  { color: currentTheme.secondaryTextColor },
-                ]}
-              >
-                {t('general_cancel')}
-              </Text>
             </TouchableOpacity>
-          )}
-        </Pressable>
-      </Pressable>
-    </Modal>
-  );
 
-  const renderActionButtons = () => (
-    <View style={styles.actionButtonsContainer}>
-      <TouchableOpacity
-        style={styles.actionButton}
-        onPress={handleAddToLibrary}
-      >
-        <Icon
-          name={inLibrary ? 'bookmark' : 'bookmark-border'}
-          size={48}
-          color={inLibrary ? currentTheme.primaryColor : currentTheme.iconColor}
-        />
-        <Text
-          style={[
-            styles.actionButtonText,
-            {
-              color: inLibrary
-                ? currentTheme.primaryColor
-                : currentTheme.textColor,
-            },
-          ]}
-        >
-          {inLibrary
-            ? t('screen_work_in_library')
-            : t('screen_work_add_to_library')}
-        </Text>
-      </TouchableOpacity>
+            <TouchableOpacity
+                style={[styles.actionButton, likeLoading && styles.actionButtonDisabled]}
+                onPress={handleLike}
+                disabled={likeLoading}
+            >
+                {likeLoading ? (
+                    <ActivityIndicator
+                        size={24}
+                        color={currentTheme.primaryColor}
+                        style={{ height: 48 }}
+                    />
+                ) : (
+                    <Icon
+                        name={liked ? 'favorite' : 'favorite-border'}
+                        size={48}
+                        color={liked ? '#ef4444' : currentTheme.iconColor}
+                    />
+                )}
+                <Text
+                    style={[
+                        styles.actionButtonText,
+                        { color: liked ? '#ef4444' : currentTheme.textColor },
+                        likeLoading && { color: currentTheme.secondaryTextColor },
+                    ]}
+                >
+                    {likeLoading
+                        ? t('screen_work_sending')
+                        : liked
+                          ? t('screen_work_liked')
+                          : t('screen_work_like')}
+                </Text>
+            </TouchableOpacity>
 
-      <TouchableOpacity
-        style={[
-          styles.actionButton,
-          likeLoading && styles.actionButtonDisabled,
-        ]}
-        onPress={handleLike}
-        disabled={likeLoading}
-      >
-        {likeLoading ? (
-          <ActivityIndicator
-            size={24}
-            color={currentTheme.primaryColor}
-            style={{ height: 48 }}
-          />
-        ) : (
-          <Icon
-            name={liked ? 'favorite' : 'favorite-border'}
-            size={48}
-            color={liked ? '#ef4444' : currentTheme.iconColor}
-          />
-        )}
-        <Text
-          style={[
-            styles.actionButtonText,
-            { color: liked ? '#ef4444' : currentTheme.textColor },
-            likeLoading && { color: currentTheme.secondaryTextColor },
-          ]}
-        >
-          {likeLoading
-            ? t('screen_work_sending')
-            : liked
-            ? t('screen_work_liked')
-            : t('screen_work_like')}
-        </Text>
-      </TouchableOpacity>
+            <TouchableOpacity style={styles.actionButton} onPress={handleMoreInfo}>
+                <Icon name="info-outline" size={48} color={currentTheme.iconColor} />
+                <Text style={[styles.actionButtonText, { color: currentTheme.textColor }]}>
+                    {t('screen_work_more_info')}
+                </Text>
+            </TouchableOpacity>
 
-      <TouchableOpacity style={styles.actionButton} onPress={handleMoreInfo}>
-        <Icon name="info-outline" size={48} color={currentTheme.iconColor} />
-        <Text
-          style={[styles.actionButtonText, { color: currentTheme.textColor }]}
-        >
-          {t('screen_work_more_info')}
-        </Text>
-      </TouchableOpacity>
+            <TouchableOpacity style={styles.actionButton} onPress={handleOpenWebView}>
+                <Icon name="open-in-browser" size={48} color={currentTheme.iconColor} />
+                <Text style={[styles.actionButtonText, { color: currentTheme.textColor }]}>
+                    {t('screen_work_open_in_web')}
+                </Text>
+            </TouchableOpacity>
+        </View>
+    );
 
-      <TouchableOpacity style={styles.actionButton} onPress={handleOpenWebView}>
-        <Icon name="open-in-browser" size={48} color={currentTheme.iconColor} />
-        <Text
-          style={[styles.actionButtonText, { color: currentTheme.textColor }]}
-        >
-          {t('screen_work_open_in_web')}
-        </Text>
-      </TouchableOpacity>
-    </View>
-  );
+    const renderChapterItem = useCallback(
+        ({ item }) => (
+            <ChapterItem
+                chapter={{
+                    ...item,
+                    workId: workId,
+                    progress: chapterProgress[item.id],
+                }}
+                index={item.originalIndex}
+                currentTheme={currentTheme}
+                onPress={() => handleChapterPress(item, item.originalIndex)}
+                showDate={showDate}
+            />
+        ),
+        [currentTheme, handleChapterPress, chapterProgress, showDate, workId],
+    );
 
-  const renderChapterItem = useCallback(
-    ({ item }) => (
-      <ChapterItem
-        chapter={{
-          ...item,
-          workId: workId,
-          progress: chapterProgress[item.id],
-        }}
-        index={item.originalIndex}
-        currentTheme={currentTheme}
-        onPress={() => handleChapterPress(item, item.originalIndex)}
-        showDate={showDate}
-      />
-    ),
-    [currentTheme, handleChapterPress, chapterProgress, showDate, workId],
-  );
+    const getItemLayout = useCallback(
+        (data, index) => {
+            const itemHeight = showDate ? ITEM_HEIGHT_EXPANDED : ITEM_HEIGHT_COMPACT;
+            return { length: itemHeight, offset: itemHeight * index, index };
+        },
+        [showDate],
+    );
 
-  const getItemLayout = useCallback(
-    (data, index) => {
-      const itemHeight = showDate ? ITEM_HEIGHT_EXPANDED : ITEM_HEIGHT_COMPACT;
-      return { length: itemHeight, offset: itemHeight * index, index };
-    },
-    [showDate],
-  );
+    const ListHeaderComponent = useMemo(
+        () => (
+            <View style={styles.workInfo}>
+                <Text style={[styles.workTitle, { color: currentTheme.textColor }]}>
+                    {work?.title}
+                </Text>
+                <TouchableOpacity
+                    onPress={() => {
+                        navigation.push('User', {
+                            username: work?.author,
+                            currentTheme: currentTheme,
+                            setScreens: setScreens,
+                            onBack: () => navigation.goBack(),
+                            settingsDAO: settingsDAO,
+                            historyDAO: historyDAO,
+                            progressDAO: progressDAO,
+                            kudoHistoryDAO: kudoHistoryDAO,
+                            libraryDAO: libraryDAO,
+                            workDAO: workDAO,
+                            chapterDAO: chapterDAO,
+                        });
+                    }}
+                >
+                    <Text style={[styles.workAuthor, { color: currentTheme.secondaryTextColor }]}>
+                        {t('screen_work_by_author', { author: work?.author })}
+                    </Text>
+                </TouchableOpacity>
 
-  const ListHeaderComponent = useMemo(
-    () => (
-      <View style={styles.workInfo}>
-        <Text style={[styles.workTitle, { color: currentTheme.textColor }]}>
-          {work?.title}
-        </Text>
-        <TouchableOpacity
-          onPress={() => {
-            navigation.push('User', {
-              username: work?.author,
-              currentTheme: currentTheme,
-              setScreens: setScreens,
-              onBack: () => navigation.goBack(),
-              settingsDAO: settingsDAO,
-              historyDAO: historyDAO,
-              progressDAO: progressDAO,
-              kudoHistoryDAO: kudoHistoryDAO,
-              libraryDAO: libraryDAO,
-              workDAO: workDAO,
-              chapterDAO: chapterDAO,
+                {renderActionButtons()}
+                <WorkDescription
+                    work={work}
+                    currentTheme={currentTheme}
+                    jsonSettings={jsonSettings}
+                />
+
+                <View
+                    style={[
+                        styles.sectionHeader,
+                        { borderBottomColor: currentTheme.borderColor, marginTop: 8 },
+                    ]}
+                >
+                    <Text style={[styles.sectionTitle, { color: currentTheme.textColor }]}>
+                        {t('screen_work_chapters_header')}
+                    </Text>
+                    <Text style={[styles.chapterCount, { color: currentTheme.secondaryTextColor }]}>
+                        {t('screen_work_chapters_count', { count: chapters.length })}
+                    </Text>
+                </View>
+            </View>
+        ),
+        [work, currentTheme, chapters, jsonSettings, inLibrary, liked, likeLoading, setScreens, t],
+    );
+
+    if (loading) {
+        return (
+            <SafeAreaView
+                style={[styles.container, { backgroundColor: currentTheme.backgroundColor }]}
+            >
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color={currentTheme.primaryColor} />
+                    <Text style={[styles.loadingText, { color: currentTheme.textColor }]}>
+                        {t('screen_work_loading')}
+                    </Text>
+                </View>
+            </SafeAreaView>
+        );
+    }
+
+    if (error) {
+        return (
+            <SafeAreaView
+                style={[styles.container, { backgroundColor: currentTheme.backgroundColor }]}
+            >
+                <View style={[styles.header, { borderBottomColor: currentTheme.borderColor }]}>
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                        <Icon name="arrow-back" size={24} color={currentTheme.textColor} />
+                    </TouchableOpacity>
+                    <Text style={[styles.title, { color: currentTheme.textColor }]}>
+                        {t('general_error')}
+                    </Text>
+                </View>
+
+                <View style={styles.errorContainer}>
+                    <Icon name="error-outline" size={48} color={currentTheme.iconColor} />
+                    <Text style={[styles.errorText, { color: currentTheme.textColor }]}>
+                        {error}
+                    </Text>
+                    <TouchableOpacity
+                        style={[styles.retryButton, { backgroundColor: currentTheme.primaryColor }]}
+                        onPress={loadWorkData}
+                    >
+                        <Text style={styles.retryButtonText}>{t('general_retry')}</Text>
+                    </TouchableOpacity>
+                </View>
+            </SafeAreaView>
+        );
+    }
+
+    if (!work) {
+        return (
+            <SafeAreaView
+                style={[styles.container, { backgroundColor: currentTheme.backgroundColor }]}
+            >
+                <View style={styles.errorContainer}>
+                    <Text style={[styles.errorText, { color: currentTheme.textColor }]}>
+                        {t('screen_work_not_found')}
+                    </Text>
+                </View>
+            </SafeAreaView>
+        );
+    }
+
+    async function getContinueChapter() {
+        for (let i = 0; i < chapters.length; i++) {
+            const chapter = chapters[i];
+            const progress = await progressDAO.get(workId, chapter.id);
+            if (progress < 0.97) {
+                return [chapter, i];
+            }
+        }
+    }
+
+    async function downloadNextChapters(nb) {
+        setDownloadMenuVisible(false);
+        let startIndex = 0;
+
+        if (nb === -2) {
+            startIndex = 0;
+        } else {
+            const result = await getContinueChapter();
+            if (!result) {
+                console.log('Book is finished or fully read.');
+                return;
+            }
+            startIndex = result[1];
+        }
+
+        const chapToDl = [];
+        let chaptersFound = 0;
+        let currentIndex = startIndex;
+
+        while (currentIndex < chapters.length) {
+            if (nb > 0 && chaptersFound >= nb) {
+                break;
+            }
+
+            const chapter = chapters[currentIndex];
+            const chId = chapter.id;
+            console.log(chapter);
+
+            const alreadyDownloaded = await isDownloaded(workId, chId);
+
+            if (!alreadyDownloaded) {
+                chapToDl.push({ workId: workId, chapterId: chId });
+                chaptersFound++;
+            }
+
+            currentIndex++;
+        }
+
+        if (chapToDl.length > 0) {
+            console.log(`Adding ${chapToDl.length} chapters to queue.`);
+            await addToDownloadQueue(chapToDl);
+            showToast(
+                t('screen_work_toast_added_chapters_to_queue', {
+                    count: chapToDl.length,
+                }),
+                'success',
+            );
+            await processQueue();
+        } else {
+            showToast(t('screen_work_toast_no_new_chapters_to_download'), 'error');
+        }
+
+        setDownloadMenuVisible(false);
+    }
+
+    async function deleteAllChapters() {
+        setDownloadMenuVisible(false);
+        for (const chapter of chapters) {
+            if (await isDownloaded(workId, chapter.id)) {
+                await deleteDownloaded(workId, chapter.id);
+            }
+        }
+    }
+
+    const handleNativeDownload = async format => {
+        const url = `https://archiveofourown.org/downloads/${workId}/work.${format}`;
+        const safeName = (work?.title || `work_${workId}`).replace(/[/\\?%*:|"<>]/g, '_');
+        const filename = `${safeName}.${format}`;
+        const destPath = `${RNFS.DownloadDirectoryPath}/${filename}`;
+
+        setNativeDownloadingFormat(format);
+        try {
+            const result = await RNFS.downloadFile({ fromUrl: url, toFile: destPath }).promise;
+            if (result.statusCode === 200) {
+                Toast.show({
+                    type: 'success',
+                    text1: t('screen_work_toast_download_complete'),
+                    text2: t('screen_work_toast_download_complete_sub', {
+                        filename: filename,
+                    }),
+                });
+            } else {
+                Toast.show({
+                    type: 'error',
+                    text1: t('screen_work_toast_download_failed'),
+                    text2: t('screen_work_toast_download_failed_sub', {
+                        statusCode: result.statusCode,
+                    }),
+                });
+            }
+        } catch (err) {
+            Toast.show({
+                type: 'error',
+                text1: t('screen_work_toast_download_failed'),
+                text2: err.message,
             });
-          }}
-        >
-          <Text
-            style={[
-              styles.workAuthor,
-              { color: currentTheme.secondaryTextColor },
-            ]}
-          >
-            {t('screen_work_by_author', { author: work?.author })}
-          </Text>
-        </TouchableOpacity>
-
-        {renderActionButtons()}
-        <WorkDescription
-          work={work}
-          currentTheme={currentTheme}
-          jsonSettings={jsonSettings}
-        />
-
-        <View
-          style={[
-            styles.sectionHeader,
-            { borderBottomColor: currentTheme.borderColor, marginTop: 8 },
-          ]}
-        >
-          <Text
-            style={[styles.sectionTitle, { color: currentTheme.textColor }]}
-          >
-            {t('screen_work_chapters_header')}
-          </Text>
-          <Text
-            style={[
-              styles.chapterCount,
-              { color: currentTheme.secondaryTextColor },
-            ]}
-          >
-            {t('screen_work_chapters_count', { count: chapters.length })}
-          </Text>
-        </View>
-      </View>
-    ),
-    [
-      work,
-      currentTheme,
-      chapters,
-      jsonSettings,
-      inLibrary,
-      liked,
-      likeLoading,
-      setScreens,
-      t,
-    ],
-  );
-
-  if (loading) {
-    return (
-      <SafeAreaView
-        style={[
-          styles.container,
-          { backgroundColor: currentTheme.backgroundColor },
-        ]}
-      >
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={currentTheme.primaryColor} />
-          <Text style={[styles.loadingText, { color: currentTheme.textColor }]}>
-            {t('screen_work_loading')}
-          </Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (error) {
-    return (
-      <SafeAreaView
-        style={[
-          styles.container,
-          { backgroundColor: currentTheme.backgroundColor },
-        ]}
-      >
-        <View
-          style={[
-            styles.header,
-            { borderBottomColor: currentTheme.borderColor },
-          ]}
-        >
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.backButton}
-          >
-            <Icon name="arrow-back" size={24} color={currentTheme.textColor} />
-          </TouchableOpacity>
-          <Text style={[styles.title, { color: currentTheme.textColor }]}>
-            {t('general_error')}
-          </Text>
-        </View>
-
-        <View style={styles.errorContainer}>
-          <Icon name="error-outline" size={48} color={currentTheme.iconColor} />
-          <Text style={[styles.errorText, { color: currentTheme.textColor }]}>
-            {error}
-          </Text>
-          <TouchableOpacity
-            style={[
-              styles.retryButton,
-              { backgroundColor: currentTheme.primaryColor },
-            ]}
-            onPress={loadWorkData}
-          >
-            <Text style={styles.retryButtonText}>{t('general_retry')}</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (!work) {
-    return (
-      <SafeAreaView
-        style={[
-          styles.container,
-          { backgroundColor: currentTheme.backgroundColor },
-        ]}
-      >
-        <View style={styles.errorContainer}>
-          <Text style={[styles.errorText, { color: currentTheme.textColor }]}>
-            {t('screen_work_not_found')}
-          </Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  async function getContinueChapter() {
-    for (let i = 0; i < chapters.length; i++) {
-      let chapter = chapters[i];
-      let progress = await progressDAO.get(workId, chapter.id);
-      if (progress < 0.97) {
-        return [chapter, i];
-      }
-    }
-  }
-
-  async function downloadNextChapters(nb) {
-    setDownloadMenuVisible(false);
-    let startIndex = 0;
-
-    if (nb === -2) {
-      startIndex = 0;
-    } else {
-      const result = await getContinueChapter();
-      if (!result) {
-        console.log('Book is finished or fully read.');
-        return;
-      }
-      startIndex = result[1];
-    }
-
-    const chapToDl = [];
-    let chaptersFound = 0;
-    let currentIndex = startIndex;
-
-    while (currentIndex < chapters.length) {
-      if (nb > 0 && chaptersFound >= nb) {
-        break;
-      }
-
-      const chapter = chapters[currentIndex];
-      const chId = chapter.id;
-      console.log(chapter);
-
-      const alreadyDownloaded = await isDownloaded(workId, chId);
-
-      if (!alreadyDownloaded) {
-        chapToDl.push({ workId: workId, chapterId: chId });
-        chaptersFound++;
-      }
-
-      currentIndex++;
-    }
-
-    if (chapToDl.length > 0) {
-      console.log(`Adding ${chapToDl.length} chapters to queue.`);
-      await addToDownloadQueue(chapToDl);
-      showToast(
-        t('screen_work_toast_added_chapters_to_queue', {
-          count: chapToDl.length,
-        }),
-        'success',
-      );
-      await processQueue();
-    } else {
-      showToast(t('screen_work_toast_no_new_chapters_to_download'), 'error');
-    }
-
-    setDownloadMenuVisible(false);
-  }
-
-  async function deleteAllChapters() {
-    setDownloadMenuVisible(false);
-    for (const chapter of chapters) {
-      if (await isDownloaded(workId, chapter.id)) {
-        await deleteDownloaded(workId, chapter.id);
-      }
-    }
-  }
-
-  const handleNativeDownload = async format => {
-    const url = `https://archiveofourown.org/downloads/${workId}/work.${format}`;
-    const safeName = (work?.title || `work_${workId}`).replace(
-      /[/\\?%*:|"<>]/g,
-      '_',
-    );
-    const filename = `${safeName}.${format}`;
-    const destPath = `${RNFS.DownloadDirectoryPath}/${filename}`;
-
-    setNativeDownloadingFormat(format);
-    try {
-      const result = await RNFS.downloadFile({ fromUrl: url, toFile: destPath })
-        .promise;
-      if (result.statusCode === 200) {
-        Toast.show({
-          type: 'success',
-          text1: t('screen_work_toast_download_complete'),
-          text2: t('screen_work_toast_download_complete_sub', {
-            filename: filename,
-          }),
-        });
-      } else {
-        Toast.show({
-          type: 'error',
-          text1: t('screen_work_toast_download_failed'),
-          text2: t('screen_work_toast_download_failed_sub', {
-            statusCode: result.statusCode,
-          }),
-        });
-      }
-    } catch (err) {
-      Toast.show({
-        type: 'error',
-        text1: t('screen_work_toast_download_failed'),
-        text2: err.message,
-      });
-    } finally {
-      setNativeDownloadingFormat(null);
-      setNativeDownloadModalVisible(false);
-    }
-  };
-
-  const continueReading = async function () {
-    setIsLoadingContinue(true);
-
-    const result = await getContinueChapter();
-
-    if (result) {
-      const [chapter, toLoad] = result;
-      await handleChapterPress(chapter, toLoad);
-      setIsLoadingContinue(false);
-      return;
-    }
-
-    let lastChapter = chapters[chapters.length - 1];
-    await handleChapterPress(lastChapter, chapters.length - 1);
-    setIsLoadingContinue(false);
-  };
-
-  const handleRefresh = async () => {
-    try {
-      setLoading(true);
-      const newWork = await fetchWorkFromWorkID(
-        workId,
-        workDAO,
-        chapterDAO,
-        true,
-      );
-      if (!newWork) {
-        Toast.show({
-          type: 'error',
-          text1: t('screen_work_toast_error_reloading_work'),
-          text2: t('screen_work_toast_error_loading_work'),
-        });
-        setLoading(false);
-        setMenuVisible(false);
-        return;
-      }
-      setWork(newWork);
-      setChapters(newWork.chapters);
-      setLoading(false);
-    } catch (err) {
-      Toast.show({
-        type: 'error',
-        text1: t('screen_work_toast_error_reloading_work'),
-        text2: t('screen_work_toast_error_loading_work'),
-      });
-      setLoading(false);
-      setMenuVisible(false);
-    }
-  };
-
-  return (
-    <SafeAreaView
-      style={[
-        styles.container,
-        { backgroundColor: currentTheme.backgroundColor },
-      ]}
-    >
-      <StatusBar backgroundColor={currentTheme.headerBackground} />
-      <View
-        style={[
-          styles.header,
-          {
-            backgroundColor: currentTheme.headerBackground,
-            borderBottomColor: currentTheme.borderColor,
-          },
-        ]}
-      >
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          <Icon name="arrow-back" size={24} color={currentTheme.iconColor} />
-        </TouchableOpacity>
-        <Text
-          style={[styles.headerTitle, { color: currentTheme.textColor }]}
-          numberOfLines={1}
-        >
-          {work.title}
-        </Text>
-        <TouchableOpacity
-          onPress={() => setDownloadMenuVisible(true)}
-          style={styles.menuButton}
-        >
-          <Icon name="download" size={24} color={currentTheme.iconColor} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setMenuVisible(true)}
-          style={styles.menuButton}
-        >
-          <Icon name="more-vert" size={24} color={currentTheme.iconColor} />
-        </TouchableOpacity>
-      </View>
-
-      {renderHeaderMenu()}
-      {renderDownloadHeaderMenu()}
-      {renderNativeDownloadModal()}
-
-      <FlatList
-        data={[...chapters]
-          .map((chapter, originalIndex) => ({ ...chapter, originalIndex }))
-          .reverse()}
-        renderItem={renderChapterItem}
-        keyExtractor={item =>
-          item.id ? String(item.id) : String(item.originalIndex)
+        } finally {
+            setNativeDownloadingFormat(null);
+            setNativeDownloadModalVisible(false);
         }
-        ListHeaderComponent={ListHeaderComponent}
-        initialNumToRender={10}
-        maxToRenderPerBatch={5}
-        windowSize={21}
-        getItemLayout={getItemLayout}
-        contentContainerStyle={styles.chaptersListContentContainer}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={loading}
-            onRefresh={() => handleRefresh()}
-          />
+    };
+
+    const continueReading = async () => {
+        setIsLoadingContinue(true);
+
+        const result = await getContinueChapter();
+
+        if (result) {
+            const [chapter, toLoad] = result;
+            await handleChapterPress(chapter, toLoad);
+            setIsLoadingContinue(false);
+            return;
         }
-      />
 
-      <BookDetailsModal
-        book={work ? formatWork(work) : null}
-        isOpen={modalVisible}
-        onClose={() => setModalVisible(false)}
-        mode={modalMode}
-        theme={currentTheme}
-        onShowAllTags={handleShowAllTags}
-        openTagSearch={openTagSearch}
-      />
+        const lastChapter = chapters[chapters.length - 1];
+        await handleChapterPress(lastChapter, chapters.length - 1);
+        setIsLoadingContinue(false);
+    };
 
-      <CategorySelectionModal
-        visible={showCategoryModal}
-        categories={categories}
-        onSelect={handleCategorySelect}
-        onCancel={() => setShowCategoryModal(false)}
-        theme={currentTheme}
-        title={t('screen_category_new_category')}
-      />
+    const handleRefresh = async () => {
+        try {
+            setLoading(true);
+            const newWork = await fetchWorkFromWorkID(workId, workDAO, chapterDAO, true);
+            if (!newWork) {
+                Toast.show({
+                    type: 'error',
+                    text1: t('screen_work_toast_error_reloading_work'),
+                    text2: t('screen_work_toast_error_loading_work'),
+                });
+                setLoading(false);
+                setMenuVisible(false);
+                return;
+            }
+            setWork(newWork);
+            setChapters(newWork.chapters);
+            setLoading(false);
+        } catch (err) {
+            Toast.show({
+                type: 'error',
+                text1: t('screen_work_toast_error_reloading_work'),
+                text2: t('screen_work_toast_error_loading_work'),
+            });
+            setLoading(false);
+            setMenuVisible(false);
+        }
+    };
 
-      <TouchableOpacity
-        style={[
-          styles.readButtonFab,
-          { backgroundColor: currentTheme.primaryColor },
-        ]}
-        onPress={() => continueReading()}
-      >
-        {isLoadingContinue ? (
-          <ActivityIndicator size="large" color="white" />
-        ) : (
-          <Icon name="play-arrow" size={24} color="white" />
-        )}
-      </TouchableOpacity>
-    </SafeAreaView>
-  );
+    return (
+        <SafeAreaView style={[styles.container, { backgroundColor: currentTheme.backgroundColor }]}>
+            <StatusBar backgroundColor={currentTheme.headerBackground} />
+            <View
+                style={[
+                    styles.header,
+                    {
+                        backgroundColor: currentTheme.headerBackground,
+                        borderBottomColor: currentTheme.borderColor,
+                    },
+                ]}
+            >
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                    <Icon name="arrow-back" size={24} color={currentTheme.iconColor} />
+                </TouchableOpacity>
+                <Text
+                    style={[styles.headerTitle, { color: currentTheme.textColor }]}
+                    numberOfLines={1}
+                >
+                    {work.title}
+                </Text>
+                <TouchableOpacity
+                    onPress={() => setDownloadMenuVisible(true)}
+                    style={styles.menuButton}
+                >
+                    <Icon name="download" size={24} color={currentTheme.iconColor} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setMenuVisible(true)} style={styles.menuButton}>
+                    <Icon name="more-vert" size={24} color={currentTheme.iconColor} />
+                </TouchableOpacity>
+            </View>
+
+            {renderHeaderMenu()}
+            {renderDownloadHeaderMenu()}
+            {renderNativeDownloadModal()}
+
+            <FlatList
+                data={[...chapters]
+                    .map((chapter, originalIndex) => ({ ...chapter, originalIndex }))
+                    .reverse()}
+                renderItem={renderChapterItem}
+                keyExtractor={item => (item.id ? String(item.id) : String(item.originalIndex))}
+                ListHeaderComponent={ListHeaderComponent}
+                initialNumToRender={10}
+                maxToRenderPerBatch={5}
+                windowSize={21}
+                getItemLayout={getItemLayout}
+                contentContainerStyle={styles.chaptersListContentContainer}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl refreshing={loading} onRefresh={() => handleRefresh()} />
+                }
+            />
+
+            <BookDetailsModal
+                book={work ? formatWork(work) : null}
+                isOpen={modalVisible}
+                onClose={() => setModalVisible(false)}
+                mode={modalMode}
+                theme={currentTheme}
+                onShowAllTags={handleShowAllTags}
+                openTagSearch={openTagSearch}
+            />
+
+            <CategorySelectionModal
+                visible={showCategoryModal}
+                categories={categories}
+                onSelect={handleCategorySelect}
+                onCancel={() => setShowCategoryModal(false)}
+                theme={currentTheme}
+                title={t('screen_category_new_category')}
+            />
+
+            <TouchableOpacity
+                style={[styles.readButtonFab, { backgroundColor: currentTheme.primaryColor }]}
+                onPress={() => continueReading()}
+            >
+                {isLoadingContinue ? (
+                    <ActivityIndicator size="large" color="white" />
+                ) : (
+                    <Icon name="play-arrow" size={24} color="white" />
+                )}
+            </TouchableOpacity>
+        </SafeAreaView>
+    );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-  },
-  backButton: {
-    padding: 8,
-    marginRight: 8,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    flex: 1,
-  },
-  workInfo: {
-    padding: 16,
-    paddingBottom: 0,
-  },
-  workTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  workAuthor: {
-    fontSize: 16,
-    marginBottom: 20,
-  },
-  actionButtonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    alignItems: 'center',
-    marginBottom: 20,
-    paddingHorizontal: 8,
-    minHeight: 80,
-  },
-  actionButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 0,
-    minWidth: 80,
-    flex: 1,
-  },
-  actionButtonDisabled: {
-    opacity: 0.6,
-  },
-  actionButtonText: {
-    fontSize: 12,
-    marginTop: 6,
-    textAlign: 'center',
-    lineHeight: 14,
-  },
-  descriptionContainer: {
-    marginTop: 10,
-    paddingHorizontal: 16,
-    position: 'relative',
-  },
-  hiddenMeasurer: {
-    position: 'absolute',
-    top: 0,
-    left: 16,
-    right: 16,
-    opacity: 0,
-    zIndex: -10,
-  },
-  descriptionWrapper: {
-    width: '100%',
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  contentPadding: {
-    paddingBottom: 10,
-  },
-  innerContent: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-  },
-  measureHelper: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    opacity: 0,
-  },
-  description: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  descriptionGradient: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 60,
-    zIndex: 2,
-  },
-  expandButton: {
-    alignSelf: 'center',
-    paddingVertical: 4,
-    width: '100%',
-    alignItems: 'center',
-    zIndex: 10,
-  },
-  chaptersListContentContainer: {
-    paddingBottom: 16,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  chapterCount: {
-    fontSize: 14,
-  },
-  chapterItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    justifyContent: 'space-between',
-  },
-  chapterContent: {
-    flex: 1,
-    justifyContent: 'center',
-    marginRight: 8,
-  },
-  rightProgressContainer: {
-    justifyContent: 'center',
-    alignItems: 'flex-end',
-    marginRight: 4,
-  },
-  progressRight: {
-    fontSize: 12,
-    fontWeight: '500',
-    marginRight: 8,
-    minWidth: 35,
-    textAlign: 'right',
-  },
-  chapterTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 0,
-  },
-  chapterDate: {
-    fontSize: 12,
-    marginTop: 4,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-  },
-  errorText: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginVertical: 16,
-  },
-  retryButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  retryButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  toast: {
-    position: 'absolute',
-    top: 40,
-    left: 16,
-    right: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderRadius: 8,
-    zIndex: 1000,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-  },
-  toastText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '500',
-    flex: 1,
-  },
-  readButtonFab: {
-    position: 'absolute',
-    right: 16,
-    bottom: 25,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
+    container: {
+        flex: 1,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 4.65,
-  },
-  floatingButton: {
-    flexDirection: 'row',
-    display: 'flex',
-  },
-  menuButton: {
-    padding: 8,
-  },
-  menuOverlay: {
-    flex: 1,
-    backgroundColor: 'transparent',
-  },
-  menuContainer: {
-    position: 'absolute',
-    top: 50,
-    right: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    width: 180,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    overflow: 'hidden',
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 14,
-  },
-  menuItemText: {
-    fontSize: 16,
-    marginLeft: 12,
-  },
-  menuDivider: {
-    height: 1,
-    width: '100%',
-  },
-  downloadContainer: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  rightActionContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexShrink: 0,
-  },
-  downloadIconWrapper: {
-    padding: 4,
-    width: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  chevron: {
-    marginLeft: 4,
-  },
-  nativeModalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-  },
-  nativeModalCard: {
-    width: '100%',
-    borderRadius: 12,
-    borderWidth: 1,
-    padding: 20,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-  },
-  nativeModalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  nativeModalSubtitle: {
-    fontSize: 13,
-    marginBottom: 16,
-  },
-  nativeFormatRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-  },
-  nativeFormatIcon: {
-    marginRight: 14,
-  },
-  nativeFormatLabel: {
-    fontSize: 16,
-    fontWeight: '500',
-    flex: 1,
-  },
-  nativeFormatSpinner: {
-    marginLeft: 8,
-  },
-  nativeCancelButton: {
-    marginTop: 14,
-    paddingVertical: 10,
-    alignItems: 'center',
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  nativeCancelText: {
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginLeft: 16,
-  },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+    },
+    backButton: {
+        padding: 8,
+        marginRight: 8,
+    },
+    headerTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        flex: 1,
+    },
+    workInfo: {
+        padding: 16,
+        paddingBottom: 0,
+    },
+    workTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 4,
+    },
+    workAuthor: {
+        fontSize: 16,
+        marginBottom: 20,
+    },
+    actionButtonsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-evenly',
+        alignItems: 'center',
+        marginBottom: 20,
+        paddingHorizontal: 8,
+        minHeight: 80,
+    },
+    actionButton: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 8,
+        paddingHorizontal: 0,
+        minWidth: 80,
+        flex: 1,
+    },
+    actionButtonDisabled: {
+        opacity: 0.6,
+    },
+    actionButtonText: {
+        fontSize: 12,
+        marginTop: 6,
+        textAlign: 'center',
+        lineHeight: 14,
+    },
+    descriptionContainer: {
+        marginTop: 10,
+        paddingHorizontal: 16,
+        position: 'relative',
+    },
+    hiddenMeasurer: {
+        position: 'absolute',
+        top: 0,
+        left: 16,
+        right: 16,
+        opacity: 0,
+        zIndex: -10,
+    },
+    descriptionWrapper: {
+        width: '100%',
+        overflow: 'hidden',
+        position: 'relative',
+    },
+    contentPadding: {
+        paddingBottom: 10,
+    },
+    innerContent: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+    },
+    measureHelper: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        opacity: 0,
+    },
+    description: {
+        fontSize: 14,
+        lineHeight: 20,
+    },
+    descriptionGradient: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: 60,
+        zIndex: 2,
+    },
+    expandButton: {
+        alignSelf: 'center',
+        paddingVertical: 4,
+        width: '100%',
+        alignItems: 'center',
+        zIndex: 10,
+    },
+    chaptersListContentContainer: {
+        paddingBottom: 16,
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+    },
+    chapterCount: {
+        fontSize: 14,
+    },
+    chapterItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        justifyContent: 'space-between',
+    },
+    chapterContent: {
+        flex: 1,
+        justifyContent: 'center',
+        marginRight: 8,
+    },
+    rightProgressContainer: {
+        justifyContent: 'center',
+        alignItems: 'flex-end',
+        marginRight: 4,
+    },
+    progressRight: {
+        fontSize: 12,
+        fontWeight: '500',
+        marginRight: 8,
+        minWidth: 35,
+        textAlign: 'right',
+    },
+    chapterTitle: {
+        fontSize: 16,
+        fontWeight: '500',
+        marginBottom: 0,
+    },
+    chapterDate: {
+        fontSize: 12,
+        marginTop: 4,
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    loadingText: {
+        marginTop: 16,
+        fontSize: 16,
+    },
+    errorContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 32,
+    },
+    errorText: {
+        fontSize: 16,
+        textAlign: 'center',
+        marginVertical: 16,
+    },
+    retryButton: {
+        paddingHorizontal: 24,
+        paddingVertical: 12,
+        borderRadius: 8,
+    },
+    retryButtonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    toast: {
+        position: 'absolute',
+        top: 40,
+        left: 16,
+        right: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 16,
+        borderRadius: 8,
+        zIndex: 1000,
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+    },
+    toastText: {
+        color: 'white',
+        fontSize: 14,
+        fontWeight: '500',
+        flex: 1,
+    },
+    readButtonFab: {
+        position: 'absolute',
+        right: 16,
+        bottom: 25,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 8,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 4,
+        },
+        shadowOpacity: 0.3,
+        shadowRadius: 4.65,
+    },
+    floatingButton: {
+        flexDirection: 'row',
+        display: 'flex',
+    },
+    menuButton: {
+        padding: 8,
+    },
+    menuOverlay: {
+        flex: 1,
+        backgroundColor: 'transparent',
+    },
+    menuContainer: {
+        position: 'absolute',
+        top: 50,
+        right: 16,
+        borderRadius: 8,
+        borderWidth: 1,
+        width: 180,
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        overflow: 'hidden',
+    },
+    menuItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 14,
+    },
+    menuItemText: {
+        fontSize: 16,
+        marginLeft: 12,
+    },
+    menuDivider: {
+        height: 1,
+        width: '100%',
+    },
+    downloadContainer: {
+        width: 40,
+        height: 40,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    rightActionContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flexShrink: 0,
+    },
+    downloadIconWrapper: {
+        padding: 4,
+        width: 32,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    chevron: {
+        marginLeft: 4,
+    },
+    nativeModalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 24,
+    },
+    nativeModalCard: {
+        width: '100%',
+        borderRadius: 12,
+        borderWidth: 1,
+        padding: 20,
+        elevation: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+    },
+    nativeModalTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        marginBottom: 4,
+    },
+    nativeModalSubtitle: {
+        fontSize: 13,
+        marginBottom: 16,
+    },
+    nativeFormatRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 14,
+        borderBottomWidth: 1,
+    },
+    nativeFormatIcon: {
+        marginRight: 14,
+    },
+    nativeFormatLabel: {
+        fontSize: 16,
+        fontWeight: '500',
+        flex: 1,
+    },
+    nativeFormatSpinner: {
+        marginLeft: 8,
+    },
+    nativeCancelButton: {
+        marginTop: 14,
+        paddingVertical: 10,
+        alignItems: 'center',
+        borderRadius: 8,
+        borderWidth: 1,
+    },
+    nativeCancelText: {
+        fontSize: 15,
+        fontWeight: '500',
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginLeft: 16,
+    },
 });
 
 export default ChapterInfoScreen;
