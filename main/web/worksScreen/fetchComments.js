@@ -79,7 +79,8 @@ export async function fetchComments(
         if (response.includes('<!-- START thread -->')) {
             const threadPart = response.split('<!-- START thread -->')[1];
             const endIdx = threadPart.lastIndexOf('<!-- END thread -->');
-            const rawThread = endIdx !== -1 ? threadPart.substring(0, endIdx) : threadPart.split('");')[0];
+            const rawThread =
+                endIdx !== -1 ? threadPart.substring(0, endIdx) : threadPart.split('");')[0];
             htmlCT = rawThread
                 .replace(/\\"/g, '"')
                 .replace(/\\'/g, "'")

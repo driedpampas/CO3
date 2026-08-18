@@ -47,40 +47,39 @@ export default function BookmarksScreen({ route }) {
 
     const PAGE_SIZE = 20;
 
-    useEffect(() => {
-        loadInitialBookmarks();
-    }, [loadInitialBookmarks]);
+    const formatWork = useCallback(
+        work => {
+            return {
+                id: work.id,
+                title: work.title,
+                author: work.author,
+                rating: work.rating,
+                category: work.category,
+                warningStatus: work.warningStatus,
+                isCompleted: work.isCompleted,
+                tags: work.tags,
+                warnings: work.warnings,
+                description: work.description,
+                lastUpdated: work.updated
+                    ? new Date(work.updated).toLocaleDateString()
+                    : t('general_unknown'),
+                likes: work.kudos,
+                bookmarks: work.bookmarks,
+                words: work.words,
+                views: work.hits,
+                language: work.language,
+                currentChapter: work.currentChapter,
+                chapterCount: work.chapterCount,
+                dateAdded: undefined,
+                collection: undefined,
+                readIndex: undefined,
+                lastRead: undefined,
+            };
+        },
+        [t],
+    );
 
-    const formatWork = work => {
-        return {
-            id: work.id,
-            title: work.title,
-            author: work.author,
-            rating: work.rating,
-            category: work.category,
-            warningStatus: work.warningStatus,
-            isCompleted: work.isCompleted,
-            tags: work.tags,
-            warnings: work.warnings,
-            description: work.description,
-            lastUpdated: work.updated
-                ? new Date(work.updated).toLocaleDateString()
-                : t('general_unknown'),
-            likes: work.kudos,
-            bookmarks: work.bookmarks,
-            words: work.words,
-            views: work.hits,
-            language: work.language,
-            currentChapter: work.currentChapter,
-            chapterCount: work.chapterCount,
-            dateAdded: undefined,
-            collection: undefined,
-            readIndex: undefined,
-            lastRead: undefined,
-        };
-    };
-
-    const loadInitialBookmarks = async () => {
+    const loadInitialBookmarks = useCallback(async () => {
         let usrname = username;
 
         if (!username) usrname = await getUsername();
@@ -108,7 +107,11 @@ export default function BookmarksScreen({ route }) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [username, pseud, t]);
+
+    useEffect(() => {
+        loadInitialBookmarks();
+    }, [loadInitialBookmarks]);
 
     const loadMoreBookmarks = async () => {
         if (loadingMore || !hasMore) return;

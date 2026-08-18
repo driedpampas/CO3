@@ -42,7 +42,9 @@ export class ChapterDAO {
         const currentChapters = await this.getChaptersForWork(workId);
 
         const currentMap = new Map();
-        currentChapters.forEach(c => currentMap.set(c.id, c));
+        for (const c of currentChapters) {
+            currentMap.set(c.id, c);
+        }
 
         const transactionOps = [];
         const newIds = new Set();

@@ -114,6 +114,24 @@ const AppWrapper = () => {
     const [selectedCollection, setSelectedCollection] = useState();
     const [applyTempPreset, setApplyTempPreset] = useState(0);
 
+    const currentTheme = useMemo(() => {
+        return themes?.[theme]
+            ? themes[theme]
+            : themes?.light || {
+                  backgroundColor: 'white',
+                  textColor: 'black',
+                  headerBackground: '#f8f8f8',
+                  iconColor: '#333',
+                  inputBackground: '#eee',
+                  borderColor: '#e0e0e0',
+                  primaryColor: '#8b5cf6',
+                  buttonBackground: '#eee',
+                  placeholderColor: '#999',
+                  cardBackground: '#fff',
+                  secondaryTextColor: '#666',
+              };
+    }, [theme]);
+
     const contextRef = useRef({
         workDAO,
         libraryDAO,
@@ -173,24 +191,6 @@ const AppWrapper = () => {
 
         openSearch();
     };
-
-    const currentTheme = useMemo(() => {
-        return themes && themes[theme] //TODO: Make the app not load till it get that theme to avoid flash bangs
-            ? themes[theme]
-            : themes?.light || {
-                  backgroundColor: 'white',
-                  textColor: 'black',
-                  headerBackground: '#f8f8f8',
-                  iconColor: '#333',
-                  inputBackground: '#eee',
-                  borderColor: '#e0e0e0',
-                  primaryColor: '#8b5cf6',
-                  buttonBackground: '#eee',
-                  placeholderColor: '#999',
-                  cardBackground: '#fff',
-                  secondaryTextColor: '#666',
-              };
-    }, [theme]);
 
     return (
         <View style={wrapperStyle}>

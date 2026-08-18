@@ -32,14 +32,14 @@ let instance = null;
 
 class DatabaseManager {
     constructor() {
-        if (!instance) {
-            this.db = null;
-            instance = this;
-        }
-        return instance;
+        this.db = null;
+        this._openPromise = null;
     }
 
     static getInstance() {
+        if (!instance) {
+            instance = new DatabaseManager();
+        }
         return instance;
     }
 
@@ -343,4 +343,4 @@ export async function clearUnusedCache(db) {
     }
 }
 
-export const database = new DatabaseManager();
+export const database = DatabaseManager.getInstance();

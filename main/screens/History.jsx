@@ -50,24 +50,40 @@ const HistoryScreen = ({
 
     const PAGE_SIZE = 20;
 
-    useEffect(() => {
-        if (historyDAO && workDAO) {
-            loadInitialHistory();
-            loadReadingDates();
-        }
-    }, [historyDAO, loadInitialHistory, loadReadingDates, workDAO]);
+    const handleClick = useCallback(
+        item => {
+            if (!item) return;
 
-    useEffect(() => {
-        const subscription = DeviceEventEmitter.addListener('doubleTap', id => {
-            handleClick(history[0]);
-        });
+            navigation.push('Work', {
+                workId: item.workId,
+                currentTheme: currentTheme,
+                settingsDAO: settingsDAO,
+                workDAO: workDAO,
+                libraryDAO: libraryDAO,
+                setScreens: setScreens,
+                historyDAO: historyDAO,
+                progressDAO: progressDAO,
+                loadChapter: item.chapterEnd || item.chapter || 0,
+                kudoHistoryDAO: kudoHistoryDAO,
+                chapterDAO: chapterDAO,
+            });
+        },
+        [
+            navigation,
+            currentTheme,
+            settingsDAO,
+            workDAO,
+            libraryDAO,
+            setScreens,
+            historyDAO,
+            progressDAO,
+            kudoHistoryDAO,
+            chapterDAO,
+        ],
+    );
 
-        return () => {
-            subscription.remove();
-        };
-    }, [history]);
-
-    const loadReadingDates = async () => {
+    const loadReadingDates = useCallback(async () => {
+        if (!historyDAO) return;
         try {
             const datesAsTimestamps = await historyDAO.getReadingDates();
             const datesAsStrings = datesAsTimestamps.map(timestamp => {
@@ -77,36 +93,40 @@ const HistoryScreen = ({
         } catch (error) {
             console.error('Error loading reading dates:', error);
         }
-    };
+    }, [historyDAO]);
 
-    const fetchAndCombineHistory = async historyData => {
-        if (!historyData || historyData.length === 0) {
-            return [];
-        }
+    const fetchAndCombineHistory = useCallback(
+        async historyData => {
+            if (!historyData || historyData.length === 0 || !workDAO) {
+                return [];
+            }
 
-        const combinedHistory = await Promise.all(
-            historyData.map(async item => {
-                try {
-                    const work = await workDAO.get(item.workId);
-                    return {
-                        ...item,
-                        book_title: work ? work.title : t('general_unknown_work'),
-                        book_author: work ? work.author : t('general_unknown_author'),
-                    };
-                } catch (error) {
-                    console.error(`Error fetching work for history item ${item.id}:`, error);
-                    return {
-                        ...item,
-                        book_title: t('general_unknown_work'),
-                        book_author: t('general_unknown_author'),
-                    };
-                }
-            }),
-        );
-        return combinedHistory;
-    };
+            const combinedHistory = await Promise.all(
+                historyData.map(async item => {
+                    try {
+                        const work = await workDAO.get(item.workId);
+                        return {
+                            ...item,
+                            book_title: work ? work.title : t('general_unknown_work'),
+                            book_author: work ? work.author : t('general_unknown_author'),
+                        };
+                    } catch (error) {
+                        console.error(`Error fetching work for history item ${item.id}:`, error);
+                        return {
+                            ...item,
+                            book_title: t('general_unknown_work'),
+                            book_author: t('general_unknown_author'),
+                        };
+                    }
+                }),
+            );
+            return combinedHistory;
+        },
+        [workDAO, t],
+    );
 
-    const loadInitialHistory = async () => {
+    const loadInitialHistory = useCallback(async () => {
+        if (!historyDAO || !workDAO) return;
         try {
             setLoading(true);
             setCurrentPage(0);
@@ -126,7 +146,7 @@ const HistoryScreen = ({
                 );
                 count = await historyDAO.getHistoryCountByDateRange(startTimestamp, endTimestamp);
             } else {
-                historyData = await historyDAO.getPaginatedHistory(PAGE_SIZE, 0); // Assuming historyDAO returns items with workId
+                historyData = await historyDAO.getPaginatedHistory(PAGE_SIZE, 0);
                 count = await historyDAO.getTotalHistoryCount();
             }
 
@@ -140,7 +160,24 @@ const HistoryScreen = ({
         } finally {
             setLoading(false);
         }
-    };
+    }, [historyDAO, workDAO, isFilterActive, dateRange, fetchAndCombineHistory]);
+
+    useEffect(() => {
+        if (historyDAO && workDAO) {
+            loadInitialHistory();
+            loadReadingDates();
+        }
+    }, [historyDAO, loadInitialHistory, loadReadingDates, workDAO]);
+
+    useEffect(() => {
+        const subscription = DeviceEventEmitter.addListener('doubleTap', () => {
+            handleClick(history[0]);
+        });
+
+        return () => {
+            subscription.remove();
+        };
+    }, [history, handleClick]);
 
     const loadMoreHistory = async () => {
         if (loadingMore || !hasMore) return;
@@ -255,24 +292,6 @@ const HistoryScreen = ({
             setLoading(false);
         }
     };
-
-    function handleClick(item) {
-        if (!item) return;
-
-        navigation.push('Work', {
-            workId: item.workId,
-            currentTheme: currentTheme,
-            settingsDAO: settingsDAO,
-            workDAO: workDAO,
-            libraryDAO: libraryDAO,
-            setScreens: setScreens,
-            historyDAO: historyDAO,
-            progressDAO: progressDAO,
-            loadChapter: item.chapterEnd || item.chapter || 0,
-            kudoHistoryDAO: kudoHistoryDAO,
-            chapterDAO: chapterDAO,
-        });
-    }
 
     const clearDateFilter = async () => {
         setDateRange({ start: null, end: null });
