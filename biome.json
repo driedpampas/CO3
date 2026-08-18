@@ -1,0 +1,73 @@
+{
+    "$schema": "https://biomejs.dev/schemas/2.5.9/schema.json",
+    "vcs": {
+        "enabled": true,
+        "clientKind": "git",
+        "useIgnoreFile": true
+    },
+    "files": {
+        "ignoreUnknown": true,
+        "includes": [
+            "main/**",
+            "languages/**",
+            "electron/**",
+            "__tests__/**",
+            "*.js",
+            "*.jsx",
+            "*.ts",
+            "*.tsx",
+            "*.json",
+            "!android",
+            "!ios",
+            "!coverage",
+            "!dist",
+            "!web-mocks",
+            "!package-lock.json"
+        ]
+    },
+    "formatter": {
+        "enabled": true,
+        "indentStyle": "space",
+        "indentWidth": 4,
+        "lineWidth": 100
+    },
+    "javascript": {
+        "formatter": {
+            "quoteStyle": "single",
+            "jsxQuoteStyle": "double",
+            "trailingCommas": "all",
+            "arrowParentheses": "asNeeded",
+            "semicolons": "always"
+        }
+    },
+    "linter": {
+        "enabled": true,
+        "rules": {
+            "preset": "recommended",
+            "correctness": {
+                "noUnusedVariables": "warn",
+                "noUnusedFunctionParameters": "off",
+                "noUnusedImports": "off",
+                "useExhaustiveDependencies": "warn"
+            },
+            "style": {
+                "noNonNullAssertion": "off",
+                "useConst": "warn",
+                "useNodejsImportProtocol": "off"
+            },
+            "suspicious": {
+                "noExplicitAny": "off",
+                "noArrayIndexKey": "off",
+                "noGlobalIsNan": "warn",
+                "useBiomeIgnoreFolder": "off"
+            },
+            "complexity": {
+                "useOptionalChain": "warn",
+                "noUselessFragments": "warn"
+            }
+        }
+    },
+    "assist": {
+        "enabled": false
+    }
+}
