@@ -1,3 +1,4 @@
+import 'setimmediate';
 import { AppRegistry } from 'react-native';
 import appJson from './app.json';
 import App from './main/app';

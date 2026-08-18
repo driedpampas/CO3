@@ -295,15 +295,16 @@ export const ReaderWrapper = ({ route }) => {
                 settingsDAO,
             });
 
-            if (!jsonSettings) {
-                jsonSettings = await getJsonSettings(chapterData);
+            let activeSettings = jsonSettings;
+            if (!activeSettings) {
+                activeSettings = await getJsonSettings(chapterData);
             }
 
             if (
-                jsonSettings?.downloadWhileReading &&
+                activeSettings?.downloadWhileReading &&
                 (await libraryDAO.isInLibrary(chapterData.workId))
             ) {
-                for (let i = 0; i < jsonSettings?.downloadWhileReading; i++) {
+                for (let i = 0; i < activeSettings?.downloadWhileReading; i++) {
                     const index = chapterData.chapterIndex + 2 + i;
                     if (chapterList.length <= index) break;
                     await addToDownloadQueue({
