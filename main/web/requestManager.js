@@ -68,7 +68,7 @@ export default async function getUrl(url, noWebview = false) {
                             if (await hasStoredPassword()) {
                                 try {
                                     const creds = await getCredsPasswd();
-                                    if (creds && creds.password) {
+                                    if (creds?.password) {
                                         await handleLogin(creds.username, creds.password);
                                     } else {
                                         navigationRef.navigate('Account', {});

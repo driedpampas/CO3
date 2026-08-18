@@ -26,7 +26,7 @@ export default function UserWorkScreen({ route }) {
     const [refreshing, setRefreshing] = useState(false);
     const [hasMore, setHasMore] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
-    const [viewMode, setViewMode] = useState('med');
+    const [viewMode, _setViewMode] = useState('med');
 
     const PAGE_SIZE = 20;
 
@@ -46,7 +46,7 @@ export default function UserWorkScreen({ route }) {
 
     useEffect(() => {
         loadInitialUserWork();
-    }, []);
+    }, [loadInitialUserWork]);
 
     const formatWork = work => {
         return {
@@ -125,7 +125,7 @@ export default function UserWorkScreen({ route }) {
         setRefreshing(true);
         await loadInitialUserWork();
         setRefreshing(false);
-    }, []);
+    }, [loadInitialUserWork]);
 
     const navigation = useNavigation();
 
@@ -163,7 +163,7 @@ export default function UserWorkScreen({ route }) {
                 <Icon name="arrow-back" size={24} color={currentTheme.textColor} />
             </TouchableOpacity>
             <Text style={[styles.title, { color: currentTheme.textColor }]}>
-                {username ? username + "'s " : ''}Works
+                {username ? `${username}'s ` : ''}Works
             </Text>
 
             <TouchableOpacity

@@ -12,28 +12,23 @@ export const fetchAutocompleteSuggestions = async (type, term) => {
     if (!term || term.length < 2) {
         return [];
     }
+    const url = `${AO3_BASE_URL}/${type}?term=${encodeURIComponent(term)}`;
+    const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+        },
+    });
 
-    try {
-        const url = `${AO3_BASE_URL}/${type}?term=${encodeURIComponent(term)}`;
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        // Ensure we return an array of objects with id and name properties
-        return Array.isArray(data) ? data : [];
-    } catch (error) {
-        throw error;
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
     }
+
+    const data = await response.json();
+
+    // Ensure we return an array of objects with id and name properties
+    return Array.isArray(data) ? data : [];
 };
 
 /**
@@ -109,7 +104,7 @@ export const parseInputForAutocomplete = input => {
     return {
         fullInput: trimmed,
         lastTerm,
-        prefix: prefix ? prefix + ' ' : '',
+        prefix: prefix ? `${prefix} ` : '',
     };
 };
 

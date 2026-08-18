@@ -358,7 +358,7 @@ export default function GlobalSearchScreen({
 
     useEffect(() => {
         loadCategories();
-    }, []);
+    }, [loadCategories]);
 
     async function searchCategories(term) {
         return categories.filter(s => s.toLowerCase().includes(term.toLowerCase()));
@@ -456,7 +456,7 @@ export default function GlobalSearchScreen({
         }, 500);
 
         return () => clearTimeout(timer);
-    }, [libraryDAO, searchTerm]);
+    }, [libraryDAO, searchTerm, searchCategories, categories]);
 
     const hasResults =
         (worksResult?.works?.length ?? 0) > 0 ||

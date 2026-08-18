@@ -46,7 +46,7 @@ export async function getCredsPasswd() {
         });
 
         if (creds) {
-            console.log('Credentials successfully loaded for user ' + creds.username);
+            console.log(`Credentials successfully loaded for user ${creds.username}`);
             await setLastLogin();
             return creds; // Return credentials
         } else {
@@ -87,7 +87,7 @@ export async function getCredsToken() {
         const creds = await Keychain.getGenericPassword({ service: 'creds_token' });
 
         if (creds) {
-            console.log('Token successfully loaded for user ' + creds.username);
+            console.log(`Token successfully loaded for user ${creds.username}`);
             await setLastLogin();
             return creds.password; // Return the token value (which is stored as password)
         } else {
@@ -151,7 +151,7 @@ export async function getUsername() {
         });
 
         if (creds) {
-            console.log('Username retrieved: ' + creds.username);
+            console.log(`Username retrieved: ${creds.username}`);
             return creds.username;
         } else {
             console.log('No username stored');

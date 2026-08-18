@@ -55,7 +55,7 @@ const LoginScreen = ({ route }) => {
 
     useEffect(() => {
         checkLoginStatus();
-    }, []);
+    }, [checkLoginStatus]);
 
     const checkLoginStatus = async () => {
         try {
@@ -86,7 +86,7 @@ const LoginScreen = ({ route }) => {
 
     const formatStoredPassword = password => {
         if (!password || password.length === 0) return '';
-        if (password.length === 1) return password + '*';
+        if (password.length === 1) return `${password}*`;
         if (password.length === 2) return password;
 
         const first = password.substring(0, 1);

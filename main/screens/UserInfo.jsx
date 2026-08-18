@@ -54,7 +54,7 @@ export default function UserInfoScreen({ route }) {
         setProperUsername(parsedUsername);
         setProperPseud(parsedPseud);
         loadUserInfo(parsedUsername, parsedPseud);
-    }, [username]);
+    }, [username, loadUserInfo]);
 
     const loadUserInfo = async (parsedUsername, parsedPseud) => {
         console.log('loadUserInfo');

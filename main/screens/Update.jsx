@@ -41,10 +41,10 @@ const UpdateScreen = ({
 
     useEffect(() => {
         loadUpdates();
-    }, [updateDAO]);
+    }, [loadUpdates]);
 
     useEffect(() => {
-        const subscription = DeviceEventEmitter.addListener('doubleTap', id => {
+        const subscription = DeviceEventEmitter.addListener('doubleTap', _id => {
             console.log('Should open the download manager screen but not implemented rn');
             Toast.show({
                 type: 'error',
@@ -147,8 +147,8 @@ const UpdateScreen = ({
             try {
                 const work = await workDAO.get(update.workId);
 
-                if (work && work.chapters) {
-                    const targetNum = parseInt(update.chapterNumber);
+                if (work?.chapters) {
+                    const targetNum = parseInt(update.chapterNumber, 10);
                     const idx = work.chapters.findIndex(c => c.number === targetNum);
 
                     if (idx !== -1) {

@@ -20,7 +20,7 @@ import CategorySelectionModal from '../WorkScreen/CategorySelectionModal';
 const QuickActionsModal = ({ isOpen, onClose, work, theme, libraryDAO, workDAO }) => {
     const [inLibrary, setInLibrary] = useState(false);
     const [categories, setCategories] = useState(null);
-    const [categoryAction, setCategoryAction] = useState(null);
+    const [_categoryAction, setCategoryAction] = useState(null);
     const [showCategoryModal, setShowCategoryModal] = useState(false);
 
     const { t } = useTranslation();
@@ -59,7 +59,7 @@ const QuickActionsModal = ({ isOpen, onClose, work, theme, libraryDAO, workDAO }
         checkLibraryStatus();
     }, [libraryDAO, work]);
 
-    const showCategorySelection = async (action = 'add') => {
+    const _showCategorySelection = async (action = 'add') => {
         if (action === 'remove') {
             await libraryDAO.remove(work.id);
             setInLibrary(false);
@@ -132,7 +132,7 @@ const QuickActionsModal = ({ isOpen, onClose, work, theme, libraryDAO, workDAO }
             setCategoryAction('add');
             setShowCategoryModal(true);
         }
-    }, [inLibrary, categories, work, workDAO, libraryDAO]);
+    }, [inLibrary, categories, work, libraryDAO, t, onClose, addToLibrary]);
 
     const handleMarkForLater = () => {
         onClose();

@@ -30,7 +30,7 @@ function StatCard({ icon, label, value, currentTheme, accent }) {
                 style={[
                     styles.iconBadge,
                     styles.iconBadgeMargin,
-                    { backgroundColor: accent + '22' },
+                    { backgroundColor: `${accent}22` },
                 ]}
             >
                 <Icon name={icon} size={22} color={accent} />
@@ -83,7 +83,7 @@ function AuthorList({
             ]}
         >
             <View style={styles.wideCardHeader}>
-                <View style={[styles.iconBadge, { backgroundColor: accent + '22' }]}>
+                <View style={[styles.iconBadge, { backgroundColor: `${accent}22` }]}>
                     <Icon name="person" size={22} color={accent} />
                 </View>
                 <Text style={[styles.wideCardLabel, { color: currentTheme.secondaryTextColor }]}>
@@ -130,7 +130,7 @@ function AuthorList({
                         >
                             {item.author}
                         </Text>
-                        <View style={[styles.countBadge, { backgroundColor: accent + '22' }]}>
+                        <View style={[styles.countBadge, { backgroundColor: `${accent}22` }]}>
                             <Text style={[styles.countText, { color: accent }]}>
                                 {item.author_count && item.author_count === 1
                                     ? t('screen_stats_work_count', { count: item.author_count })
@@ -166,7 +166,7 @@ function TagList({ tags, currentTheme, accent, openTagSearch }) {
             ]}
         >
             <View style={styles.wideCardHeader}>
-                <View style={[styles.iconBadge, { backgroundColor: accent + '22' }]}>
+                <View style={[styles.iconBadge, { backgroundColor: `${accent}22` }]}>
                     <Icon name="local-offer" size={22} color={accent} />
                 </View>
                 <Text style={[styles.wideCardLabel, { color: currentTheme.secondaryTextColor }]}>
@@ -183,7 +183,7 @@ function TagList({ tags, currentTheme, accent, openTagSearch }) {
                             key={i}
                             style={[
                                 styles.tag,
-                                { backgroundColor: accent + '18', borderColor: accent + '40' },
+                                { backgroundColor: `${accent}18`, borderColor: `${accent}40` },
                             ]}
                             activeOpacity={0.7}
                             onPress={() => {
@@ -192,8 +192,8 @@ function TagList({ tags, currentTheme, accent, openTagSearch }) {
                         >
                             <Text style={[styles.tagText, { color: accent }]}>
                                 {tag.tag_name}
-                                <Text style={[styles.tagSep, { color: accent + '88' }]}> · </Text>
-                                <Text style={[styles.tagCountText, { color: accent + 'aa' }]}>
+                                <Text style={[styles.tagSep, { color: `${accent}88` }]}> · </Text>
+                                <Text style={[styles.tagCountText, { color: `${accent}aa` }]}>
                                     {tag.usage_count}
                                 </Text>
                             </Text>

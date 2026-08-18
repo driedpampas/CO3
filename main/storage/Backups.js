@@ -3,7 +3,7 @@ import JSZip from 'jszip';
 import { Platform } from 'react-native';
 import RNFS from 'react-native-fs';
 
-async function dumpAsyncStorage() {
+async function _dumpAsyncStorage() {
     try {
         const keys = await AsyncStorage.getAllKeys();
         const result = await AsyncStorage.multiGet(keys);
@@ -15,7 +15,7 @@ async function dumpAsyncStorage() {
     }
 }
 
-async function restoreAsyncStorage(dataObject, { clearFirst = false } = {}) {
+async function _restoreAsyncStorage(dataObject, { clearFirst = false } = {}) {
     try {
         if (clearFirst) {
             await AsyncStorage.clear();

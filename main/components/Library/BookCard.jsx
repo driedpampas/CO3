@@ -394,8 +394,7 @@ const BookCard = ({
                                     ]}
                                 >
                                     {t('component_generic_chapter', {
-                                        chapters:
-                                            book.currentChapter + '/' + (book.chapterCount || '?'),
+                                        chapters: `${book.currentChapter}/${book.chapterCount || '?'}`,
                                     })}
                                 </Text>
                             </View>

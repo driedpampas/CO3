@@ -48,7 +48,7 @@ export async function fetchChapter(workId, chapterId, noWebview = false) {
         for (let i = 0; i < styleElements.length; i++) {
             const styleContent = getElementText(styleElements[i]);
             if (styleContent) {
-                cssStyles += styleContent + '\n';
+                cssStyles += `${styleContent}\n`;
             }
         }
     }
@@ -57,15 +57,15 @@ export async function fetchChapter(workId, chapterId, noWebview = false) {
         const styleElements = chapterDiv.getElementsByTagName('style');
         for (let i = 0; i < styleElements.length; i++) {
             const styleContent = getElementText(styleElements[i]);
-            if (styleContent) cssStyles += styleContent + '\n';
+            if (styleContent) cssStyles += `${styleContent}\n`;
         }
     }
 
     const allStyleElements = doc.getElementsByTagName('style');
     for (let i = 0; i < allStyleElements.length; i++) {
         const styleContent = getElementText(allStyleElements[i]);
-        if (styleContent && styleContent.includes('#workskin')) {
-            cssStyles += styleContent + '\n';
+        if (styleContent?.includes('#workskin')) {
+            cssStyles += `${styleContent}\n`;
         }
     }
 
@@ -147,7 +147,7 @@ async function createCompleteHtml(chapterHtml, cssStyles, currentTheme, settings
       background-color: var(--bg-color, #fff);
       color: var(--text-color, #333);
       transition: background-color 0.3s ease, color 0.3s ease;
-      font-size: ${settings.useCustomSize ? settings.fontSize + 'em' : '1em'};
+      font-size: ${settings.useCustomSize ? `${settings.fontSize}em` : '1em'};
       overflow-wrap: break-word;
     }
     

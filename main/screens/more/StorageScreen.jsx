@@ -62,7 +62,7 @@ export default function StorageScreen({ route }) {
         getStorageData();
         getDownloadedCount();
         getCachedCount();
-    }, []);
+    }, [getStorageData, getDownloadedCount, getCachedCount]);
 
     async function clearCache() {
         clearUnusedCache(databaseObj)

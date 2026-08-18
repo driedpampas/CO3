@@ -347,7 +347,7 @@ const TopBar = ({
             ) : (
                 <View style={styles.titleHeader}>
                     <Text style={[styles.headerTitle, { color: currentTheme.textColor }]}>
-                        {t('navigation_' + activeScreen)}
+                        {t(`navigation_${activeScreen}`)}
                     </Text>
                 </View>
             )}
@@ -543,7 +543,20 @@ const App = () => {
         });
 
         return () => subscription.remove();
-    }, [loading, libraryDAO, progressDAO, settingsDAO, workDAO]);
+    }, [
+        loading,
+        libraryDAO,
+        progressDAO,
+        settingsDAO,
+        workDAO,
+        historyDAO,
+        kudoHistoryDAO,
+        openTagSearch,
+        setScreens,
+        navigation.push,
+        currentTheme,
+        chapterDAO,
+    ]);
 
     useEffect(() => {
         contextRef.current = {
@@ -555,7 +568,16 @@ const App = () => {
             kudoHistoryDAO,
             currentTheme,
         };
-    }, [workDAO, libraryDAO, settingsDAO, historyDAO, progressDAO, kudoHistoryDAO, currentTheme]);
+    }, [
+        workDAO,
+        libraryDAO,
+        settingsDAO,
+        historyDAO,
+        progressDAO,
+        kudoHistoryDAO,
+        currentTheme,
+        contextRef,
+    ]);
 
     useEffect(() => {
         initializeApp();
@@ -587,7 +609,7 @@ const App = () => {
             }
             unsubscribeForeground();
         };
-    }, []);
+    }, [initializeApp, setActiveScreen, setScreens, handleNotificationOpen]);
 
     const handleDoubleTap = screenId => {
         DeviceEventEmitter.emit('doubleTap', screenId);
@@ -607,7 +629,7 @@ const App = () => {
             let loadChapterIndex = null;
 
             if (chapterNumber && work.chapters && work.chapters.length > 0) {
-                const targetNum = parseInt(chapterNumber);
+                const targetNum = parseInt(chapterNumber, 10);
 
                 const foundIndex = work.chapters.findIndex(c => c.number === targetNum);
 
@@ -657,7 +679,7 @@ const App = () => {
         const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
 
         return () => backHandler.remove();
-    }, [screens]);
+    }, [screens, setActiveScreen, activeScreen]);
 
     const initializeApp = async () => {
         const jsonSettings = await getJsonSettings();
@@ -666,7 +688,7 @@ const App = () => {
 
         if (Platform.OS === 'android') {
             try {
-                const granted = await PermissionsAndroid.request(
+                const _granted = await PermissionsAndroid.request(
                     PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
                 );
             } catch (err) {
@@ -714,7 +736,7 @@ const App = () => {
         if (workDAO) {
             loadBooks();
         }
-    }, [workDAO]);
+    }, [workDAO, loadBooks]);
 
     useEffect(() => {
         const navBarColor =

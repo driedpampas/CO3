@@ -42,8 +42,6 @@ export async function fetchBookmarks(page, username, pseud, noWebview = false) {
         }
 
         return parseWorkElements(workElements);
-    } catch (error) {
-        throw error;
     } finally {
         console.log('finished loading', url);
     }

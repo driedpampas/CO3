@@ -40,7 +40,7 @@ export default function BookmarksScreen({ route }) {
     const [refreshing, setRefreshing] = useState(false);
     const [hasMore, setHasMore] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
-    const [viewMode, setViewMode] = useState('med');
+    const [viewMode, _setViewMode] = useState('med');
     const [error, setError] = useState(null);
 
     const { t } = useTranslation();
@@ -145,7 +145,7 @@ export default function BookmarksScreen({ route }) {
         setRefreshing(true);
         await loadInitialBookmarks();
         setRefreshing(false);
-    }, []);
+    }, [loadInitialBookmarks]);
 
     const navigation = useNavigation();
 

@@ -144,7 +144,7 @@ export const navigateToPreviousChapter = async ({
  */
 const recordChapterRead = async (historyDAO, workId, chapterId, chapterTitle) => {
     try {
-        if (!historyDAO || !historyDAO.addHistoryEntry) {
+        if (!historyDAO?.addHistoryEntry) {
             console.log('History DAO not available or method not found');
             return;
         }

@@ -14,7 +14,7 @@ export async function fetchLoginAuthenticityToken() {
         }
         const doc = new DomParser().parseFromString(html, 'text/html');
         const form = doc.getElementById('new_user');
-        if (!form || !form.childNodes || !form.childNodes[0]) {
+        if (!form?.childNodes?.[0]) {
             throw new Error('Could not find login form authenticity token');
         }
         return form.childNodes[0].getAttribute('value');

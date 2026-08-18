@@ -61,7 +61,7 @@ export default function Step4({ currentTheme, setScreen, onFinish }) {
                             <View
                                 style={[
                                     styles.cardIconWrap,
-                                    { backgroundColor: item.color + '22' },
+                                    { backgroundColor: `${item.color}22` },
                                 ]}
                             >
                                 <Icon name={item.icon} size={22} color={item.color} />

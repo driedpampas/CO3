@@ -56,7 +56,7 @@ const SideMenu = ({
 
         try {
             if (setTheme) setTheme(newTheme);
-        } catch (error) {
+        } catch (_error) {
             setLocalTheme(previousTheme);
         }
     };
@@ -67,7 +67,7 @@ const SideMenu = ({
 
         try {
             if (setViewMode) setViewMode(newMode);
-        } catch (error) {
+        } catch (_error) {
             setLocalViewMode(previousMode);
         }
     };
@@ -79,7 +79,7 @@ const SideMenu = ({
 
         try {
             if (toggleIncognitoMode) toggleIncognitoMode();
-        } catch (error) {
+        } catch (_error) {
             setLocalIncognito(previousState);
         }
     };

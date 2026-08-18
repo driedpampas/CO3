@@ -103,7 +103,7 @@ const BrowseScreen = ({
     const [jsonSettings, setJsonSettings] = useState();
 
     useEffect(() => {
-        const subscription = DeviceEventEmitter.addListener('doubleTap', id => {
+        const subscription = DeviceEventEmitter.addListener('doubleTap', _id => {
             openSearch();
         });
 
@@ -185,7 +185,7 @@ const BrowseScreen = ({
     useEffect(() => {
         if (applyTempPreset) return;
         loadWorks(true);
-    }, [tagMode, appliedFilters, applyTempPreset]);
+    }, [applyTempPreset, loadWorks]);
 
     // Handle preset selection
     useEffect(() => {
@@ -509,7 +509,22 @@ const BrowseScreen = ({
                 chapterDAO={chapterDAO}
             />
         ),
-        [viewMode, currentTheme, jsonSettings],
+        [
+            viewMode,
+            currentTheme,
+            jsonSettings,
+            setScreens,
+            workDAO,
+            settingsDAO,
+            openTagSearch,
+            screens,
+            libraryDAO,
+            formatWork,
+            progressDAO,
+            historyDAO,
+            kudoHistoryDAO,
+            chapterDAO,
+        ],
     );
 
     const renderLoading = () => {

@@ -762,15 +762,46 @@ const AdvancedSearchScreen = ({
             loadTempPreset();
         }
         loadPresetsFromStorage();
-    }, []);
+    }, [
+        kudos,
+        wordCount,
+        excludedRelationships.length,
+        excludedWarnings.length,
+        fandoms.length,
+        hits,
+        language,
+        loadPresetsFromStorage,
+        loadTempPreset,
+        rating,
+        relationships.length,
+        singleChapter,
+        sortBy,
+        sortDirection,
+        title,
+        warnings.length,
+        excludedRatings.length,
+        comments,
+        completionStatus,
+        creator,
+        crossoverStatus,
+        date,
+        excludedAdditionalTags.length,
+        excludedCharacters.length, //This is fucking bad but it works really well so i'm not changing it
+        anyField,
+        excludedFandoms.length,
+        characters.length,
+        bookmarks,
+        categories.length,
+        additionalTags.length,
+    ]);
 
     useEffect(() => {
-        const events = DeviceEventEmitter.addListener('tempPreset', p => {
+        const events = DeviceEventEmitter.addListener('tempPreset', _p => {
             loadTempPreset();
         });
 
         return () => events.remove();
-    }, []);
+    }, [loadTempPreset]);
 
     useEffect(() => {
         //TODO: Fix this properly, this is a half backed fix but it works okay ?
@@ -869,8 +900,8 @@ const AdvancedSearchScreen = ({
         sortBy,
         sortDirection,
         onSearch,
-        tagMode,
         activeCanonicalTag,
+        saveTempPreset,
     ]);
 
     async function savePreset(name) {
@@ -966,7 +997,7 @@ const AdvancedSearchScreen = ({
             return;
         }
 
-        if (!presetToLoad || !presetToLoad.preset) {
+        if (!presetToLoad?.preset) {
             return;
         }
 
@@ -1237,7 +1268,7 @@ const AdvancedSearchScreen = ({
                         style={[
                             styles.canonicalTagBanner,
                             {
-                                backgroundColor: currentTheme.primaryColor + '22',
+                                backgroundColor: `${currentTheme.primaryColor}22`,
                                 borderColor: currentTheme.primaryColor,
                             },
                         ]}

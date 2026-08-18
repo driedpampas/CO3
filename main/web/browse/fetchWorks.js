@@ -150,7 +150,7 @@ export function parseWorkElements(workElements) {
 
         const fullDescriptionText = getElementText(summaryContainer);
         let fullDescriptionHTML = '';
-        if (summaryContainer && summaryContainer.childNodes) {
+        if (summaryContainer?.childNodes) {
             for (let i = 0; i < summaryContainer.childNodes.length; i++) {
                 fullDescriptionHTML += summaryContainer.childNodes[i].toString();
             }
@@ -179,7 +179,7 @@ export function parseWorkElements(workElements) {
         const parseNumber = str => {
             if (!str) return 0;
             const num = parseInt(str.replace(/,/g, ''), 10);
-            return isNaN(num) ? 0 : num;
+            return Number.isNaN(num) ? 0 : num;
         };
 
         return new Work({
@@ -235,7 +235,7 @@ export async function fetchFilteredWorks(filters = {}, page = 1) {
             }
 
             params.append('commit', 'Search');
-            url += '?' + params.toString();
+            url += `?${params.toString()}`;
         } else {
             if (page > 1) {
                 url += `?page=${page}`;

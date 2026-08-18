@@ -34,7 +34,7 @@ export const CommentsScreen = ({
 
     const [loading, setLoading] = useState(true);
     const [cannotNext, setCannotNext] = useState(true);
-    const [step, setStep] = useState('Initializing');
+    const [_step, setStep] = useState('Initializing');
     const [comments, setComments] = useState([]);
     const [preferHTML, setPreferHTML] = useState(false);
     const [minusList, setMinusList] = useState([]);
@@ -44,7 +44,7 @@ export const CommentsScreen = ({
 
     useEffect(() => {
         asyncFetchComments();
-    }, [singleChapter, workOrChapterId, page]);
+    }, [asyncFetchComments]);
 
     const asyncFetchComments = async () => {
         const preferHtml = (await getJsonSettings()).preferHtml;

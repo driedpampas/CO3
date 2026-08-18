@@ -50,14 +50,14 @@ const MoreScreen = ({
     }, [fadeAnim]);
 
     useEffect(() => {
-        const subscription = DeviceEventEmitter.addListener('doubleTap', id => {
+        const subscription = DeviceEventEmitter.addListener('doubleTap', _id => {
             handlePress('Preferences');
         });
 
         return () => {
             subscription.remove();
         };
-    }, []);
+    }, [handlePress]);
 
     const handlePress = screenName => {
         switch (screenName) {

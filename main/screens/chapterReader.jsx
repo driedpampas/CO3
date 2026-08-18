@@ -87,12 +87,12 @@ const ChapterReader = ({
     const [barsVisible, setBarsVisible] = useState(false);
     const [scrollProgress, setScrollProgress] = useState(0);
     const [pullDistance, setPullDistance] = useState(0);
-    const [webViewReady, setWebViewReady] = useState(false);
+    const [_webViewReady, setWebViewReady] = useState(false);
     const [isIncognitoMode, setIsIncognitoMode] = useState(false);
     const [commentsVisible, setCommentsVisible] = useState(false);
-    const [initialProgressLoaded, setInitialProgressLoaded] = useState(false);
-    const [initialScrollAttempted, setInitialScrollAttempted] = useState(false);
-    const [size, setSize] = useState(1);
+    const [_initialProgressLoaded, setInitialProgressLoaded] = useState(false);
+    const [_initialScrollAttempted, setInitialScrollAttempted] = useState(false);
+    const [_size, setSize] = useState(1);
     const [jsonSettings, setJsonSettings] = useState();
 
     const [modifiedHtmlContent, setModifiedHtmlContent] = useState(htmlContent);
@@ -200,7 +200,7 @@ const ChapterReader = ({
         if (typeof isIncognitoMode === 'boolean') {
             loadInitialProgress();
         }
-    }, [workId, chapterID, progressDAO, isIncognitoMode]);
+    }, [workId, chapterID, progressDAO, isIncognitoMode, sendWebViewCommand]);
 
     useEffect(() => {
         const manageHistory = async () => {
@@ -210,7 +210,7 @@ const ChapterReader = ({
 
             try {
                 const latestEntry = await historyDAO.getLatestEntry();
-                const now = new Date().getTime();
+                const now = Date.now();
                 const oneHour = 60 * 60 * 1000;
 
                 if (
@@ -267,7 +267,7 @@ const ChapterReader = ({
         if (progressSaveTimeoutRef.current) {
             clearTimeout(progressSaveTimeoutRef.current);
         }
-    }, [currentChapterIndex, workId, chapterID]);
+    }, []);
 
     useEffect(() => {
         Animated.timing(fadeAnim, {

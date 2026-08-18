@@ -35,7 +35,7 @@ export const getSavedLanguage = async () => {
     try {
         const savedLang = await AsyncStorage.getItem('app_language');
         return savedLang || 'en';
-    } catch (e) {
+    } catch (_e) {
         return 'en';
     }
 };

@@ -103,7 +103,7 @@ const LibraryScreen = ({
     const navigation = useNavigation();
 
     useEffect(() => {
-        const subscription = DeviceEventEmitter.addListener('doubleTap', id => {
+        const subscription = DeviceEventEmitter.addListener('doubleTap', _id => {
             navigation.push('ReadLaterScreen', {
                 setScreens: setScreens,
                 currentTheme: currentTheme,
@@ -121,19 +121,31 @@ const LibraryScreen = ({
         return () => {
             subscription.remove();
         };
-    }, []);
+    }, [
+        historyDAO,
+        workDAO,
+        settingsDAO,
+        progressDAO,
+        setScreens,
+        navigation.push,
+        currentTheme,
+        screens,
+        libraryDAO,
+        kudoHistoryDAO,
+        chapterDAO,
+    ]);
 
     useEffect(() => {
         if (libraryDAO) {
             loadCollections();
         }
-    }, [libraryDAO]);
+    }, [libraryDAO, loadCollections]);
 
     useEffect(() => {
         if (libraryDAO && workDAO) {
             loadWorks(true, true);
         }
-    }, [searchTerm, sortType, selectedCollection, libraryDAO, workDAO]);
+    }, [libraryDAO, workDAO, loadWorks]);
 
     const loadCollections = async () => {
         try {
@@ -170,7 +182,7 @@ const LibraryScreen = ({
             let libraryEntries;
             let count;
 
-            if (searchTerm && searchTerm.trim()) {
+            if (searchTerm?.trim()) {
                 setIsSearching(true);
                 libraryEntries = await libraryDAO.search(
                     searchTerm.trim(),
@@ -236,7 +248,7 @@ const LibraryScreen = ({
     const handleRefresh = useCallback(() => {
         setRefreshing(true);
         loadWorks(true);
-    }, [searchTerm, sortType, selectedCollection]);
+    }, [loadWorks]);
 
     const handleLoadMore = useCallback(() => {
         if (!loading && !loadingMore && hasMore && works.length > 0) {
@@ -246,7 +258,7 @@ const LibraryScreen = ({
 
     const handleWorkUpdate = useCallback(() => {
         loadWorks(true, true);
-    }, []);
+    }, [loadWorks]);
 
     const handleGoToBrowse = () => {
         setActiveScreen('browse');
@@ -561,7 +573,7 @@ const LibraryScreen = ({
                                 {
                                     backgroundColor:
                                         sortType === option.key
-                                            ? currentTheme.primaryColor + '20'
+                                            ? `${currentTheme.primaryColor}20`
                                             : 'transparent',
                                 },
                             ]}

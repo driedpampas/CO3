@@ -62,7 +62,7 @@ const PreferencesScreen = ({ route }) => {
     useEffect(() => {
         loadSettings();
         loadCategories();
-    }, []);
+    }, [loadCategories, loadSettings]);
 
     const loadSettings = async () => {
         try {
@@ -157,7 +157,7 @@ const PreferencesScreen = ({ route }) => {
 
     const handleFontChange = async () => {
         const [picked] = await pick({ type: ['font/ttf', 'font/otf'] });
-        if (!picked || !picked.name) return;
+        if (!picked?.name) return;
 
         keepLocalCopy({
             destination: 'cachesDirectory',
@@ -307,7 +307,7 @@ const PreferencesScreen = ({ route }) => {
           padding: 20px;
           background-color: ${activeTheme.backgroundColor};
           color: ${activeTheme.textColor};
-          font-size: ${useCustomSize ? fontSize + 'em' : '1em'};
+          font-size: ${useCustomSize ? `${fontSize}em` : '1em'};
         }
         h1 { 
           color: ${activeTheme.textColor};
@@ -340,7 +340,7 @@ const PreferencesScreen = ({ route }) => {
     </body>
     </html>
   `;
-    }, [activeTheme, useCustomSize, fontSize, useCustomFont, fontFamily, font]);
+    }, [activeTheme, useCustomSize, fontSize, useCustomFont, fontFamily, font, t]);
 
     // --- Render Helpers ---
 

@@ -21,7 +21,7 @@ export default function WordReplacer({ route }) {
 
     useEffect(() => {
         loadRules();
-    }, []);
+    }, [loadRules]);
 
     async function loadRules() {
         try {

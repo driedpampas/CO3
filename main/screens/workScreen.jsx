@@ -318,7 +318,17 @@ export const ReaderWrapper = ({ route }) => {
             console.log(error);
             setError(error);
         }
-    }, [loading, chapterData, chapterList, currentTheme, historyDAO, settingsDAO]);
+    }, [
+        loading,
+        chapterData,
+        chapterList,
+        currentTheme,
+        historyDAO,
+        settingsDAO,
+        jsonSettings,
+        libraryDAO.isInLibrary,
+        handleChapterChange,
+    ]);
 
     const handlePreviousChapter = useCallback(async () => {
         try {
@@ -337,7 +347,15 @@ export const ReaderWrapper = ({ route }) => {
             console.log(error);
             setError(error);
         }
-    }, [loading, chapterData, chapterList, currentTheme, historyDAO, settingsDAO]);
+    }, [
+        loading,
+        chapterData,
+        chapterList,
+        currentTheme,
+        historyDAO,
+        settingsDAO,
+        handleChapterChange,
+    ]);
 
     if (error) {
         return (
@@ -420,7 +438,7 @@ const ChapterInfoScreen = ({ route }) => {
     const [chapterProgress, setChapterProgress] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+    const [_isDescriptionExpanded, _setIsDescriptionExpanded] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
     const [modalMode, setModalMode] = useState('summary');
     const [inLibrary, setInLibrary] = useState(false);
@@ -429,13 +447,13 @@ const ChapterInfoScreen = ({ route }) => {
     const [isLoadingContinue, setIsLoadingContinue] = useState(false);
     const [categories, setCategories] = useState(['Default']);
     const [showCategoryModal, setShowCategoryModal] = useState(false);
-    const [categoryAction, setCategoryAction] = useState(null);
+    const [_categoryAction, setCategoryAction] = useState(null);
     const [menuVisible, setMenuVisible] = useState(false);
     const [downloadMenuVisible, setDownloadMenuVisible] = useState(false);
     const [nativeDownloadModalVisible, setNativeDownloadModalVisible] = useState(false);
     const [nativeDownloadingFormat, setNativeDownloadingFormat] = useState(null);
     const [showDate, setShowDate] = useState(false);
-    const [loadChapterRef, setLoadChapterRef] = useState(loadChapter);
+    const [_loadChapterRef, _setLoadChapterRef] = useState(loadChapter);
 
     const [jsonSettings, setJsonSettings] = useState();
 
@@ -456,7 +474,7 @@ const ChapterInfoScreen = ({ route }) => {
             }
             setJsonSettings(settings);
         });
-    }, []);
+    }, [loadCategories]);
 
     const loadCategories = async () => {
         try {
@@ -524,7 +542,7 @@ const ChapterInfoScreen = ({ route }) => {
 
     useEffect(() => {
         loadWorkData();
-    }, [workId]);
+    }, [loadWorkData]);
 
     const loadWorkData = async () => {
         try {
@@ -551,10 +569,7 @@ const ChapterInfoScreen = ({ route }) => {
             const chapterUrlMatch = url ? url.match(/\/chapters\/(\d+)/) : null;
             const hasUrlTrigger = !!chapterUrlMatch;
 
-            if (
-                (hasLoadChapterIndex && workData.chapters && workData.chapters[loadChapter]) ||
-                hasUrlTrigger
-            ) {
+            if ((hasLoadChapterIndex && workData.chapters?.[loadChapter]) || hasUrlTrigger) {
                 let chapterToLoad;
                 let actualIndex = -1;
 
@@ -667,7 +682,7 @@ const ChapterInfoScreen = ({ route }) => {
         } else {
             await showCategorySelection('add');
         }
-    }, [inLibrary, workId, libraryDAO, work, categories]);
+    }, [inLibrary, showCategorySelection]);
 
     const handleLike = useCallback(async () => {
         if (likeLoading) return;
@@ -695,7 +710,7 @@ const ChapterInfoScreen = ({ route }) => {
         } finally {
             setLikeLoading(false);
         }
-    }, [workId, likeLoading, kudoHistoryDAO, t]);
+    }, [workId, likeLoading, kudoHistoryDAO, t, showToast]);
 
     const handleMoreInfo = useCallback(() => {
         setModalMode('full');
@@ -708,7 +723,7 @@ const ChapterInfoScreen = ({ route }) => {
     }, []);
 
     const handleOpenWebView = useCallback(() => {
-        InAppBrowser.open('https://archiveofourown.org/works/' + workId, {
+        InAppBrowser.open(`https://archiveofourown.org/works/${workId}`, {
             // Android
             showTitle: true,
             toolbarColor: currentTheme.backgroundColor,
@@ -720,7 +735,7 @@ const ChapterInfoScreen = ({ route }) => {
             preferredBarTintColor: currentTheme.backgroundColor,
             preferredControlTintColor: 'white',
         });
-    }, [workId]);
+    }, [workId, currentTheme.backgroundColor]);
 
     const handleBookmark = async () => {
         setMenuVisible(false);
@@ -811,6 +826,12 @@ const ChapterInfoScreen = ({ route }) => {
             progressDAO,
             workDAO,
             t,
+            libraryDAO,
+            jsonSettings,
+            kudoHistoryDAO,
+            showToast,
+            chapterDAO,
+            navigation.push,
         ],
     );
 
@@ -836,7 +857,7 @@ const ChapterInfoScreen = ({ route }) => {
             views: work.hits,
             language: work.language,
         }),
-        [],
+        [t],
     );
 
     function getTextForNb(nb) {
@@ -1211,7 +1232,24 @@ const ChapterInfoScreen = ({ route }) => {
                 </View>
             </View>
         ),
-        [work, currentTheme, chapters, jsonSettings, inLibrary, liked, likeLoading, setScreens, t],
+        [
+            work,
+            currentTheme,
+            chapters,
+            jsonSettings,
+            setScreens,
+            t,
+            chapterDAO,
+            navigation.push,
+            workDAO,
+            kudoHistoryDAO,
+            settingsDAO,
+            libraryDAO,
+            renderActionButtons,
+            navigation.goBack,
+            progressDAO,
+            historyDAO,
+        ],
     );
 
     if (loading) {
@@ -1419,7 +1457,7 @@ const ChapterInfoScreen = ({ route }) => {
             setWork(newWork);
             setChapters(newWork.chapters);
             setLoading(false);
-        } catch (err) {
+        } catch (_err) {
             Toast.show({
                 type: 'error',
                 text1: t('screen_work_toast_error_reloading_work'),

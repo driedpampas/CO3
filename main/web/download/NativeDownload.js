@@ -2,7 +2,7 @@ import { Buffer } from 'buffer';
 import ky from 'ky';
 import RNFS from 'react-native-fs';
 
-const FORMATS = ['azw3', 'epub', 'mobi', 'pdf', 'html'];
+const _FORMATS = ['azw3', 'epub', 'mobi', 'pdf', 'html'];
 
 export async function nativeDownload(workId, format, name) {
     const url = `https://archiveofourown.org/downloads/${workId}/work.${format}`;

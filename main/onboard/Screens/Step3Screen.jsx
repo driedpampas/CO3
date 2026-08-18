@@ -79,7 +79,7 @@ export default function Step3({ currentTheme, setScreen, theme, setTheme }) {
                                 <View style={styles.themeCardBottom}>
                                     <Icon name={themeItem.icon} size={18} color={themeItem.text} />
                                     <Text style={[styles.themeLabel, { color: themeItem.text }]}>
-                                        {t('screen_preferences_label_theme_' + themeItem.label)}
+                                        {t(`screen_preferences_label_theme_${themeItem.label}`)}
                                     </Text>
                                     {isActive && (
                                         <View

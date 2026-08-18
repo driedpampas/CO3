@@ -42,7 +42,7 @@ export default function ReadLaterScreen({ route }) {
     const [refreshing, setRefreshing] = useState(false);
     const [hasMore, setHasMore] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
-    const [viewMode, setViewMode] = useState('med');
+    const [viewMode, _setViewMode] = useState('med');
     const [error, setError] = useState(null);
 
     const { t } = useTranslation();
@@ -51,7 +51,7 @@ export default function ReadLaterScreen({ route }) {
 
     useEffect(() => {
         loadInitialEntries();
-    }, []);
+    }, [loadInitialEntries]);
 
     const formatWork = work => {
         return {
@@ -135,7 +135,7 @@ export default function ReadLaterScreen({ route }) {
         setRefreshing(true);
         await loadInitialEntries();
         setRefreshing(false);
-    }, []);
+    }, [loadInitialEntries]);
 
     const onBack = () => {
         navigation.goBack();

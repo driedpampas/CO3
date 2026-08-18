@@ -75,7 +75,7 @@ const getMergedIconName = work => {
     return `ic_${r}_${c}_${w}_${s}`.toLowerCase();
 };
 
-const getEmojiStatus = work => {
+const _getEmojiStatus = work => {
     let text = '';
     if (work.rating === 'Explicit') text += '🔞 ';
     else if (work.rating === 'Mature') text += '🛑 ';

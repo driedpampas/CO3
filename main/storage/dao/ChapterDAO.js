@@ -10,7 +10,7 @@ export class ChapterDAO {
     async add(chapter) {
         const { id, workId, number, name, date } = chapter;
 
-        const [result] = await this.db.executeSql(
+        const [_result] = await this.db.executeSql(
             'INSERT INTO chapters (id, workId, number, name, date) VALUES (?, ?, ?, ?, ?)',
             [id, workId, number, name, date],
         );

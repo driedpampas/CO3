@@ -25,7 +25,7 @@ export default function CategoryScreen({ route }) {
 
     useEffect(() => {
         loadCategories();
-    }, []);
+    }, [loadCategories]);
 
     async function loadCategories() {
         try {

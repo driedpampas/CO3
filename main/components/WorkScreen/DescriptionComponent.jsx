@@ -85,7 +85,13 @@ export const WorkDescription = React.memo(({ work, currentTheme, jsonSettings })
                 )}
             </View>
         );
-    }, [work?.descriptionHTML, work?.description, currentTheme, jsonSettings?.preferHtml]);
+    }, [
+        work?.descriptionHTML,
+        work?.description,
+        currentTheme,
+        jsonSettings?.preferHtml,
+        HTML_TAG_STYLES,
+    ]);
 
     if (!work?.description) return null;
 

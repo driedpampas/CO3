@@ -19,12 +19,12 @@ const HistoryItem = ({
     const { t } = useTranslation();
 
     const formatDate = timestamp => {
-        if (typeof timestamp !== 'number' || isNaN(timestamp)) {
+        if (typeof timestamp !== 'number' || Number.isNaN(timestamp)) {
             return t('general_not_applicable');
         }
 
         const date = new Date(timestamp);
-        if (isNaN(date.getTime())) {
+        if (Number.isNaN(date.getTime())) {
             return t('general_not_applicable');
         }
 

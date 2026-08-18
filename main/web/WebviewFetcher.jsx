@@ -84,7 +84,7 @@ export default function WebviewFetcher() {
         return () => {
             triggerNext = null;
         };
-    }, []);
+    }, [processNext]);
 
     const onWarningDismiss = () => {
         setShowCFWarning(false);

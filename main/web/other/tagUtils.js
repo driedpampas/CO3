@@ -26,7 +26,7 @@ export async function checkTagCanonical(tagName) {
 
     const doc = new DomParser().parseFromString(response, 'text/html');
 
-    const notices = Array.from(doc.getElementsByTagName('p')).map(
+    const _notices = Array.from(doc.getElementsByTagName('p')).map(
         p => p.getAttribute('class') || '',
     );
     const mainDiv = doc.getElementById('main');

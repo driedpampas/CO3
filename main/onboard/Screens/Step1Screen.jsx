@@ -30,7 +30,7 @@ export default function Step1({ currentTheme, setScreen }) {
                 <View style={[styles.divider, { backgroundColor: currentTheme.borderColor }]} />
 
                 <Text style={[styles.body, { color: currentTheme.secondaryTextColor }]}>
-                    {t('onboard_step1_ligne1') + '\n' + t('onboard_step1_ligne2')}
+                    {`${t('onboard_step1_ligne1')}\n${t('onboard_step1_ligne2')}`}
                 </Text>
             </ScrollView>
 
