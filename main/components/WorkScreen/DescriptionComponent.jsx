@@ -15,22 +15,25 @@ import HtmlTextRenderer from '../common/HtmlTextRenderer';
 const COLLAPSED_HEIGHT = 90;
 
 export const WorkDescription = React.memo(({ work, currentTheme, jsonSettings }) => {
-    const HTML_TAG_STYLES = {
-        p: {
-            fontSize: 14,
-            paddingBottom: 12,
-        },
-        span: {
-            fontSize: 14,
-            paddingBottom: 12,
-        },
-        a: {
-            fontSize: 14,
-            paddingBottom: 12,
-            color: currentTheme.primaryColor,
-            textDecorationLine: 'underline',
-        },
-    };
+    const HTML_TAG_STYLES = useMemo(
+        () => ({
+            p: {
+                fontSize: 14,
+                paddingBottom: 12,
+            },
+            span: {
+                fontSize: 14,
+                paddingBottom: 12,
+            },
+            a: {
+                fontSize: 14,
+                paddingBottom: 12,
+                color: currentTheme.primaryColor,
+                textDecorationLine: 'underline',
+            },
+        }),
+        [currentTheme.primaryColor],
+    );
 
     const [isExpanded, setIsExpanded] = useState(false);
     const [fullHeight, setFullHeight] = useState(0);

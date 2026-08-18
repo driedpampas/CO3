@@ -76,19 +76,22 @@ const QuickActionsModal = ({ isOpen, onClose, work, theme, libraryDAO, workDAO }
         return true;
     };
 
-    const addToLibrary = async collection => {
-        try {
-            const existingWork = await workDAO.get(work.id);
-            if (!existingWork) {
-                await workDAO.add(normalizeWorkData(work));
-            }
+    const addToLibrary = useCallback(
+        async collection => {
+            try {
+                const existingWork = await workDAO.get(work.id);
+                if (!existingWork) {
+                    await workDAO.add(normalizeWorkData(work));
+                }
 
-            await libraryDAO.add(work.id, collection);
-            setInLibrary(true);
-        } catch (error) {
-            console.error('Error adding to library:', error);
-        }
-    };
+                await libraryDAO.add(work.id, collection);
+                setInLibrary(true);
+            } catch (error) {
+                console.error('Error adding to library:', error);
+            }
+        },
+        [work, workDAO, libraryDAO],
+    );
 
     const handleAddToLibrary = useCallback(async () => {
         if (inLibrary) {

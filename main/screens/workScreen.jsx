@@ -247,8 +247,6 @@ export const ReaderWrapper = ({ route }) => {
     const {
         initialChapterData,
         currentTheme,
-        setScreens,
-        screens,
         chapterList,
         historyDAO,
         progressDAO,
@@ -269,7 +267,7 @@ export const ReaderWrapper = ({ route }) => {
         libraryDAO.updateReadIndex(chapterData.workId);
     }, [chapterData.workId, libraryDAO]);
 
-    const handleChapterChange = newChapterData => {
+    const handleChapterChange = useCallback(newChapterData => {
         setError(false);
         if (newChapterData) {
             setChapterData(prevData => ({
@@ -278,7 +276,7 @@ export const ReaderWrapper = ({ route }) => {
             }));
         }
         setLoading(false);
-    };
+    }, []);
 
     const handleNextChapter = useCallback(async () => {
         try {
@@ -457,15 +455,73 @@ const ChapterInfoScreen = ({ route }) => {
 
     const [jsonSettings, setJsonSettings] = useState();
 
-    const showToast = (message, type = 'error') => {
-        Toast.show({
-            type: type,
-            text1: type === 'success' ? t('general_success') : t('general_error'),
-            text2: message,
-            position: 'bottom',
-            bottomOffset: 80,
-        });
-    };
+    const showToast = useCallback(
+        (message, type = 'error') => {
+            Toast.show({
+                type: type,
+                text1: type === 'success' ? t('general_success') : t('general_error'),
+                text2: message,
+                position: 'bottom',
+                bottomOffset: 80,
+            });
+        },
+        [t],
+    );
+
+    const addToLibrary = useCallback(
+        async collection => {
+            try {
+                const existingWork = await workDAO.get(workId);
+                if (!existingWork) {
+                    await workDAO.add(normalizeWorkData(work));
+                }
+
+                await libraryDAO.add(workId, collection);
+
+                setInLibrary(true);
+                const message =
+                    collection !== 'Default'
+                        ? t('screen_work_toast_added_to_library_in_collection', {
+                              collection,
+                          })
+                        : t('screen_work_toast_added_to_library');
+                showToast(message, 'success');
+            } catch (error) {
+                console.error('Error adding to library:', error);
+                showToast(t('screen_work_toast_failed_to_add_to_library'));
+            }
+        },
+        [workId, workDAO, work, libraryDAO, t, showToast],
+    );
+
+    const showCategorySelection = useCallback(
+        async (action = 'add') => {
+            if (action === 'remove') {
+                await libraryDAO.remove(workId);
+                setInLibrary(false);
+                showToast(t('screen_work_toast_removed_from_library'), 'success');
+                return;
+            }
+
+            if (categories.length === 1) {
+                await addToLibrary(categories[0]);
+                return;
+            }
+
+            setCategoryAction('add');
+            setShowCategoryModal(true);
+        },
+        [libraryDAO, workId, showToast, t, categories, addToLibrary],
+    );
+
+    const handleCategorySelect = useCallback(
+        async collection => {
+            setShowCategoryModal(false);
+            await addToLibrary(collection);
+        },
+        [addToLibrary],
+    );
+
     const loadCategories = useCallback(async () => {
         try {
             const res = await AsyncStorage.getItem('Categories');
@@ -494,51 +550,6 @@ const ChapterInfoScreen = ({ route }) => {
             setJsonSettings(settings);
         });
     }, [loadCategories]);
-
-    const showCategorySelection = async (action = 'add') => {
-        if (action === 'remove') {
-            await libraryDAO.remove(workId);
-            setInLibrary(false);
-            showToast(t('screen_work_toast_removed_from_library'), 'success');
-            return;
-        }
-
-        if (categories.length === 1) {
-            await addToLibrary(categories[0]);
-            return;
-        }
-
-        setCategoryAction('add');
-        setShowCategoryModal(true);
-    };
-
-    const handleCategorySelect = async collection => {
-        setShowCategoryModal(false);
-        await addToLibrary(collection);
-    };
-
-    const addToLibrary = async collection => {
-        try {
-            const existingWork = await workDAO.get(workId);
-            if (!existingWork) {
-                await workDAO.add(normalizeWorkData(work));
-            }
-
-            await libraryDAO.add(workId, collection);
-
-            setInLibrary(true);
-            const message =
-                collection !== 'Default'
-                    ? t('screen_work_toast_added_to_library_in_collection', {
-                          collection,
-                      })
-                    : t('screen_work_toast_added_to_library');
-            showToast(message, 'success');
-        } catch (error) {
-            console.error('Error adding to library:', error);
-            showToast(t('screen_work_toast_failed_to_add_to_library'));
-        }
-    };
 
     const loadWorkData = useCallback(async () => {
         try {
@@ -782,8 +793,7 @@ const ChapterInfoScreen = ({ route }) => {
                     await workDAO.add(work);
                 }
 
-                let chapterContent;
-                chapterContent = await fetchChapterWithTheme(
+                const chapterContent = await fetchChapterWithTheme(
                     workId,
                     chapter.id,
                     currentTheme,
@@ -1103,73 +1113,88 @@ const ChapterInfoScreen = ({ route }) => {
         </Modal>
     );
 
-    const renderActionButtons = () => (
-        <View style={styles.actionButtonsContainer}>
-            <TouchableOpacity style={styles.actionButton} onPress={handleAddToLibrary}>
-                <Icon
-                    name={inLibrary ? 'bookmark' : 'bookmark-border'}
-                    size={48}
-                    color={inLibrary ? currentTheme.primaryColor : currentTheme.iconColor}
-                />
-                <Text
-                    style={[
-                        styles.actionButtonText,
-                        {
-                            color: inLibrary ? currentTheme.primaryColor : currentTheme.textColor,
-                        },
-                    ]}
-                >
-                    {inLibrary ? t('screen_work_in_library') : t('screen_work_add_to_library')}
-                </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-                style={[styles.actionButton, likeLoading && styles.actionButtonDisabled]}
-                onPress={handleLike}
-                disabled={likeLoading}
-            >
-                {likeLoading ? (
-                    <ActivityIndicator
-                        size={24}
-                        color={currentTheme.primaryColor}
-                        style={{ height: 48 }}
-                    />
-                ) : (
+    const renderActionButtons = useCallback(
+        () => (
+            <View style={styles.actionButtonsContainer}>
+                <TouchableOpacity style={styles.actionButton} onPress={handleAddToLibrary}>
                     <Icon
-                        name={liked ? 'favorite' : 'favorite-border'}
+                        name={inLibrary ? 'bookmark' : 'bookmark-border'}
                         size={48}
-                        color={liked ? '#ef4444' : currentTheme.iconColor}
+                        color={inLibrary ? currentTheme.primaryColor : currentTheme.iconColor}
                     />
-                )}
-                <Text
-                    style={[
-                        styles.actionButtonText,
-                        { color: liked ? '#ef4444' : currentTheme.textColor },
-                        likeLoading && { color: currentTheme.secondaryTextColor },
-                    ]}
+                    <Text
+                        style={[
+                            styles.actionButtonText,
+                            {
+                                color: inLibrary
+                                    ? currentTheme.primaryColor
+                                    : currentTheme.textColor,
+                            },
+                        ]}
+                    >
+                        {inLibrary ? t('screen_work_in_library') : t('screen_work_add_to_library')}
+                    </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[styles.actionButton, likeLoading && styles.actionButtonDisabled]}
+                    onPress={handleLike}
+                    disabled={likeLoading}
                 >
-                    {likeLoading
-                        ? t('screen_work_sending')
-                        : liked
-                          ? t('screen_work_liked')
-                          : t('screen_work_like')}
-                </Text>
-            </TouchableOpacity>
+                    {likeLoading ? (
+                        <ActivityIndicator
+                            size={24}
+                            color={currentTheme.primaryColor}
+                            style={{ height: 48 }}
+                        />
+                    ) : (
+                        <Icon
+                            name={liked ? 'favorite' : 'favorite-border'}
+                            size={48}
+                            color={liked ? '#ef4444' : currentTheme.iconColor}
+                        />
+                    )}
+                    <Text
+                        style={[
+                            styles.actionButtonText,
+                            { color: liked ? '#ef4444' : currentTheme.textColor },
+                            likeLoading && { color: currentTheme.secondaryTextColor },
+                        ]}
+                    >
+                        {likeLoading
+                            ? t('screen_work_sending')
+                            : liked
+                              ? t('screen_work_liked')
+                              : t('screen_work_like')}
+                    </Text>
+                </TouchableOpacity>
 
-            <TouchableOpacity style={styles.actionButton} onPress={handleMoreInfo}>
-                <Icon name="info-outline" size={48} color={currentTheme.iconColor} />
-                <Text style={[styles.actionButtonText, { color: currentTheme.textColor }]}>
-                    {t('screen_work_more_info')}
-                </Text>
-            </TouchableOpacity>
+                <TouchableOpacity style={styles.actionButton} onPress={handleMoreInfo}>
+                    <Icon name="info-outline" size={48} color={currentTheme.iconColor} />
+                    <Text style={[styles.actionButtonText, { color: currentTheme.textColor }]}>
+                        {t('screen_work_more_info')}
+                    </Text>
+                </TouchableOpacity>
 
-            <TouchableOpacity style={styles.actionButton} onPress={handleOpenWebView}>
-                <Icon name="open-in-browser" size={48} color={currentTheme.iconColor} />
-                <Text style={[styles.actionButtonText, { color: currentTheme.textColor }]}>
-                    {t('screen_work_open_in_web')}
-                </Text>
-            </TouchableOpacity>
-        </View>
+                <TouchableOpacity style={styles.actionButton} onPress={handleOpenWebView}>
+                    <Icon name="open-in-browser" size={48} color={currentTheme.iconColor} />
+                    <Text style={[styles.actionButtonText, { color: currentTheme.textColor }]}>
+                        {t('screen_work_open_in_web')}
+                    </Text>
+                </TouchableOpacity>
+            </View>
+        ),
+        [
+            handleAddToLibrary,
+            inLibrary,
+            currentTheme,
+            t,
+            likeLoading,
+            handleLike,
+            liked,
+            handleMoreInfo,
+            handleOpenWebView,
+        ],
     );
 
     const renderChapterItem = useCallback(

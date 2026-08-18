@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,18 +19,18 @@ export default function WordReplacer({ route }) {
     const { t } = useTranslation();
     const navigation = useNavigation();
 
-    useEffect(() => {
-        loadRules();
-    }, [loadRules]);
-
-    async function loadRules() {
+    const loadRules = useCallback(async () => {
         try {
             const res = await AsyncStorage.getItem(STORAGE_KEY);
             setRules(res ? JSON.parse(res) : []);
         } catch (error) {
             console.error('Error loading word replace rules:', error);
         }
-    }
+    }, []);
+
+    useEffect(() => {
+        loadRules();
+    }, [loadRules]);
 
     async function saveRules(rulesToSave) {
         try {

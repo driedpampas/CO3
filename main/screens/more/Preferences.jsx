@@ -20,15 +20,7 @@ import { availableLanguages, changeLanguage } from '../../storage/LanguageManage
 import { themes } from '../../utils/themes';
 
 const PreferencesScreen = ({ route }) => {
-    const {
-        currentTheme,
-        settingsDAO,
-        setScreens,
-        setTheme,
-        viewMode,
-        setViewMode,
-        onRestartOnboarding,
-    } = route.params;
+    const { currentTheme, settingsDAO, setTheme, setViewMode, onRestartOnboarding } = route.params;
     const navigation = useNavigation();
 
     // DB Settings State

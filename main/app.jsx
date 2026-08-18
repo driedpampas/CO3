@@ -482,7 +482,6 @@ const App = () => {
         setSettingsDAO,
         setLibraryDAO,
         setProgressDAO,
-        setKudoDAO,
         setKudoHistoryDAO,
         setupdateDAO,
         setChapterDAO,
@@ -492,8 +491,6 @@ const App = () => {
         setIsSideMenuOpen,
         isIncognitoMode,
         setIsIncognitoMode,
-        linkingUrl,
-        setLinkingUrl,
         setBooks,
     } = useContext(AppContext);
 

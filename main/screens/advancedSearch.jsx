@@ -90,7 +90,6 @@ const AutocompleteInput = ({
     const [suggestions, setSuggestions] = useState([]);
     const [loading, setLoading] = useState(false);
     const [isFocused, setIsFocused] = useState(false);
-    const { t } = useTranslation();
 
     const debouncedFetch = useMemo(
         () =>
@@ -635,7 +634,7 @@ const AdvancedSearchScreen = ({
             ? str.split(',').map((name, index) => ({ id: `${name}-${index}`, name: name.trim() }))
             : [];
 
-    const normalizeItems = items => {
+    const normalizeItems = useCallback(items => {
         if (!Array.isArray(items)) return [];
         return items
             .map((item, index) => {
@@ -652,7 +651,7 @@ const AdvancedSearchScreen = ({
                 return null;
             })
             .filter(Boolean);
-    };
+    }, []);
 
     const [restoredCanonicalTag, setRestoredCanonicalTag] = useState(
         tagMode.active ? tagMode.tagName : null,
@@ -734,6 +733,61 @@ const AdvancedSearchScreen = ({
             console.error('Error loading presets:', error);
         }
     }, []);
+
+    const loadTempPreset = useCallback(async () => {
+        let presetToLoad;
+        try {
+            presetToLoad = await getTempPreset();
+        } catch (error) {
+            console.error('Error loading temporary preset:', error);
+            return;
+        }
+
+        if (!presetToLoad?.preset) {
+            return;
+        }
+
+        console.log('Preset: ', presetToLoad);
+
+        setAnyField(presetToLoad.preset.anyField || '');
+        setTitle(presetToLoad.preset.title || '');
+        setCreator(presetToLoad.preset.creator || '');
+        setDate(presetToLoad.preset.date || '');
+        setCompletionStatus(presetToLoad.preset.completionStatus || '');
+        setCrossoverStatus(presetToLoad.preset.crossoverStatus || '');
+        setSingleChapter(presetToLoad.preset.singleChapter || false);
+        setWordCount(presetToLoad.preset.wordCount || '');
+        setLanguage(presetToLoad.preset.language || '');
+
+        setFandoms(normalizeItems(presetToLoad.preset.fandoms));
+        setRating(presetToLoad.preset.rating || '');
+        setWarnings(presetToLoad.preset.warnings || []);
+        setCategories(presetToLoad.preset.categories || []);
+        setCharacters(normalizeItems(presetToLoad.preset.characters));
+        setRelationships(normalizeItems(presetToLoad.preset.relationships));
+        setAdditionalTags(normalizeItems(presetToLoad.preset.additionalTags));
+        setExcludedFandoms(normalizeItems(presetToLoad.preset.excludedFandoms));
+        setExcludedCharacters(normalizeItems(presetToLoad.preset.excludedCharacters));
+        setExcludedRelationships(normalizeItems(presetToLoad.preset.excludedRelationships));
+        setExcludedAdditionalTags(
+            normalizeItems(
+                presetToLoad.preset.excludedAdditionalTags || presetToLoad.preset.excludedTags,
+            ),
+        );
+        setExcludedRatings(presetToLoad.preset.excludedRatings || []);
+        setExcludedWarnings(presetToLoad.preset.excludedWarnings || []);
+        setRestoredCanonicalTag(presetToLoad.preset.canonicalTagName || null);
+        setCanonicalTagDismissed(false);
+
+        setHits(presetToLoad.preset.hits || '');
+        setKudos(presetToLoad.preset.kudos || '');
+        setComments(presetToLoad.preset.comments || '');
+        setBookmarks(presetToLoad.preset.bookmarks || '');
+        setSortBy(presetToLoad.preset.sortBy || '');
+        setSortDirection(presetToLoad.preset.sortDirection || '');
+
+        setPresetName(presetToLoad.name);
+    }, [normalizeItems]);
 
     useEffect(() => {
         if (
@@ -822,6 +876,75 @@ const AdvancedSearchScreen = ({
             setSortBy('_score');
         }
     }, [sortBy, sortDirection]);
+
+    const saveTempPreset = useCallback(async () => {
+        const newPreset = {
+            timestamp: Date.now(),
+            preset: {
+                anyField,
+                title,
+                creator,
+                date,
+                completionStatus,
+                crossoverStatus,
+                singleChapter,
+                wordCount,
+                language,
+                fandoms,
+                rating,
+                warnings,
+                categories,
+                characters,
+                relationships,
+                additionalTags,
+                excludedFandoms,
+                excludedCharacters,
+                excludedRelationships,
+                excludedAdditionalTags,
+                excludedRatings,
+                excludedWarnings,
+                hits,
+                kudos,
+                comments,
+                bookmarks,
+                sortBy,
+                sortDirection,
+                canonicalTagName: activeCanonicalTag,
+            },
+        };
+
+        await setTempPreset(newPreset);
+    }, [
+        anyField,
+        title,
+        creator,
+        date,
+        completionStatus,
+        crossoverStatus,
+        singleChapter,
+        wordCount,
+        language,
+        fandoms,
+        rating,
+        warnings,
+        categories,
+        characters,
+        relationships,
+        additionalTags,
+        excludedFandoms,
+        excludedCharacters,
+        excludedRelationships,
+        excludedAdditionalTags,
+        excludedRatings,
+        excludedWarnings,
+        hits,
+        kudos,
+        comments,
+        bookmarks,
+        sortBy,
+        sortDirection,
+        activeCanonicalTag,
+    ]);
 
     const handleSearch = useCallback(() => {
         const filters = {};
@@ -947,100 +1070,6 @@ const AdvancedSearchScreen = ({
 
         await pushJsonPreset(newPreset);
         await loadPresetsFromStorage();
-    }
-
-    async function saveTempPreset() {
-        const newPreset = {
-            timestamp: Date.now(),
-            preset: {
-                anyField,
-                title,
-                creator,
-                date,
-                completionStatus,
-                crossoverStatus,
-                singleChapter,
-                wordCount,
-                language,
-                fandoms,
-                rating,
-                warnings,
-                categories,
-                characters,
-                relationships,
-                additionalTags,
-                excludedFandoms,
-                excludedCharacters,
-                excludedRelationships,
-                excludedAdditionalTags,
-                excludedRatings,
-                excludedWarnings,
-                hits,
-                kudos,
-                comments,
-                bookmarks,
-                sortBy,
-                sortDirection,
-                canonicalTagName: activeCanonicalTag,
-            },
-        };
-
-        await setTempPreset(newPreset);
-    }
-
-    async function loadTempPreset() {
-        let presetToLoad;
-        try {
-            presetToLoad = await getTempPreset();
-        } catch (error) {
-            console.error('Error loading temporary preset:', error);
-            return;
-        }
-
-        if (!presetToLoad?.preset) {
-            return;
-        }
-
-        console.log('Preset: ', presetToLoad);
-
-        setAnyField(presetToLoad.preset.anyField || '');
-        setTitle(presetToLoad.preset.title || '');
-        setCreator(presetToLoad.preset.creator || '');
-        setDate(presetToLoad.preset.date || '');
-        setCompletionStatus(presetToLoad.preset.completionStatus || '');
-        setCrossoverStatus(presetToLoad.preset.crossoverStatus || '');
-        setSingleChapter(presetToLoad.preset.singleChapter || false);
-        setWordCount(presetToLoad.preset.wordCount || '');
-        setLanguage(presetToLoad.preset.language || '');
-
-        setFandoms(normalizeItems(presetToLoad.preset.fandoms));
-        setRating(presetToLoad.preset.rating || '');
-        setWarnings(presetToLoad.preset.warnings || []);
-        setCategories(presetToLoad.preset.categories || []);
-        setCharacters(normalizeItems(presetToLoad.preset.characters));
-        setRelationships(normalizeItems(presetToLoad.preset.relationships));
-        setAdditionalTags(normalizeItems(presetToLoad.preset.additionalTags));
-        setExcludedFandoms(normalizeItems(presetToLoad.preset.excludedFandoms));
-        setExcludedCharacters(normalizeItems(presetToLoad.preset.excludedCharacters));
-        setExcludedRelationships(normalizeItems(presetToLoad.preset.excludedRelationships));
-        setExcludedAdditionalTags(
-            normalizeItems(
-                presetToLoad.preset.excludedAdditionalTags || presetToLoad.preset.excludedTags,
-            ),
-        );
-        setExcludedRatings(presetToLoad.preset.excludedRatings || []);
-        setExcludedWarnings(presetToLoad.preset.excludedWarnings || []);
-        setRestoredCanonicalTag(presetToLoad.preset.canonicalTagName || null);
-        setCanonicalTagDismissed(false);
-
-        setHits(presetToLoad.preset.hits || '');
-        setKudos(presetToLoad.preset.kudos || '');
-        setComments(presetToLoad.preset.comments || '');
-        setBookmarks(presetToLoad.preset.bookmarks || '');
-        setSortBy(presetToLoad.preset.sortBy || '');
-        setSortDirection(presetToLoad.preset.sortDirection || '');
-
-        setPresetName(presetToLoad.name);
     }
 
     function loadPreset(presetToLoad) {

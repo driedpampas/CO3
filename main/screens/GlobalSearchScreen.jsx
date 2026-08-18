@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
@@ -343,7 +343,7 @@ export default function GlobalSearchScreen({
     const [freeform, setFreeform] = useState([]);
     const [categories, setCategories] = useState([]);
 
-    async function loadCategories() {
+    const loadCategories = useCallback(async () => {
         try {
             const res = await AsyncStorage.getItem('Categories');
             if (res) {
@@ -354,15 +354,18 @@ export default function GlobalSearchScreen({
         } catch (error) {
             console.error('Error loading categories:', error);
         }
-    }
+    }, []);
 
     useEffect(() => {
         loadCategories();
     }, [loadCategories]);
 
-    async function searchCategories(term) {
-        return categories.filter(s => s.toLowerCase().includes(term.toLowerCase()));
-    }
+    const searchCategories = useCallback(
+        async term => {
+            return categories.filter(s => s.toLowerCase().includes(term.toLowerCase()));
+        },
+        [categories],
+    );
 
     useEffect(() => {
         const timer = setTimeout(() => {

@@ -63,14 +63,14 @@ const BrowseScreen = ({
     const [searchMounted, setSearchMounted] = useState(true); // mount once, never unmount
     const slideAnim = useRef(new Animated.Value(Dimensions.get('window').height)).current;
 
-    const openSearch = () => {
+    const openSearch = useCallback(() => {
         setSearchMounted(true);
         Animated.timing(slideAnim, {
             toValue: 0,
             duration: 260,
             useNativeDriver: true,
         }).start();
-    };
+    }, [slideAnim]);
 
     const closeSearch = useCallback(() => {
         Animated.timing(slideAnim, {
@@ -412,7 +412,7 @@ const BrowseScreen = ({
         ]);
     };
 
-    const formatWork = work => {
+    const formatWork = useCallback(work => {
         return {
             id: work.id,
             title: work.title,
@@ -434,7 +434,7 @@ const BrowseScreen = ({
             currentChapter: work.currentChapter,
             chapterCount: work.chapterCount,
         };
-    };
+    }, []);
 
     const getFilterSummary = () => {
         if (!hasFilters) return '';

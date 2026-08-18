@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import WebView from 'react-native-webview';
 
@@ -67,17 +67,19 @@ export default function WebviewFetcher() {
     const currentRef = useRef(null);
     const httpErrorRef = useRef(null);
 
-    const loadCurrent = () => {
+    const loadCurrent = useCallback(() => {
         setVisible(false);
-        setSource({ uri: currentRef.current.url });
-    };
+        if (currentRef.current?.url) {
+            setSource({ uri: currentRef.current.url });
+        }
+    }, []);
 
-    const processNext = () => {
+    const processNext = useCallback(() => {
         if (currentRef.current || queue.length === 0) return;
         currentRef.current = queue.shift();
         httpErrorRef.current = null;
         loadCurrent();
-    };
+    }, [loadCurrent]);
 
     useEffect(() => {
         triggerNext = processNext;

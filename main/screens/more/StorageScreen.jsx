@@ -1,6 +1,6 @@
 import { errorCodes, isErrorWithCode, pick, types } from '@react-native-documents/picker';
 import { useNavigation } from '@react-navigation/native';
-import { useContext, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import DeviceInfo from 'react-native-device-info';
@@ -16,7 +16,7 @@ import { exportBackup, importBackup } from '../../storage/Backups';
 import { clearUnusedCache, database, exportDb } from '../../storage/DatabaseManager';
 
 export default function StorageScreen({ route }) {
-    const { setScreens, currentTheme, databaseObj = database } = route.params || {};
+    const { currentTheme, databaseObj = database } = route.params || {};
     const { workDAO, chapterDAO } = useContext(AppContext);
 
     const navigation = useNavigation();
@@ -32,7 +32,7 @@ export default function StorageScreen({ route }) {
     const [cachedWorksCount, setCachedWorksCount] = useState();
     const [cachedChaptersCount, setCachedChaptersCount] = useState();
 
-    async function getStorageData() {
+    const getStorageData = useCallback(async () => {
         const totalSpace = await DeviceInfo.getTotalDiskCapacity();
         const freeSpace = await DeviceInfo.getFreeDiskStorage();
 
@@ -47,16 +47,16 @@ export default function StorageScreen({ route }) {
             freeGB: freeRawGB.toFixed(2),
             usedGB: usedRawGB.toFixed(2),
         });
-    }
+    }, []);
 
-    async function getDownloadedCount() {
+    const getDownloadedCount = useCallback(async () => {
         setDownloadedCount(await countDownloads());
-    }
+    }, []);
 
-    async function getCachedCount() {
+    const getCachedCount = useCallback(async () => {
         setCachedWorksCount(await workDAO.countWorks());
         setCachedChaptersCount(await chapterDAO.countChapters());
-    }
+    }, [workDAO, chapterDAO]);
 
     useEffect(() => {
         getStorageData();

@@ -1,11 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-class updateRestictionType {
-    static None = 0;
-    static Wifi = 1;
-    // static Unmetered = 2; //Wifi and Unmetered are the same thing
-    static NotRoaming = 3;
-}
+const updateRestictionType = {
+    None: 0,
+    Wifi: 1,
+    // Unmetered: 2, //Wifi and Unmetered are the same thing
+    NotRoaming: 3,
+};
 
 const DEFAULT_SETTINGS = {
     time: 1440,
