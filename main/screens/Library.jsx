@@ -136,6 +136,7 @@ const LibraryScreen = ({
     ]);
 
     const loadCollections = useCallback(async () => {
+        if (!libraryDAO) return;
         try {
             const collections = await libraryDAO.getCollectionsWithCounts();
             setAllCollections(collections.map(c => c.name));
@@ -146,27 +147,21 @@ const LibraryScreen = ({
     }, [libraryDAO]);
 
     const loadWorks = useCallback(
-        async (reset = false, isFilter = false) => {
-            if (!reset && loadingMore) return;
-            if (!reset && !hasMore) return;
+        async (pageToLoad = 1, isReset = true, isFilter = false) => {
+            if (!libraryDAO || !workDAO) return;
 
             try {
-                if (reset && !isFilter) {
+                if (isReset && !isFilter) {
                     setLoading(true);
                 }
-                if (reset && isFilter) {
+                if (isReset && isFilter) {
                     setFilterLoading(true);
                 }
-                if (reset) {
-                    setCurrentPage(1);
-                    setWorks([]);
-                    setHasMore(true);
+                if (isReset) {
                     setError(null);
                 } else {
                     setLoadingMore(true);
                 }
-
-                const pageToLoad = reset ? 1 : currentPage + 1;
 
                 let libraryEntries;
                 let count;
@@ -207,7 +202,7 @@ const LibraryScreen = ({
                     }
                 }
 
-                if (reset) {
+                if (isReset) {
                     setWorks(worksWithLibraryData);
                     setTotalCount(count);
                 } else {
@@ -219,7 +214,9 @@ const LibraryScreen = ({
                 const isLastPage = libraryEntries.length < pageSize;
                 setHasMore(!isLastPage);
 
-                setJsonSettings(await getJsonSettings());
+                getJsonSettings()
+                    .then(setJsonSettings)
+                    .catch(() => {});
             } catch (err) {
                 console.error('Error loading works:', err);
                 setError({
@@ -233,43 +230,32 @@ const LibraryScreen = ({
                 setRefreshing(false);
             }
         },
-        [
-            loadingMore,
-            hasMore,
-            currentPage,
-            searchTerm,
-            libraryDAO,
-            sortType,
-            selectedCollection,
-            workDAO,
-        ],
+        [searchTerm, libraryDAO, sortType, selectedCollection, workDAO],
     );
 
     useEffect(() => {
-        if (libraryDAO) {
-            loadCollections();
-        }
-    }, [libraryDAO, loadCollections]);
+        loadCollections();
+    }, [loadCollections]);
 
     useEffect(() => {
         if (libraryDAO && workDAO) {
-            loadWorks(true, true);
+            loadWorks(1, true, true);
         }
     }, [libraryDAO, workDAO, loadWorks]);
 
     const handleRefresh = useCallback(() => {
         setRefreshing(true);
-        loadWorks(true);
+        loadWorks(1, true);
     }, [loadWorks]);
 
     const handleLoadMore = useCallback(() => {
         if (!loading && !loadingMore && hasMore && works.length > 0) {
-            loadWorks(false);
+            loadWorks(currentPage + 1, false);
         }
-    }, [loading, loadingMore, hasMore, works.length, loadWorks]);
+    }, [loading, loadingMore, hasMore, works.length, currentPage, loadWorks]);
 
     const handleWorkUpdate = useCallback(() => {
-        loadWorks(true, true);
+        loadWorks(1, true, true);
     }, [loadWorks]);
 
     const handleGoToBrowse = () => {
@@ -597,7 +583,7 @@ const LibraryScreen = ({
         </Modal>
     );
 
-    if (loading) {
+    if (loading && works.length === 0) {
         return (
             <View
                 style={[styles.centerContainer, { backgroundColor: currentTheme.backgroundColor }]}
@@ -610,7 +596,7 @@ const LibraryScreen = ({
         );
     }
 
-    if (error) {
+    if (error && works.length === 0) {
         return (
             <View
                 style={[styles.centerContainer, { backgroundColor: currentTheme.backgroundColor }]}
@@ -632,7 +618,7 @@ const LibraryScreen = ({
                     </Text>
                     <TouchableOpacity
                         style={[styles.retryButton, { backgroundColor: currentTheme.primaryColor }]}
-                        onPress={() => loadWorks(true)}
+                        onPress={() => loadWorks(1, true)}
                     >
                         <Text style={styles.retryButtonText}>{t('general_retry')}</Text>
                     </TouchableOpacity>

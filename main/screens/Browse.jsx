@@ -113,39 +113,32 @@ const BrowseScreen = ({
     }, [openSearch]);
 
     const loadWorks = useCallback(
-        async (reset = false) => {
+        async (pageToLoad = 1, isReset = true) => {
             const isTagMode = tagMode.active && tagMode.tagName;
-            if (!reset && !isTagMode && Object.keys(appliedFilters).length === 0) return;
+            const filterCount = Object.keys(appliedFilters).length;
 
-            if (loadingMore && !reset) return;
-            if (!reset && !hasMore) return;
+            if (!isReset && !isTagMode && filterCount === 0) return;
 
             try {
-                if (reset) {
+                if (isReset) {
                     setLoading(true);
-                    setCurrentPage(1);
-                    setWorks([]);
-                    setHasMore(true);
+                    setError(null);
                 } else {
                     setLoadingMore(true);
                 }
 
-                setError(null);
-
-                const pageToLoad = reset ? 1 : currentPage + 1;
-
                 const result = isTagMode
                     ? await fetchTagWorks(tagMode.tagName, appliedFilters, pageToLoad)
                     : await fetchFilteredWorks(appliedFilters, pageToLoad);
-                const newWorks = result.works || [];
-
-                console.log(result);
+                const newWorks = result?.works || [];
 
                 const isLastPage = newWorks.length < 20;
 
-                setJsonSettings(await getJsonSettings());
+                getJsonSettings()
+                    .then(setJsonSettings)
+                    .catch(() => {});
 
-                if (reset) {
+                if (isReset) {
                     setWorks(newWorks);
                 } else {
                     setWorks(prevWorks => {
@@ -157,14 +150,16 @@ const BrowseScreen = ({
 
                 setCurrentPage(pageToLoad);
 
-                if (!isTagMode && Object.keys(appliedFilters).length === 0) {
+                if (!isTagMode && filterCount === 0) {
                     setHasMore(false);
                 } else if (isLastPage) {
                     setHasMore(false);
+                } else {
+                    setHasMore(true);
                 }
             } catch (err) {
                 console.error('Error loading worksScreen:', err);
-                if (reset) {
+                if (isReset) {
                     setError({
                         message: err.message || 'Failed to load worksScreen',
                         status: err.response?.status || 'Unknown',
@@ -179,12 +174,12 @@ const BrowseScreen = ({
                 setRefreshing(false);
             }
         },
-        [tagMode, appliedFilters, currentPage, hasMore, loadingMore],
+        [tagMode, appliedFilters],
     );
 
     useEffect(() => {
         if (applyTempPreset) return;
-        loadWorks(true);
+        loadWorks(1, true);
     }, [applyTempPreset, loadWorks]);
 
     // Handle preset selection
@@ -376,16 +371,26 @@ const BrowseScreen = ({
 
     const handleRefresh = useCallback(() => {
         setRefreshing(true);
-        loadWorks(true);
+        loadWorks(1, true);
     }, [loadWorks]);
 
     const handleLoadMore = useCallback(() => {
-        if (!tagMode.active && Object.keys(appliedFilters).length === 0) return;
+        const isTagMode = tagMode.active && tagMode.tagName;
+        if (!isTagMode && Object.keys(appliedFilters).length === 0) return;
 
         if (!loading && !loadingMore && hasMore && works.length > 0) {
-            loadWorks(false);
+            loadWorks(currentPage + 1, false);
         }
-    }, [tagMode, loading, loadingMore, hasMore, works.length, loadWorks, appliedFilters]);
+    }, [
+        tagMode,
+        appliedFilters,
+        loading,
+        loadingMore,
+        hasMore,
+        works.length,
+        currentPage,
+        loadWorks,
+    ]);
 
     const handleSearchFilters = (filters, canonicalTagName) => {
         if (canonicalTagName) {
@@ -568,7 +573,7 @@ const BrowseScreen = ({
                     </Text>
                     <TouchableOpacity
                         style={[styles.retryButton, { backgroundColor: currentTheme.primaryColor }]}
-                        onPress={() => loadWorks(true)}
+                        onPress={() => loadWorks(1, true)}
                     >
                         <Text style={styles.retryButtonText}>{t('general_retry')}</Text>
                     </TouchableOpacity>
@@ -579,9 +584,9 @@ const BrowseScreen = ({
 
     return (
         <View style={{ flex: 1, backgroundColor: currentTheme.backgroundColor }}>
-            {loading ? (
+            {loading && works.length === 0 ? (
                 renderLoading()
-            ) : error ? (
+            ) : error && works.length === 0 ? (
                 rennderError()
             ) : (
                 <FlatList

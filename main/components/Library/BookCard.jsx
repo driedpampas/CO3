@@ -80,7 +80,7 @@ const BookCard = ({
 
             const history = await progressDAO.getProgressList(book.id);
             if (history?.length === 0) {
-                setBadgeColor(theme.statusBadge.clicked);
+                setBadgeColor(theme?.statusBadge?.clicked);
                 return;
             }
 
@@ -89,21 +89,21 @@ const BookCard = ({
             const prog = await progressDAO.get(book.id, lastChapter.id);
 
             if (prog >= 0.9) {
-                setBadgeColor(theme.statusBadge.finished);
+                setBadgeColor(theme?.statusBadge?.finished);
             } else {
-                setBadgeColor(theme.statusBadge.started);
+                setBadgeColor(theme?.statusBadge?.started);
             }
         }
 
-        if (jsonSettings.showStatusBadge) getBadgeColor();
+        if (jsonSettings?.showStatusBadge) getBadgeColor();
     }, [
         book.id,
         chapterDAO,
-        jsonSettings.showStatusBadge,
+        jsonSettings?.showStatusBadge,
         progressDAO,
-        theme.statusBadge.clicked,
-        theme.statusBadge.finished,
-        theme.statusBadge.started,
+        theme?.statusBadge?.clicked,
+        theme?.statusBadge?.finished,
+        theme?.statusBadge?.started,
         workDAO,
     ]);
 
