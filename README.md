@@ -1,77 +1,93 @@
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/c168f8ee-cd36-4896-b591-87be5d3ad0fe" alt="Logo for the Tales of Our Own project">
-</p>
-<p align="center">
-  <a href="https://github.com/tbvns/CO3/actions/workflows/android-build.yml">
-    <img src="https://github.com/tbvns/CO3/actions/workflows/android-build.yml/badge.svg" alt="Build Android APK">
-  </a>
-  <a href="https://github.com/tbvns/CO3/actions/workflows/ios-build.yml">
-    <img src="https://github.com/tbvns/CO3/actions/workflows/ios-build.yml/badge.svg" alt="Build iOS IPA (Unsigned)" border="0">
-  </a>
-</p>
-<p align="center">
-  <a href="https://tbvns.xyz/discord">
-    <img src="https://img.shields.io/badge/-Tales%20Discord%20Server-%237289DA?style=flat&logo=discord&logoColor=white" alt="Build Android APK">
-  </a>
+  <!-- PLACEHOLDER: Project Logo / Banner -->
 </p>
 
-# Tales of Our Own
-Tales of Our Own is a free reader app for **Archive of Our Own** (AO3). We built it because other AO3 apps charge money for features that should be free. </br>
-The goal is to give you a better reading experience on your phone with features like native AMOLED support, local reading history, and custom categories to organize your stories.
-
-> [!TIP]
-> Looking for download links? Go [here](#download).
-
-## Features:
-- **Custom library** - Save your favorite works in one place
-- **Category management** - Organize your stories however you want (without paying for it)
-- **History with filters** - Find works you've read by date
-- **Completely free** - No subscriptions, no ads, ever
-- **Auto Updates** - Automatically fetch and notify you of update on your saved works
-- **Statistics** - See what are you favorite tags and authors, how many works you started and how many chapter you've read
-- **Enhanced downloads** - Enable full work-style download support, with multiple auto-download features
-
-> [!NOTE]
-> Need help or want to chat? Join our [Discord](https://discord.gg/3wMGWu2xMF).
-
-# Download
-We recommend you use F-Droid to install the client, this will allow for auto-updates and alert you if any vulnerabilities are found.
+<h1 align="center">Tales of Our Own</h1>
 
 <p align="center">
-  <a href="https://f-droid.org/packages/com.co3/">
-    <img src="https://f-droid.org/badge/get-it-on.png" alt="Get Tales from F-Droid" width="220">
-  </a>
-  <a href="https://github.com/tbvns/CO3/releases">
-    <img src="https://user-images.githubusercontent.com/663460/26973090-f8fdc986-4d14-11e7-995a-e7c5e79ed925.png" alt="Get Tales APK from GitHub" width="220" />
+  <a href="https://www.gnu.org/licenses/gpl-3.0">
+    <img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License: GPL v3">
   </a>
 </p>
 
-> [!CAUTION]
-> Since the dev team doesn't own any Apple device, we are not able to provide proper testing to the platform. Hence, we would really appreciate any feedback for this platform. Some unexpected bug and crashes can appear on this platform, but multiple users reported it working properly.
+**Tales of Our Own** is a free, open-source reader app for **Archive of Our Own** (AO3).
+The goal is to provide a clean, customizable reading experience across platforms with features like native AMOLED support, local reading history, and custom categories to organize your stories.
 
-You can get releases [here](https://github.com/tbvns/CO3/releases). </br>
-You can get android dev builds [here](https://github.com/tbvns/CO3/actions/workflows/android-build.yml). </br>
-You can get IOS dev builds [here](https://github.com/tbvns/CO3/actions/workflows/ios-build.yml).
+Please see the [Disclaimer & Trademark Notice](#disclaimer--trademark-notice) for important attribution, trademark, and non-affiliation information.
 
-# Star History
+## Features
 
-<a href="https://www.star-history.com/?repos=tbvns%2FCO3&type=date&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=tbvns/CO3&type=date&theme=dark&legend=top-left&sealed_token=uov0KCSeJbVMdQAV_xEis2Ip366E5YPJtuNIbQCweDBdyndKnxwk2sk46gbJSOk72B0SDjce7b-KYAFt7EGmYOW9FgLifF5qNqOF_Wje_PPdDIbFiJeXow" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=tbvns/CO3&type=date&legend=top-left&sealed_token=uov0KCSeJbVMdQAV_xEis2Ip366E5YPJtuNIbQCweDBdyndKnxwk2sk46gbJSOk72B0SDjce7b-KYAFt7EGmYOW9FgLifF5qNqOF_Wje_PPdDIbFiJeXow" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=tbvns/CO3&type=date&legend=top-left&sealed_token=uov0KCSeJbVMdQAV_xEis2Ip366E5YPJtuNIbQCweDBdyndKnxwk2sk46gbJSOk72B0SDjce7b-KYAFt7EGmYOW9FgLifF5qNqOF_Wje_PPdDIbFiJeXow" />
- </picture>
-</a>
+- **Custom Library** - Save your favorite works in one place
+- **Category Management** - Organize your stories however you want
+- **Reading History & Filters** - Track and find works you've read by date
+- **Offline Reading & Downloads** - Enable full work-style downloads with custom formatting
+- **Auto Updates** - Automatically fetch and notify you of updates on your saved works
+- **Statistics** - Insights into your favorite tags, authors, started works, and chapters read
+- **Cross-Platform** - Available for Android, iOS, Web, and Desktop
+- **Completely Free & Open Source** - No subscriptions, no ads, ever
 
-# Logo and name usage
-The name "Tales of Our Own" or "Tales" and the project logo are copyright © Tbvns and are not covered by the GPL license. You may not publish this application or any derivative under the same name or logo on the Google Play Store, Apple App Store, or any other proprietary app store. Redistribution via F-Droid or direct APK sideloading is permitted.
+## Getting Started
 
-# License
-Copyright (C) 2026 Tbvns
+### Prerequisites
+- [Bun](https://bun.sh/) (>= 1.0.0)
 
-This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+### Installation & Development
 
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/<your-username>/Tales.git
+   cd Tales
+   ```
 
-You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>. 
+2. Install dependencies:
+   ```bash
+   bun install
+   ```
 
+3. Run the application:
+   - **Web**: `bun run web`
+   - **Desktop (Electron)**: `bun run electron`
+   - **Android**: `bun run android`
+   - **iOS**: `bun run ios`
+
+
+## Disclaimer & Trademark Notice
+
+<details>
+<summary><strong>Click to expand Disclaimer, Trademark, and Non-Affiliation Notice</strong></summary>
+<br/>
+
+**Tales of Our Own** is an independent, non-commercial, open-source fan application. This project is not affiliated with, endorsed by, sponsored by, or in any way officially connected with the [Organization for Transformative Works (OTW)](https://www.transformativeworks.org/), [Archive of Our Own (AO3)](https://archiveofourown.org/), [Marvel Entertainment, LLC](https://www.marvel.com/), Marvel Characters, Inc., The Walt Disney Company, or any of their respective subsidiaries or affiliates.
+
+The name "Archive of Our Own" and the AO3 logo are trademarks of the Organization for Transformative Works. The name "Marvel" and all associated names, marks, emblems, and characters are registered trademarks of Marvel Characters, Inc. and its affiliates. All trademarks, service marks, trade names, and logos appearing within this application, documentation, and repository are the property of their respective owners.
+
+The name "Tales of Our Own" and the accompanying application icon are non-commercial fan works inspired by a fictional in-universe reference depicted in Marvel Comics publications. The application icon is a transformative derivative work adapted from the [open-source Archive of Our Own vector mark](https://commons.wikimedia.org/wiki/File:Logo_Archive_of_Our_Own.svg). No claim of ownership, copyright, or trademark over the original reference marks, names, or underlying source imagery is made or implied.
+
+This software operates solely as a third-party client interface and reader tool. All fanworks, metadata, and media accessed, viewed, or cached through this application remain the exclusive property of their respective authors and the hosting platform. The developers of this project do not host, store, or claim ownership over any user-generated content retrieved through the service.
+
+</details>
+
+## Contributors
+
+Tales of Our Own is maintained and built with contributions from the community. See [CONTRIBUTORS.md](CONTRIBUTORS.md) for the list of maintainers and contributors.
+
+## License
+
+This project is licensed under the **GNU General Public License v3.0** (GPL-3.0). See the [LICENSE](LICENSE) file for the license text, and [CONTRIBUTORS.md](CONTRIBUTORS.md) for project contributors.
+
+```text
+Copyright (C) 2026 Tales of Our Own Contributors
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+```
