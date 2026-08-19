@@ -138,7 +138,7 @@ const BookCard = ({
     }
 
     if (book.isCompleted === null) {
-        if (book.chapterCount === book.currentChapter) {
+        if (book.chapterCount && book.chapterCount === book.currentChapter) {
             statusImage = imageMappings.isCompleted.true;
         } else {
             statusImage = imageMappings.isCompleted.false;

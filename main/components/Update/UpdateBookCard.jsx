@@ -219,7 +219,7 @@ const UpdateBookCard = ({ update, workDAO, theme, onPress }) => {
     }
 
     if (work.isCompleted === null) {
-        if (work.chapterCount === work.currentChapter) {
+        if (work.chapterCount && work.chapterCount === work.currentChapter) {
             statusImage = imageMappings.isCompleted.true;
         } else {
             statusImage = imageMappings.isCompleted.false;

@@ -48,6 +48,7 @@ function extractWorkMetadata(doc) {
         language: null,
         tags: [],
         published: null,
+        updated: null,
         completed: null,
         words: null,
         chapters: null,
@@ -116,7 +117,15 @@ function extractWorkMetadata(doc) {
                     if (statClass === 'published') {
                         result.published = parseDate(statText);
                     } else if (statClass === 'status' || statClass === 'completed') {
-                        result.completed = parseDate(statText);
+                        const dtText = getElementText(statsDTs[j]);
+                        if (
+                            dtText?.toLowerCase().includes('completed') ||
+                            statClass === 'completed'
+                        ) {
+                            result.completed = parseDate(statText);
+                        } else {
+                            result.updated = parseDate(statText);
+                        }
                     } else if (statClass === 'words') {
                         result.words = parseInt(statText?.replace(/,/g, '') || '0', 10) || 0;
                     } else if (statClass === 'chapters') {
@@ -298,7 +307,9 @@ export async function fetchWorkFromWorkID(
 
         const chapterInfo = parseChapters(metadata.chapters);
         const isCompleted =
-            (chapterInfo.total !== '?' && chapterInfo.current === chapterInfo.total) ||
+            (chapterInfo.total !== null &&
+                chapterInfo.total !== undefined &&
+                chapterInfo.current === chapterInfo.total) ||
             metadata.completed !== null
                 ? 1
                 : 0;
@@ -318,7 +329,7 @@ export async function fetchWorkFromWorkID(
             kudos: metadata.kudos || 0,
             hits: metadata.hits || 0,
             language: metadata.language || 'English',
-            updated: metadata.published || Date.now(),
+            updated: metadata.updated || metadata.completed || metadata.published || Date.now(),
             bookmarks: metadata.bookmarks || 0,
             words: metadata.words || '?',
             tags: metadata.tags || [],
@@ -326,8 +337,8 @@ export async function fetchWorkFromWorkID(
             description: content.summary || '',
             descriptionHTML: content.summaryHTML || '',
             chapters: cleanChapters,
-            currentChapter: chapterInfo.current,
-            chapterCount: chapterInfo.total || '?',
+            currentChapter: chapterInfo.current || 1,
+            chapterCount: chapterInfo.total ?? null,
             rating: metadata.rating || 'Not Rated',
             category: metadata.category || 'None',
             warningStatus: warningStatus,

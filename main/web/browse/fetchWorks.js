@@ -198,7 +198,7 @@ export function parseWorkElements(workElements) {
             descriptionHTML: fullDescriptionHTML,
             chapters: [],
             currentChapter: chapterInfo.current || 1,
-            chapterCount: chapterInfo.total || 1,
+            chapterCount: chapterInfo.total ?? null,
             rating: requiredTags.rating || 'Not Rated',
             category: requiredTags.category || 'None',
             warningStatus: requiredTags.warningStatus || 'NoWarningsApply',
