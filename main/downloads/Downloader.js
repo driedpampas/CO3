@@ -3,7 +3,7 @@ import RNFS from 'react-native-fs';
 import { fetchChapter } from '../web/worksScreen/fetchChapter';
 
 export function buildPath(workId, chapterId) {
-    return `${RNFS.DocumentDirectoryPath}/CO3/downloads/${workId}/${chapterId}`;
+    return `${RNFS.DocumentDirectoryPath}/Tales/downloads/${workId}/${chapterId}`;
 }
 
 export async function downloadChapter(workId, chapterId) {
@@ -15,9 +15,9 @@ const saveFile = async (html, css, workId, chapterId) => {
     const path = buildPath(workId, chapterId);
 
     try {
-        await RNFS.mkdir(`${RNFS.DocumentDirectoryPath}/CO3/`);
-        await RNFS.mkdir(`${RNFS.DocumentDirectoryPath}/CO3/downloads/`);
-        await RNFS.mkdir(`${RNFS.DocumentDirectoryPath}/CO3/downloads/${workId}/`);
+        await RNFS.mkdir(`${RNFS.DocumentDirectoryPath}/Tales/`);
+        await RNFS.mkdir(`${RNFS.DocumentDirectoryPath}/Tales/downloads/`);
+        await RNFS.mkdir(`${RNFS.DocumentDirectoryPath}/Tales/downloads/${workId}/`);
 
         await RNFS.writeFile(`${path}.html`, html, 'utf8');
         await RNFS.writeFile(`${path}.css`, css, 'utf8');
@@ -60,7 +60,7 @@ export const deleteDownloaded = async (workId, chapterId) => {
 };
 
 export async function countDownloads() {
-    const downloadsPath = `${RNFS.DocumentDirectoryPath}/CO3/downloads`;
+    const downloadsPath = `${RNFS.DocumentDirectoryPath}/Tales/downloads`;
 
     const exists = await RNFS.exists(downloadsPath);
     if (!exists) return { folderCount: 0, fileCount: 0, chapterCount: 0 };
@@ -78,7 +78,7 @@ export async function countDownloads() {
 }
 
 export async function deleteAllDownloads() {
-    const dlPath = `${RNFS.DocumentDirectoryPath}/CO3/downloads/`;
+    const dlPath = `${RNFS.DocumentDirectoryPath}/Tales/downloads/`;
     return await RNFS.unlink(dlPath)
         .then(() => {
             return undefined;

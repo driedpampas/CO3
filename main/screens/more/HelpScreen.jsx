@@ -25,7 +25,7 @@ export default function HelpScreen({ route }) {
             </View>
             <ScrollView>
                 <View style={styles.mainContent}>
-                    <Image style={styles.image} source={require('../../res/CO3.png')} />
+                    <Image style={styles.image} source={require('../../res/logo.png')} />
                     <View
                         style={[styles.separator, { backgroundColor: currentTheme.borderColor }]}
                     />

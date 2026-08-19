@@ -109,7 +109,7 @@ function getBackupDir() {
 }
 
 function getDownloadsDir() {
-    return `${RNFS.DocumentDirectoryPath}/CO3/downloads`;
+    return `${RNFS.DocumentDirectoryPath}/Tales/downloads`;
 }
 
 async function addDirToZip(zip, dirPath, entryPrefix) {

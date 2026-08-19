@@ -52,6 +52,7 @@ import { getTempPreset, setTempPreset } from './storage/jsonSearches';
 import { getJsonSettings, saveJsonSettings } from './storage/jsonSettings';
 import { STORAGE_KEYS } from './utils/constants';
 import { themes } from './utils/themes';
+import { setAppIcon } from './utils/appIcon';
 import { checkTagCanonical } from './web/other/tagUtils';
 import { setup, setupNotificationListeners } from './web/updater';
 import WebviewFetcher from './web/WebviewFetcher';
@@ -791,6 +792,7 @@ const App = () => {
                 await AsyncStorage.setItem(STORAGE_KEYS.THEME, newTheme);
                 setTheme(newTheme);
             }
+            await setAppIcon(newTheme);
         } catch (error) {
             console.error('Error saving theme:', error);
         }
@@ -899,7 +901,7 @@ const App = () => {
                     <View style={styles.loadingContainer}>
                         <Image
                             style={{ width: 140, height: 140, marginBottom: 28 }}
-                            source={require('./res/CO3.png')}
+                            source={require('./res/logo.png')}
                             resizeMode="contain"
                         />
                         <ActivityIndicator size="large" color={loadingTheme.primaryColor} />

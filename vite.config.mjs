@@ -105,10 +105,18 @@ export default defineConfig({
             '@react-native-async-storage/async-storage',
             'react-native-linear-gradient',
             'react-native-inappbrowser-reborn',
+            'react-native-change-icon',
         ],
     },
     resolve: {
         alias: [
+            {
+                find: 'react-native-change-icon',
+                replacement: path.resolve(
+                    __dirname,
+                    'web-mocks/change-icon.js',
+                ),
+            },
             {
                 find: 'react-native-vector-icons/MaterialIcons',
                 replacement: path.resolve(

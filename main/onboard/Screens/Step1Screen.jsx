@@ -14,7 +14,7 @@ export default function Step1({ currentTheme, setScreen }) {
                 <View style={styles.heroSection}>
                     <Image
                         style={styles.logo}
-                        source={require('../../res/CO3.png')}
+                        source={require('../../res/logo.png')}
                         resizeMode="contain"
                     />
 
