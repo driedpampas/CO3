@@ -85,24 +85,14 @@ const SideMenu = ({
     };
 
     const ThemeButton = ({ themeKey, label, isActive, onPress }) => {
-        const buttonStyle = [styles.themeButton];
-        const textStyle = [styles.themeButtonText];
-
-        if (isActive) {
-            if (themeKey === 'light') {
-                buttonStyle.push({ backgroundColor: '#ffffff' });
-                textStyle.push({ color: '#374151' });
-            } else if (themeKey === 'dark') {
-                buttonStyle.push({ backgroundColor: '#374151' });
-                textStyle.push({ color: '#f3f4f6' });
-            } else if (themeKey === 'black') {
-                buttonStyle.push({ backgroundColor: '#000000' });
-                textStyle.push({ color: '#f9fafb' });
-            }
-        } else {
-            buttonStyle.push({ backgroundColor: 'transparent' });
-            textStyle.push({ color: currentTheme.textColor });
-        }
+        const buttonStyle = [
+            styles.themeButton,
+            { backgroundColor: isActive ? currentTheme.primaryColor : 'transparent' },
+        ];
+        const textStyle = [
+            styles.themeButtonText,
+            { color: isActive ? '#ffffff' : currentTheme.textColor },
+        ];
 
         return (
             <TouchableOpacity style={buttonStyle} onPress={onPress} activeOpacity={0.7}>
@@ -131,24 +121,10 @@ const SideMenu = ({
     };
 
     const getSwitchColors = () => {
-        const purpleColor = '#8b5cf6';
-
-        if (localTheme === 'dark') {
-            return {
-                thumbColor: localIncognito ? purpleColor : '#a0aec0',
-                trackColor: { false: '#3b4a5f', true: purpleColor },
-            };
-        } else if (localTheme === 'black') {
-            return {
-                thumbColor: localIncognito ? purpleColor : '#f9fafb',
-                trackColor: { false: '#1a1a1a', true: purpleColor },
-            };
-        } else {
-            return {
-                thumbColor: localIncognito ? purpleColor : '#f4f3f4',
-                trackColor: { false: '#767577', true: purpleColor },
-            };
-        }
+        return {
+            thumbColor: localIncognito ? currentTheme.primaryColor : '#f4f3f4',
+            trackColor: { false: currentTheme.borderColor, true: `${currentTheme.primaryColor}80` },
+        };
     };
 
     const switchColors = getSwitchColors();

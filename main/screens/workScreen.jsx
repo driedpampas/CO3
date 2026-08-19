@@ -1119,7 +1119,7 @@ const ChapterInfoScreen = ({ route }) => {
                 <TouchableOpacity style={styles.actionButton} onPress={handleAddToLibrary}>
                     <Icon
                         name={inLibrary ? 'bookmark' : 'bookmark-border'}
-                        size={48}
+                        size={24}
                         color={inLibrary ? currentTheme.primaryColor : currentTheme.iconColor}
                     />
                     <Text
@@ -1143,14 +1143,14 @@ const ChapterInfoScreen = ({ route }) => {
                 >
                     {likeLoading ? (
                         <ActivityIndicator
-                            size={24}
+                            size={20}
                             color={currentTheme.primaryColor}
-                            style={{ height: 48 }}
+                            style={{ height: 24 }}
                         />
                     ) : (
                         <Icon
                             name={liked ? 'favorite' : 'favorite-border'}
-                            size={48}
+                            size={24}
                             color={liked ? '#ef4444' : currentTheme.iconColor}
                         />
                     )}
@@ -1170,14 +1170,14 @@ const ChapterInfoScreen = ({ route }) => {
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.actionButton} onPress={handleMoreInfo}>
-                    <Icon name="info-outline" size={48} color={currentTheme.iconColor} />
+                    <Icon name="info-outline" size={24} color={currentTheme.iconColor} />
                     <Text style={[styles.actionButtonText, { color: currentTheme.textColor }]}>
                         {t('screen_work_more_info')}
                     </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.actionButton} onPress={handleOpenWebView}>
-                    <Icon name="open-in-browser" size={48} color={currentTheme.iconColor} />
+                    <Icon name="open-in-browser" size={24} color={currentTheme.iconColor} />
                     <Text style={[styles.actionButtonText, { color: currentTheme.textColor }]}>
                         {t('screen_work_open_in_web')}
                     </Text>
@@ -1602,67 +1602,67 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingVertical: 12,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
         borderBottomWidth: 1,
     },
     backButton: {
-        padding: 8,
-        marginRight: 8,
+        padding: 6,
+        marginRight: 6,
     },
     headerTitle: {
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: '600',
         flex: 1,
     },
     workInfo: {
-        padding: 16,
+        padding: 12,
         paddingBottom: 0,
     },
     workTitle: {
-        fontSize: 24,
+        fontSize: 18,
         fontWeight: 'bold',
-        marginBottom: 4,
+        marginBottom: 2,
     },
     workAuthor: {
-        fontSize: 16,
-        marginBottom: 20,
+        fontSize: 13,
+        marginBottom: 10,
     },
     actionButtonsContainer: {
         flexDirection: 'row',
         justifyContent: 'space-evenly',
         alignItems: 'center',
-        marginBottom: 20,
-        paddingHorizontal: 8,
-        minHeight: 80,
+        marginBottom: 10,
+        paddingHorizontal: 4,
+        minHeight: 48,
     },
     actionButton: {
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 8,
+        paddingVertical: 4,
         paddingHorizontal: 0,
-        minWidth: 80,
+        minWidth: 60,
         flex: 1,
     },
     actionButtonDisabled: {
         opacity: 0.6,
     },
     actionButtonText: {
-        fontSize: 12,
-        marginTop: 6,
+        fontSize: 11,
+        marginTop: 3,
         textAlign: 'center',
-        lineHeight: 14,
+        lineHeight: 13,
     },
     descriptionContainer: {
-        marginTop: 10,
-        paddingHorizontal: 16,
+        marginTop: 8,
+        paddingHorizontal: 12,
         position: 'relative',
     },
     hiddenMeasurer: {
         position: 'absolute',
         top: 0,
-        left: 16,
-        right: 16,
+        left: 12,
+        right: 12,
         opacity: 0,
         zIndex: -10,
     },
@@ -1672,7 +1672,7 @@ const styles = StyleSheet.create({
         position: 'relative',
     },
     contentPadding: {
-        paddingBottom: 10,
+        paddingBottom: 8,
     },
     innerContent: {
         position: 'absolute',
@@ -1688,46 +1688,46 @@ const styles = StyleSheet.create({
         opacity: 0,
     },
     description: {
-        fontSize: 14,
-        lineHeight: 20,
+        fontSize: 13,
+        lineHeight: 18,
     },
     descriptionGradient: {
         position: 'absolute',
         bottom: 0,
         left: 0,
         right: 0,
-        height: 60,
+        height: 48,
         zIndex: 2,
     },
     expandButton: {
         alignSelf: 'center',
-        paddingVertical: 4,
+        paddingVertical: 2,
         width: '100%',
         alignItems: 'center',
         zIndex: 10,
     },
     chaptersListContentContainer: {
-        paddingBottom: 16,
+        paddingBottom: 12,
     },
     sectionHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingVertical: 12,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
         borderBottomWidth: 1,
     },
     sectionTitle: {
-        fontSize: 18,
+        fontSize: 15,
         fontWeight: '600',
     },
     chapterCount: {
-        fontSize: 14,
+        fontSize: 13,
     },
     chapterItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 16,
+        paddingHorizontal: 12,
         justifyContent: 'space-between',
     },
     chapterContent: {
@@ -1748,13 +1748,13 @@ const styles = StyleSheet.create({
         textAlign: 'right',
     },
     chapterTitle: {
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: '500',
         marginBottom: 0,
     },
     chapterDate: {
-        fontSize: 12,
-        marginTop: 4,
+        fontSize: 11,
+        marginTop: 2,
     },
     loadingContainer: {
         flex: 1,
@@ -1762,69 +1762,69 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     loadingText: {
-        marginTop: 16,
-        fontSize: 16,
+        marginTop: 12,
+        fontSize: 14,
     },
     errorContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        paddingHorizontal: 32,
+        paddingHorizontal: 24,
     },
     errorText: {
-        fontSize: 16,
+        fontSize: 14,
         textAlign: 'center',
-        marginVertical: 16,
+        marginVertical: 12,
     },
     retryButton: {
-        paddingHorizontal: 24,
-        paddingVertical: 12,
-        borderRadius: 8,
+        paddingHorizontal: 20,
+        paddingVertical: 8,
+        borderRadius: 6,
     },
     retryButtonText: {
         color: 'white',
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: '600',
     },
     toast: {
         position: 'absolute',
         top: 40,
-        left: 16,
-        right: 16,
+        left: 12,
+        right: 12,
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 16,
-        borderRadius: 8,
+        padding: 12,
+        borderRadius: 6,
         zIndex: 1000,
         elevation: 5,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
-        shadowRadius: 4,
+        shadowRadius: 3,
     },
     toastText: {
         color: 'white',
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: '500',
         flex: 1,
     },
     readButtonFab: {
         position: 'absolute',
-        right: 16,
-        bottom: 25,
-        width: 56,
-        height: 56,
-        borderRadius: 28,
+        right: 14,
+        bottom: 20,
+        width: 48,
+        height: 48,
+        borderRadius: 24,
         justifyContent: 'center',
         alignItems: 'center',
-        elevation: 8,
+        elevation: 6,
         shadowColor: '#000',
         shadowOffset: {
             width: 0,
-            height: 4,
+            height: 2,
         },
-        shadowOpacity: 0.3,
-        shadowRadius: 4.65,
+        shadowOpacity: 0.25,
+        shadowRadius: 3,
     },
     floatingButton: {
         flexDirection: 'row',

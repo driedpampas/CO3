@@ -153,7 +153,7 @@ async function createCompleteHtml(chapterHtml, cssStyles, currentTheme, settings
     
     #workskin h1, #workskin h2, #workskin h3, #workskin h4, #workskin h5, #workskin h6 {
       color: var(--text-color, #333);
-      border-bottom: 2px solid var(--primary-color, #3b82f6);
+      border-bottom: 2px solid var(--primary-color, #ea580c);
       padding-bottom: 8px;
       margin-bottom: 16px;
     }
@@ -164,7 +164,7 @@ async function createCompleteHtml(chapterHtml, cssStyles, currentTheme, settings
     }
     
     #workskin a {
-      color: var(--primary-color, #3b82f6);
+      color: var(--primary-color, #ea580c);
     }
     
     #workskin a:hover {
@@ -172,8 +172,8 @@ async function createCompleteHtml(chapterHtml, cssStyles, currentTheme, settings
     }
     
     #workskin blockquote {
-      border-left: 4px solid var(--primary-color, #3b82f6);
-      background-color: var(--input-bg-color, #f3f4f6);
+      border-left: 4px solid var(--primary-color, #ea580c);
+      background-color: var(--input-bg-color, #ebebeb);
       padding: 16px;
       margin: 16px 0;
       border-radius: 4px;
@@ -181,21 +181,21 @@ async function createCompleteHtml(chapterHtml, cssStyles, currentTheme, settings
     }
     
     #workskin .notes {
-      background-color: var(--input-bg-color, #f3f4f6);
-      border: 1px solid var(--border-color, #e5e7eb);
+      background-color: var(--input-bg-color, #ebebeb);
+      border: 1px solid var(--border-color, #e5e5e5);
       border-radius: 8px;
       padding: 16px;
       margin: 16px 0;
     }
     
     #workskin .notes h3 {
-      color: var(--secondary-text-color, #6b7280);
+      color: var(--secondary-text-color, #737373);
       margin-top: 0;
-      border-bottom: 1px solid var(--border-color, #e5e7eb);
+      border-bottom: 1px solid var(--border-color, #e5e5e5);
     }
     
     #workskin .title a {
-      color: var(--primary-color, #3b82f6);
+      color: var(--primary-color, #ea580c);
       font-weight: bold;
     }
     

@@ -324,19 +324,19 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     contentContainer: {
-        padding: 16,
-        paddingBottom: 100,
+        padding: 10,
+        paddingBottom: 70,
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 20,
-        paddingVertical: 10,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
     },
     title: {
-        fontSize: 24,
+        fontSize: 16,
         fontWeight: 'bold',
-        marginLeft: 16,
+        marginLeft: 8,
         width: '80%',
     },
     loadingText: {

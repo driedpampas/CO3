@@ -9,34 +9,27 @@ const HistoryHeader = ({
     hasHistory,
     onClearHistory,
     onClearFilter,
-    isKudosHistory = false,
+    _isKudosHistory = false,
 }) => {
     const { t } = useTranslation();
 
     return (
         <View style={styles.header}>
-            <View>
-                {isKudosHistory ? null : (
-                    <Text style={[styles.title, { color: currentTheme.textColor }]}>
-                        {t('screen_history_title')}
-                    </Text>
-                )}
-                <Text style={[styles.subtitle, { color: currentTheme.placeholderColor }]}>
-                    {isFilterActive
-                        ? totalCount > 1
-                            ? t('component_history_header_count_filtered_plural', {
-                                  totalCount: totalCount,
-                              })
-                            : t('component_history_header_count_filtered', {
-                                  totalCount: totalCount,
-                              })
-                        : totalCount > 1
-                          ? t('component_history_header_count_plural', {
-                                totalCount: totalCount,
-                            })
-                          : t('component_history_header_count', { totalCount: totalCount })}
-                </Text>
-            </View>
+            <Text style={[styles.subtitle, { color: currentTheme.secondaryTextColor }]}>
+                {isFilterActive
+                    ? totalCount > 1
+                        ? t('component_history_header_count_filtered_plural', {
+                              totalCount: totalCount,
+                          })
+                        : t('component_history_header_count_filtered', {
+                              totalCount: totalCount,
+                          })
+                    : totalCount > 1
+                      ? t('component_history_header_count_plural', {
+                            totalCount: totalCount,
+                        })
+                      : t('component_history_header_count', { totalCount: totalCount })}
+            </Text>
 
             <View style={styles.headerButtons}>
                 {isFilterActive && (
@@ -55,11 +48,14 @@ const HistoryHeader = ({
 
                 {hasHistory && (
                     <TouchableOpacity
-                        style={[styles.clearButton, { borderColor: currentTheme.primaryColor }]}
+                        style={[styles.clearButton, { borderColor: currentTheme.borderColor }]}
                         onPress={onClearHistory}
                     >
                         <Text
-                            style={[styles.clearButtonText, { color: currentTheme.primaryColor }]}
+                            style={[
+                                styles.clearButtonText,
+                                { color: currentTheme.secondaryTextColor },
+                            ]}
                         >
                             {t('component_history_header_clear_history')}
                         </Text>
@@ -74,25 +70,21 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        marginBottom: 20,
+        alignItems: 'center',
+        marginBottom: 8,
     },
     headerButtons: {
         flexDirection: 'row',
-        gap: 8,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
+        gap: 6,
     },
     subtitle: {
-        fontSize: 16,
-        marginTop: 8,
+        fontSize: 13,
+        fontWeight: '500',
     },
     clearFilterButton: {
-        borderRadius: 8,
-        paddingHorizontal: 12,
-        paddingVertical: 6,
+        borderRadius: 6,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -102,12 +94,12 @@ const styles = StyleSheet.create({
     },
     clearButton: {
         borderWidth: 1,
-        borderRadius: 8,
-        paddingHorizontal: 16,
-        paddingVertical: 8,
+        borderRadius: 6,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
     },
     clearButtonText: {
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: '500',
     },
 });

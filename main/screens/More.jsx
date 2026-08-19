@@ -292,18 +292,19 @@ const MoreScreen = ({
         <ScrollView
             style={[styles.mainContent, { backgroundColor: currentTheme.backgroundColor }]}
             contentContainerStyle={{
-                paddingBottom: insets.bottom,
+                paddingBottom: insets.bottom + 60,
             }}
         >
             <View style={styles.contentContainer}>
-                <Text style={[styles.title, { color: currentTheme.textColor }]}>
-                    {t('screen_more_title')}
-                </Text>
-                <Text style={[styles.subtitle, { color: currentTheme.placeholderColor }]}>
-                    {t('screen_more_subtitle')}
-                </Text>
-
-                <View style={styles.menuContainer}>
+                <View
+                    style={[
+                        styles.menuContainer,
+                        {
+                            borderColor: currentTheme.borderColor,
+                            backgroundColor: currentTheme.cardBackground,
+                        },
+                    ]}
+                >
                     {menuItems.map((item, index) => (
                         <Animated.View
                             key={item.name}
@@ -336,7 +337,7 @@ const MoreScreen = ({
                                 <View style={styles.iconContainer}>
                                     <Icon
                                         name={item.icon}
-                                        size={24}
+                                        size={20}
                                         color={currentTheme.primaryColor}
                                     />
                                 </View>
@@ -345,7 +346,7 @@ const MoreScreen = ({
                                 </Text>
                                 <Icon
                                     name="chevron-right"
-                                    size={24}
+                                    size={20}
                                     color={currentTheme.placeholderColor}
                                 />
                             </TouchableOpacity>
@@ -360,44 +361,33 @@ const MoreScreen = ({
 const styles = StyleSheet.create({
     mainContent: {
         flex: 1,
-        margin: 16,
     },
     contentContainer: {
-        padding: 16,
-        paddingBottom: 80,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 8,
-    },
-    subtitle: {
-        fontSize: 16,
-        marginBottom: 24,
+        padding: 10,
     },
     menuContainer: {
-        borderRadius: 12,
+        borderRadius: 8,
+        borderWidth: 1,
         overflow: 'hidden',
-        marginHorizontal: -16,
     },
     menuItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 16,
-        paddingHorizontal: 16,
+        paddingVertical: 12,
+        paddingHorizontal: 12,
         borderBottomWidth: 1,
     },
     lastItem: {
         borderBottomWidth: 0,
     },
     iconContainer: {
-        width: 40,
+        width: 28,
         alignItems: 'center',
-        marginRight: 16,
+        marginRight: 10,
     },
     menuText: {
         flex: 1,
-        fontSize: 18,
+        fontSize: 15,
         fontWeight: '500',
     },
 });

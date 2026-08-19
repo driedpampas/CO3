@@ -15,7 +15,6 @@ import {
     DeviceEventEmitter,
     Image,
     Linking,
-    PermissionsAndroid,
     Platform,
     SafeAreaView,
     StatusBar,
@@ -126,17 +125,17 @@ const AppWrapper = () => {
         return themes?.[theme]
             ? themes[theme]
             : themes?.light || {
-                  backgroundColor: 'white',
-                  textColor: 'black',
-                  headerBackground: '#f8f8f8',
-                  iconColor: '#333',
-                  inputBackground: '#eee',
-                  borderColor: '#e0e0e0',
-                  primaryColor: '#8b5cf6',
-                  buttonBackground: '#eee',
-                  placeholderColor: '#999',
-                  cardBackground: '#fff',
-                  secondaryTextColor: '#666',
+                  backgroundColor: '#f5f5f5',
+                  textColor: '#171717',
+                  headerBackground: '#ffffff',
+                  iconColor: '#525252',
+                  inputBackground: '#ebebeb',
+                  borderColor: '#e5e5e5',
+                  primaryColor: '#ea580c',
+                  buttonBackground: '#ebebeb',
+                  placeholderColor: '#a3a3a3',
+                  cardBackground: '#ffffff',
+                  secondaryTextColor: '#525252',
               };
     }, [theme]);
 
@@ -644,6 +643,7 @@ const App = () => {
 
         if (Platform.OS === 'android') {
             try {
+                const { PermissionsAndroid } = require('react-native');
                 const _granted = await PermissionsAndroid.request(
                     PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
                 );
@@ -1015,68 +1015,70 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 16,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
         borderBottomWidth: 1,
     },
     searchContainer: {
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        marginRight: 12,
+        marginRight: 8,
     },
     titleHeader: {
         flex: 1,
-        marginRight: 12,
+        marginRight: 8,
     },
     headerTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
+        fontSize: 18,
+        fontWeight: '600',
     },
     searchInput: {
         flex: 1,
-        marginLeft: 12,
-        padding: 8,
-        borderRadius: 8,
+        marginLeft: 8,
+        paddingVertical: 6,
+        paddingHorizontal: 10,
+        borderRadius: 6,
         borderWidth: 1,
-        fontSize: 16,
+        fontSize: 14,
     },
     menuButton: {
-        padding: 8,
-        borderRadius: 8,
+        padding: 6,
+        borderRadius: 6,
     },
     mainContent: {
         flex: 1,
     },
     contentContainer: {
-        padding: 16,
-        paddingBottom: 80,
+        padding: 12,
+        paddingBottom: 60,
     },
     titleContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 24,
+        marginBottom: 12,
     },
     title: {
-        fontSize: 24,
+        fontSize: 20,
         fontWeight: 'bold',
     },
     subtitle: {
-        fontSize: 16,
-        marginTop: 8,
-        marginBottom: 20,
+        fontSize: 14,
+        marginTop: 4,
+        marginBottom: 12,
     },
     addButton: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
+        width: 40,
+        height: 40,
+        borderRadius: 20,
         justifyContent: 'center',
         alignItems: 'center',
     },
     noBooks: {
         textAlign: 'center',
-        marginTop: 40,
-        fontSize: 16,
+        marginTop: 32,
+        fontSize: 14,
     },
     bottomNav: {
         position: 'absolute',
@@ -1085,14 +1087,14 @@ const styles = StyleSheet.create({
         right: 0,
         flexDirection: 'row',
         justifyContent: 'space-around',
-        paddingVertical: 12,
+        paddingVertical: 4,
         borderTopWidth: 1,
     },
     navItemContainer: {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 8,
+        paddingVertical: 4,
     },
     navItemContent: {
         alignItems: 'center',
@@ -1101,6 +1103,8 @@ const styles = StyleSheet.create({
     navItemLabel: {
         textAlign: 'center',
         fontWeight: '500',
+        fontSize: 11,
+        marginTop: 2,
     },
 });
 

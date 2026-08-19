@@ -85,7 +85,7 @@ const LibraryScreen = ({
     const [isSearching, setIsSearching] = useState(false);
 
     const [currentPage, setCurrentPage] = useState(1);
-    const [totalCount, setTotalCount] = useState(0);
+    const [_totalCount, setTotalCount] = useState(0);
     const [hasMore, setHasMore] = useState(false);
 
     const [sortType, setSortType] = useState('lastRead');
@@ -342,50 +342,13 @@ const LibraryScreen = ({
 
     const renderHeader = () => (
         <View style={styles.headerContainer}>
-            <View style={styles.titleContainer}>
-                <View>
-                    <Text style={[styles.title, { color: currentTheme.textColor }]}>
-                        {t('screen_library_title')}
-                    </Text>
-                    <View style={styles.subtitleContainer}>
-                        <Text style={[styles.subtitle, { color: currentTheme.placeholderColor }]}>
-                            {totalCount <= 1
-                                ? t('screen_library_subtitle', { count: totalCount })
-                                : t('screen_library_subtitle_plural', { count: totalCount })}
-                            {selectedCollection &&
-                                t('screen_library_subtitle_collection', {
-                                    collection: selectedCollection,
-                                })}
-                            {isSearching &&
-                                t('screen_library_subtitle_match_filter', {
-                                    query: searchTerm,
-                                })}
-                        </Text>
-                    </View>
-                </View>
-                <TouchableOpacity
-                    style={[
-                        styles.sortButton,
-                        {
-                            backgroundColor: currentTheme.cardBackground,
-                            borderColor: currentTheme.borderColor,
-                        },
-                    ]}
-                    onPress={() => setShowSortModal(true)}
-                >
-                    <SortIcon color={currentTheme.textColor} size={16} />
-                    <Text style={[styles.sortButtonText, { color: currentTheme.textColor }]}>
-                        {getSortDisplayName(sortType)}
-                    </Text>
-                </TouchableOpacity>
-            </View>
-
-            {allCollections.length > 1 && (
-                <View style={styles.collectionsContainer}>
+            <View style={styles.toolbarRow}>
+                {allCollections.length > 1 ? (
                     <ScrollView
                         horizontal
                         showsHorizontalScrollIndicator={false}
                         style={styles.collectionsScroll}
+                        contentContainerStyle={styles.collectionsScrollContent}
                     >
                         <TouchableOpacity
                             style={[
@@ -395,8 +358,8 @@ const LibraryScreen = ({
                                         selectedCollection === null
                                             ? currentTheme.primaryColor
                                             : currentTheme.cardBackground,
+                                    borderColor: currentTheme.borderColor,
                                 },
-                                { borderColor: currentTheme.borderColor },
                             ]}
                             onPress={() => handleCollectionFilter(null)}
                         >
@@ -425,8 +388,8 @@ const LibraryScreen = ({
                                             selectedCollection === collectionData.name
                                                 ? currentTheme.primaryColor
                                                 : currentTheme.cardBackground,
+                                        borderColor: currentTheme.borderColor,
                                     },
-                                    { borderColor: currentTheme.borderColor },
                                 ]}
                                 onPress={() => handleCollectionFilter(collectionData.name)}
                             >
@@ -450,17 +413,37 @@ const LibraryScreen = ({
                             <TouchableOpacity
                                 style={[
                                     styles.collectionChip,
-                                    { backgroundColor: currentTheme.cardBackground },
-                                    { borderColor: currentTheme.borderColor },
+                                    {
+                                        backgroundColor: currentTheme.cardBackground,
+                                        borderColor: currentTheme.borderColor,
+                                    },
                                 ]}
                                 onPress={() => setShowAllCollectionsModal(true)}
                             >
-                                <Icon name="more-horiz" size={18} color={currentTheme.textColor} />
+                                <Icon name="more-horiz" size={16} color={currentTheme.textColor} />
                             </TouchableOpacity>
                         )}
                     </ScrollView>
-                </View>
-            )}
+                ) : (
+                    <View style={{ flex: 1 }} />
+                )}
+
+                <TouchableOpacity
+                    style={[
+                        styles.sortButton,
+                        {
+                            backgroundColor: currentTheme.cardBackground,
+                            borderColor: currentTheme.borderColor,
+                        },
+                    ]}
+                    onPress={() => setShowSortModal(true)}
+                >
+                    <SortIcon color={currentTheme.textColor} size={14} />
+                    <Text style={[styles.sortButtonText, { color: currentTheme.textColor }]}>
+                        {getSortDisplayName(sortType)}
+                    </Text>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 
@@ -703,56 +686,47 @@ const LibraryScreen = ({
 
 const styles = StyleSheet.create({
     contentContainer: {
-        padding: 16,
-        paddingBottom: 150,
+        padding: 10,
+        paddingBottom: 70,
     },
     headerContainer: {
-        marginBottom: 20,
+        marginBottom: 8,
     },
-    titleContainer: {
+    toolbarRow: {
         flexDirection: 'row',
+        alignItems: 'center',
         justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        marginBottom: 16,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-    },
-    subtitleContainer: {
-        marginTop: 4,
-    },
-    subtitle: {
-        fontSize: 16,
+        gap: 6,
     },
     sortButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderRadius: 8,
+        paddingHorizontal: 8,
+        paddingVertical: 5,
+        borderRadius: 6,
         borderWidth: 1,
-        gap: 6,
+        gap: 4,
     },
     sortButtonText: {
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: '500',
     },
-    collectionsContainer: {
-        marginBottom: 8,
-    },
     collectionsScroll: {
+        flex: 1,
+    },
+    collectionsScrollContent: {
         flexDirection: 'row',
+        alignItems: 'center',
     },
     collectionChip: {
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 20,
-        marginRight: 8,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 6,
+        marginRight: 6,
         borderWidth: 1,
     },
     collectionChipText: {
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: '500',
     },
     centerContainer: {

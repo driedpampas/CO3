@@ -444,25 +444,31 @@ const BrowseScreen = ({
             : t('screen_browse_filter_summary', { count: filterCount });
     };
 
-    const renderHeader = () => (
-        <View style={styles.headerContainer}>
-            <View>
-                <Text style={[styles.title, { color: currentTheme.textColor }]}>
-                    {t('screen_browse_title')}
+    const renderHeader = () => {
+        if (!hasFilters) return null;
+        return (
+            <View
+                style={[
+                    styles.activeFilterBar,
+                    {
+                        backgroundColor: currentTheme.inputBackground,
+                        borderColor: currentTheme.borderColor,
+                    },
+                ]}
+            >
+                <Icon name="filter-list" size={16} color={currentTheme.primaryColor} />
+                <Text
+                    style={[styles.filterStatusText, { color: currentTheme.textColor }]}
+                    numberOfLines={1}
+                >
+                    {getFilterSummary()}
                 </Text>
-                <View style={styles.subtitleContainer}>
-                    <Text style={[styles.subtitle, { color: currentTheme.placeholderColor }]}>
-                        {t('screen_browse_subtitle', { count: works.length })}
-                    </Text>
-                    {hasFilters && (
-                        <Text style={[styles.filterStatus, { color: currentTheme.primaryColor }]}>
-                            • {getFilterSummary()}
-                        </Text>
-                    )}
-                </View>
+                <TouchableOpacity onPress={handleClearFilters} style={styles.clearFilterBadge}>
+                    <Icon name="close" size={14} color={currentTheme.iconColor} />
+                </TouchableOpacity>
             </View>
-        </View>
-    );
+        );
+    };
 
     const renderFooter = () => {
         if (loadingMore) {
@@ -656,28 +662,26 @@ const BrowseScreen = ({
 
 const styles = StyleSheet.create({
     contentContainer: {
-        padding: 16,
-        paddingBottom: 150,
+        padding: 10,
+        paddingBottom: 70,
     },
-    headerContainer: {
-        marginBottom: 20,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-    },
-    subtitleContainer: {
+    activeFilterBar: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginTop: 4,
+        paddingVertical: 6,
+        paddingHorizontal: 10,
+        borderRadius: 6,
+        borderWidth: 1,
+        marginBottom: 8,
+        gap: 6,
     },
-    subtitle: {
-        fontSize: 16,
-    },
-    filterStatus: {
-        fontSize: 14,
-        marginLeft: 8,
+    filterStatusText: {
+        flex: 1,
+        fontSize: 13,
         fontWeight: '500',
+    },
+    clearFilterBadge: {
+        padding: 2,
     },
     centerContainer: {
         flex: 1,
@@ -686,83 +690,84 @@ const styles = StyleSheet.create({
         padding: 16,
     },
     loadingText: {
-        marginTop: 16,
-        fontSize: 16,
+        marginTop: 12,
+        fontSize: 14,
     },
     errorContainer: {
-        padding: 24,
+        padding: 20,
         borderRadius: 8,
         borderWidth: 1,
         alignItems: 'center',
         maxWidth: '90%',
     },
     errorTitle: {
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: 'bold',
-        marginBottom: 8,
+        marginBottom: 6,
     },
     errorMessage: {
-        fontSize: 14,
+        fontSize: 13,
         textAlign: 'center',
         marginBottom: 8,
     },
     retryButton: {
-        paddingHorizontal: 20,
-        paddingVertical: 10,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
         borderRadius: 6,
     },
     retryButtonText: {
         color: 'white',
         fontWeight: '600',
+        fontSize: 13,
     },
     emptyContainer: {
-        padding: 40,
+        padding: 32,
         alignItems: 'center',
     },
     emptyText: {
-        fontSize: 16,
+        fontSize: 14,
         textAlign: 'center',
     },
     footerLoader: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 20,
-        marginBottom: 20,
+        paddingVertical: 12,
+        marginBottom: 12,
     },
     footerText: {
-        marginLeft: 10,
-        fontSize: 14,
+        marginLeft: 8,
+        fontSize: 13,
     },
     fab: {
         position: 'absolute',
-        right: 16,
-        bottom: 100,
-        width: 56,
-        height: 56,
-        borderRadius: 28,
-        justifyContent: 'center',
-        alignItems: 'center',
-        elevation: 8,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-    },
-    clearFab: {
-        position: 'absolute',
-        right: 20,
-        bottom: 170,
+        right: 14,
+        bottom: 80,
         width: 48,
         height: 48,
         borderRadius: 24,
         justifyContent: 'center',
         alignItems: 'center',
-        elevation: 8,
+        elevation: 6,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
-        shadowRadius: 3.84,
+        shadowRadius: 3,
+    },
+    clearFab: {
+        position: 'absolute',
+        right: 18,
+        bottom: 136,
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 6,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3,
     },
 });
 

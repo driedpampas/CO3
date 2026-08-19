@@ -345,55 +345,55 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingVertical: 12,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
         borderBottomWidth: 1,
     },
     headerLeft: {
         flex: 1,
     },
     lastUpdateText: {
-        fontSize: 13,
+        fontSize: 12,
         fontStyle: 'italic',
     },
     refreshButton: {
-        padding: 8,
-        borderRadius: 8,
+        padding: 6,
+        borderRadius: 6,
     },
     scrollView: {
         flex: 1,
     },
     section: {
-        marginTop: 16,
+        marginTop: 10,
     },
     sectionTitle: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: '600',
-        marginHorizontal: 16,
-        marginBottom: 8,
+        marginHorizontal: 12,
+        marginBottom: 6,
     },
     emptyContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        paddingTop: 100,
-        paddingHorizontal: 32,
+        paddingTop: 60,
+        paddingHorizontal: 24,
     },
     emptyText: {
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: '600',
-        marginTop: 16,
+        marginTop: 12,
     },
     emptySubtext: {
-        fontSize: 14,
-        marginTop: 8,
+        fontSize: 13,
+        marginTop: 6,
         textAlign: 'center',
     },
     loadingText: {
-        fontSize: 16,
+        fontSize: 14,
     },
     bottomPadding: {
-        height: 100,
+        height: 70,
     },
 });
 

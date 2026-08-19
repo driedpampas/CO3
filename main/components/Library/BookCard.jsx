@@ -357,98 +357,88 @@ const BookCard = ({
                         ))}
 
                     {showMetadataInCard && (
-                        <View style={styles.metadata}>
-                            {showDate ? (
-                                <View style={styles.metadataRow}>
-                                    <Icon name="schedule" size={14} color={theme.iconColor} />
+                        <View style={[styles.metadataGrid, { borderTopColor: theme.borderColor }]}>
+                            <View style={styles.gridRow}>
+                                <View style={styles.gridItem}>
+                                    <Icon name="favorite" size={13} color="#ef4444" />
                                     <Text
                                         style={[
-                                            styles.metadataText,
+                                            styles.gridValue,
                                             { color: theme.secondaryTextColor },
                                         ]}
+                                        numberOfLines={1}
                                     >
-                                        {t('component_generic_updated', { date: book.lastUpdated })}
+                                        {book.likes?.toLocaleString() || '0'}
                                     </Text>
                                 </View>
-                            ) : null}
-
-                            <View style={styles.metadataRow}>
-                                <Icon name="favorite" size={14} color="#ef4444" />
-                                <Text
-                                    style={[
-                                        styles.metadataText,
-                                        { color: theme.secondaryTextColor },
-                                    ]}
-                                >
-                                    {t('component_generic_kudos', {
-                                        count: book.likes?.toLocaleString() || '?',
-                                    })}
-                                </Text>
+                                <View style={styles.gridItem}>
+                                    <Icon name="book" size={13} color={theme.primaryColor} />
+                                    <Text
+                                        style={[
+                                            styles.gridValue,
+                                            { color: theme.secondaryTextColor },
+                                        ]}
+                                        numberOfLines={1}
+                                    >
+                                        {`${book.currentChapter}/${book.chapterCount || '?'}`}
+                                    </Text>
+                                </View>
+                                <View style={styles.gridItem}>
+                                    <Icon name="bookmark" size={13} color="#f59e0b" />
+                                    <Text
+                                        style={[
+                                            styles.gridValue,
+                                            { color: theme.secondaryTextColor },
+                                        ]}
+                                        numberOfLines={1}
+                                    >
+                                        {book.bookmarks?.toLocaleString() || '0'}
+                                    </Text>
+                                </View>
                             </View>
-                            <View style={styles.metadataRow}>
-                                <Icon name="book" size={14} color="#f97316" />
-                                <Text
-                                    style={[
-                                        styles.metadataText,
-                                        { color: theme.secondaryTextColor },
-                                    ]}
-                                >
-                                    {t('component_generic_chapter', {
-                                        chapters: `${book.currentChapter}/${book.chapterCount || '?'}`,
-                                    })}
-                                </Text>
-                            </View>
-                            <View style={styles.metadataRow}>
-                                <Icon name="bookmark" size={14} color="#eab308" />
-                                <Text
-                                    style={[
-                                        styles.metadataText,
-                                        { color: theme.secondaryTextColor },
-                                    ]}
-                                >
-                                    {t('component_generic_bookmarks', {
-                                        bookmarks: book.bookmarks?.toLocaleString() || 0,
-                                    })}
-                                </Text>
-                            </View>
-                            <View style={styles.metadataRow}>
-                                <Icon name="visibility" size={14} color="#8b5cf6" />
-                                <Text
-                                    style={[
-                                        styles.metadataText,
-                                        { color: theme.secondaryTextColor },
-                                    ]}
-                                >
-                                    {t('component_generic_views', {
-                                        views: book.views?.toLocaleString() || 0,
-                                    })}
-                                </Text>
-                            </View>
-                            <View style={styles.metadataRow}>
-                                <Icon name="text-snippet" size={14} color="#6e6e6e" />
-                                <Text
-                                    style={[
-                                        styles.metadataText,
-                                        { color: theme.secondaryTextColor },
-                                    ]}
-                                >
-                                    {t('component_generic_words', {
-                                        words: book.words?.toLocaleString() || 0,
-                                    })}
-                                </Text>
-                            </View>
-                            <View style={styles.metadataRow}>
-                                <Icon name="language" size={14} color="#22c55e" />
-                                <Text
-                                    style={[
-                                        styles.metadataText,
-                                        { color: theme.secondaryTextColor },
-                                    ]}
-                                >
-                                    {t('component_generic_language', {
-                                        language: book.language || t('general_unknown'),
-                                    })}
-                                </Text>
+                            <View style={styles.gridRow}>
+                                <View style={styles.gridItem}>
+                                    <Icon name="text-snippet" size={13} color={theme.iconColor} />
+                                    <Text
+                                        style={[
+                                            styles.gridValue,
+                                            { color: theme.secondaryTextColor },
+                                        ]}
+                                        numberOfLines={1}
+                                    >
+                                        {book.words?.toLocaleString() || '0'}
+                                    </Text>
+                                </View>
+                                <View style={styles.gridItem}>
+                                    <Icon name="visibility" size={13} color={theme.iconColor} />
+                                    <Text
+                                        style={[
+                                            styles.gridValue,
+                                            { color: theme.secondaryTextColor },
+                                        ]}
+                                        numberOfLines={1}
+                                    >
+                                        {book.views?.toLocaleString() || '0'}
+                                    </Text>
+                                </View>
+                                <View style={styles.gridItem}>
+                                    <Icon
+                                        name={showDate ? 'schedule' : 'language'}
+                                        size={13}
+                                        color={theme.iconColor}
+                                    />
+                                    <Text
+                                        style={[
+                                            styles.gridValue,
+                                            { color: theme.secondaryTextColor },
+                                        ]}
+                                        numberOfLines={1}
+                                    >
+                                        {showDate
+                                            ? book.lastUpdated
+                                            : book.language || t('general_unknown')}
+                                    </Text>
+                                </View>
                             </View>
                         </View>
                     )}
@@ -500,9 +490,9 @@ const BookCard = ({
 
 const styles = StyleSheet.create({
     card: {
-        padding: 16,
-        marginBottom: 16,
-        borderRadius: 14,
+        padding: 12,
+        marginBottom: 8,
+        borderRadius: 8,
         borderWidth: 1,
         flexDirection: 'column',
     },
@@ -514,14 +504,14 @@ const styles = StyleSheet.create({
     imageSection: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 16,
+        marginBottom: 8,
     },
     smallImageSection: {
         marginBottom: 0,
         flex: 1,
     },
     imageGrid: {
-        marginRight: 16,
+        marginRight: 12,
         borderRadius: 4,
         overflow: 'hidden',
     },
@@ -537,15 +527,15 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     title: {
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: '600',
-        marginBottom: 4,
+        marginBottom: 2,
     },
     smallTitle: {
-        fontSize: 16,
+        fontSize: 15,
     },
     author: {
-        fontSize: 14,
+        fontSize: 13,
     },
     smallAuthor: {
         fontSize: 12,
@@ -556,36 +546,44 @@ const styles = StyleSheet.create({
     tagsButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 12,
+        marginBottom: 8,
     },
     tagsButtonText: {
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: '500',
         marginLeft: 4,
     },
     description: {
-        fontSize: 14,
-        lineHeight: 20,
-        marginBottom: 12,
+        fontSize: 13,
+        lineHeight: 18,
+        marginBottom: 8,
     },
-    metadata: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
+    metadataGrid: {
+        marginTop: 4,
+        paddingTop: 8,
+        borderTopWidth: 1,
     },
-    metadataRow: {
+    gridRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginRight: 16,
+        justifyContent: 'space-between',
         marginBottom: 4,
     },
-    metadataText: {
+    gridItem: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        marginRight: 4,
+    },
+    gridValue: {
         fontSize: 12,
-        marginLeft: 4,
+        fontWeight: '500',
     },
     infoButton: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
+        width: 36,
+        height: 36,
+        borderRadius: 18,
         justifyContent: 'center',
         alignItems: 'center',
     },
