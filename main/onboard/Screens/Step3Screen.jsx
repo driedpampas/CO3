@@ -77,38 +77,53 @@ export default function Step3({ currentTheme, setScreen, theme, setTheme }) {
                                 onPress={() => setTheme(themeItem.key)}
                                 activeOpacity={0.85}
                             >
-                                {/* Miniature UI Mockup */}
-                                <View
-                                    style={[
-                                        styles.mockupHeader,
-                                        { backgroundColor: themeItem.cardBg },
-                                    ]}
-                                >
+                                {/* Top row: Mockup dot/bar on left, Notch on right */}
+                                <View style={styles.cardTopRow}>
+                                    <View style={styles.mockupHeaderLeft}>
+                                        <View
+                                            style={[
+                                                styles.mockupDot,
+                                                { backgroundColor: themeItem.accent },
+                                            ]}
+                                        />
+                                        <View
+                                            style={[
+                                                styles.mockupBar,
+                                                { backgroundColor: themeItem.cardBg },
+                                            ]}
+                                        />
+                                    </View>
+
+                                    {/* Notch badge in upper right */}
                                     <View
                                         style={[
-                                            styles.mockupDot,
-                                            { backgroundColor: themeItem.accent },
-                                        ]}
-                                    />
-                                    <View
-                                        style={[
-                                            styles.mockupBar,
+                                            styles.notch,
                                             {
-                                                backgroundColor: themeItem.border,
-                                                width: '45%',
+                                                backgroundColor: themeItem.cardBg,
+                                                borderColor: themeItem.border,
                                             },
                                         ]}
-                                    />
+                                    >
+                                        <Icon
+                                            name={themeItem.icon}
+                                            size={13}
+                                            color={themeItem.text}
+                                        />
+                                        <Text style={[styles.notchText, { color: themeItem.text }]}>
+                                            {t(themeItem.labelKey)}
+                                        </Text>
+                                    </View>
                                 </View>
 
+                                {/* Skeleton content lines */}
                                 <View style={styles.mockupBody}>
                                     <View
                                         style={[
                                             styles.mockupLine,
                                             {
                                                 backgroundColor: themeItem.text,
-                                                opacity: 0.8,
-                                                width: '80%',
+                                                opacity: 0.85,
+                                                width: '90%',
                                             },
                                         ]}
                                     />
@@ -118,7 +133,7 @@ export default function Step3({ currentTheme, setScreen, theme, setTheme }) {
                                             {
                                                 backgroundColor: themeItem.subtext,
                                                 opacity: 0.5,
-                                                width: '95%',
+                                                width: '75%',
                                             },
                                         ]}
                                     />
@@ -128,46 +143,25 @@ export default function Step3({ currentTheme, setScreen, theme, setTheme }) {
                                             {
                                                 backgroundColor: themeItem.subtext,
                                                 opacity: 0.3,
-                                                width: '60%',
+                                                width: '50%',
                                             },
                                         ]}
                                     />
                                 </View>
 
-                                {/* Theme Label Bar */}
-                                <View
-                                    style={[
-                                        styles.themeCardBottom,
-                                        {
-                                            borderTopColor: themeItem.border,
-                                            backgroundColor: themeItem.cardBg,
-                                        },
-                                    ]}
-                                >
-                                    <View style={styles.labelRow}>
-                                        <Icon
-                                            name={themeItem.icon}
-                                            size={16}
-                                            color={themeItem.text}
-                                        />
-                                        <Text
-                                            style={[styles.themeLabel, { color: themeItem.text }]}
-                                        >
-                                            {t(themeItem.labelKey)}
-                                        </Text>
-                                    </View>
-
-                                    {isActive && (
+                                {/* Centered Checkmark Badge floating above skeleton when active */}
+                                {isActive && (
+                                    <View style={styles.centerCheckOverlay} pointerEvents="none">
                                         <View
                                             style={[
-                                                styles.activeBadge,
+                                                styles.centerCheckBadge,
                                                 { backgroundColor: themeItem.accent },
                                             ]}
                                         >
-                                            <Icon name="check" size={12} color="#ffffff" />
+                                            <Icon name="check" size={20} color="#ffffff" />
                                         </View>
-                                    )}
-                                </View>
+                                    </View>
+                                )}
                             </TouchableOpacity>
                         );
                     })}
@@ -229,14 +223,20 @@ const styles = StyleSheet.create({
     },
     themeCard: {
         borderRadius: 16,
+        padding: 14,
+        position: 'relative',
         overflow: 'hidden',
     },
-    mockupHeader: {
+    cardTopRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 12,
+    },
+    mockupHeaderLeft: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 8,
-        paddingHorizontal: 16,
-        paddingVertical: 10,
     },
     mockupDot: {
         width: 8,
@@ -244,41 +244,50 @@ const styles = StyleSheet.create({
         borderRadius: 4,
     },
     mockupBar: {
+        width: 60,
         height: 6,
         borderRadius: 3,
     },
+    notch: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 5,
+        paddingVertical: 4,
+        paddingHorizontal: 10,
+        borderRadius: 10,
+        borderWidth: 1,
+    },
+    notchText: {
+        fontSize: 12,
+        fontWeight: '700',
+    },
     mockupBody: {
-        paddingHorizontal: 16,
-        paddingVertical: 12,
         gap: 6,
     },
     mockupLine: {
         height: 6,
         borderRadius: 3,
     },
-    themeCardBottom: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        borderTopWidth: 1,
-    },
-    labelRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-    },
-    themeLabel: {
-        fontSize: 15,
-        fontWeight: '700',
-    },
-    activeBadge: {
-        width: 22,
-        height: 22,
-        borderRadius: 11,
+    centerCheckOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    centerCheckBadge: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3,
+        elevation: 4,
     },
     infoText: {
         fontSize: 13,
