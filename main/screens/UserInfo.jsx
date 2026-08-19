@@ -286,7 +286,11 @@ export default function UserInfoScreen({ route }) {
                             </TouchableOpacity>
                         </>
                     ) : (
-                        <ActivityIndicator />
+                        <ActivityIndicator
+                            size="large"
+                            color={currentTheme.primaryColor}
+                            style={{ marginVertical: 20 }}
+                        />
                     )}
                 </ScrollView>
             </SafeAreaView>

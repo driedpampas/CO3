@@ -1,4 +1,4 @@
-package com.co3
+package org.eu.nl.syu.to3
 
 import com.facebook.react.ReactPackage
 import com.facebook.react.bridge.NativeModule

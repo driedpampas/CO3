@@ -5,12 +5,12 @@ import {
     ActivityIndicator,
     FlatList,
     Image,
-    SafeAreaView,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { getJsonSettings } from '../../storage/jsonSettings';
 import { fetchComments } from '../../web/worksScreen/fetchComments';

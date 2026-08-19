@@ -16,7 +16,6 @@ import {
     Image,
     Linking,
     Platform,
-    SafeAreaView,
     StatusBar,
     StyleSheet,
     Text,
@@ -27,7 +26,7 @@ import {
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import notifee from 'react-native-notify-kit';
 import { Host } from 'react-native-portalize';
-import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import SystemNavigationBar from 'react-native-system-navigation-bar';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import SideMenu from './components/app/SideMenu';
@@ -146,10 +145,11 @@ const AppWrapper = () => {
         historyDAO,
         progressDAO,
         kudoHistoryDAO,
+        chapterDAO,
         currentTheme,
     });
 
-    const loadBooks = async () => {
+    const loadBooks = useCallback(async () => {
         try {
             if (workDAO) {
                 const booksData = await workDAO.getAll();
@@ -158,46 +158,49 @@ const AppWrapper = () => {
         } catch (error) {
             console.error('Error loading books:', error);
         }
-    };
+    }, [workDAO]);
 
-    const openSearch = () => {
+    const openSearch = useCallback(() => {
         if (navigationRef.canGoBack()) {
             navigationRef.dispatch(StackActions.popToTop());
         }
         setApplyTempPreset(Date.now());
         setActiveScreen('browse');
-    };
+    }, []);
 
-    const openTagSearch = async tag => {
-        let isCanonical = false;
-        try {
-            const info = await checkTagCanonical(tag);
-            isCanonical = !!info?.isCanonical;
-        } catch (error) {
-            console.warn('checkTagCanonical failed, treating tag as additional:', error);
-        }
+    const openTagSearch = useCallback(
+        async tag => {
+            let isCanonical = false;
+            try {
+                const info = await checkTagCanonical(tag);
+                isCanonical = !!info?.isCanonical;
+            } catch (error) {
+                console.warn('checkTagCanonical failed, treating tag as additional:', error);
+            }
 
-        const current = await getTempPreset();
-        const currentPreset = current?.preset || {};
+            const current = await getTempPreset();
+            const currentPreset = current?.preset || {};
 
-        const preset = { ...currentPreset };
+            const preset = { ...currentPreset };
 
-        if (isCanonical && !preset.canonicalTagName) {
-            preset.canonicalTagName = tag;
-        } else {
-            const additionalTags = preset.additionalTags ?? [];
-            const tagExists = additionalTags.some(
-                item => (typeof item === 'string' ? item : item?.name) === tag,
-            );
-            preset.additionalTags = tagExists
-                ? additionalTags
-                : [...additionalTags, { id: `custom-${tag}`, name: tag }];
-        }
+            if (isCanonical && !preset.canonicalTagName) {
+                preset.canonicalTagName = tag;
+            } else {
+                const additionalTags = preset.additionalTags ?? [];
+                const tagExists = additionalTags.some(
+                    item => (typeof item === 'string' ? item : item?.name) === tag,
+                );
+                preset.additionalTags = tagExists
+                    ? additionalTags
+                    : [...additionalTags, { id: `custom-${tag}`, name: tag }];
+            }
 
-        await setTempPreset({ timestamp: Date.now(), preset });
+            await setTempPreset({ timestamp: Date.now(), preset });
 
-        openSearch();
-    };
+            openSearch();
+        },
+        [openSearch],
+    );
 
     return (
         <View style={wrapperStyle}>
@@ -570,6 +573,7 @@ const App = () => {
             historyDAO,
             progressDAO,
             kudoHistoryDAO,
+            chapterDAO,
             currentTheme,
         };
     }, [
@@ -579,6 +583,7 @@ const App = () => {
         historyDAO,
         progressDAO,
         kudoHistoryDAO,
+        chapterDAO,
         currentTheme,
         contextRef,
     ]);
@@ -591,7 +596,7 @@ const App = () => {
 
             try {
                 const { fetchWorkFromWorkID } = require('./web/worksScreen/fetchWork');
-                const work = await fetchWorkFromWorkID(workId, workDAO, chapterDAO);
+                const work = await fetchWorkFromWorkID(workId, ctx.workDAO, ctx.chapterDAO);
 
                 if (!work) return;
 
@@ -633,8 +638,13 @@ const App = () => {
                 console.error('Failed to open work from notification', e);
             }
         },
-        [contextRef, workDAO, chapterDAO, navigation, setScreens, openTagSearch, setActiveScreen],
+        [contextRef, navigation, setScreens, openTagSearch, setActiveScreen],
     );
+
+    const handleNotificationOpenRef = useRef(handleNotificationOpen);
+    useEffect(() => {
+        handleNotificationOpenRef.current = handleNotificationOpen;
+    }, [handleNotificationOpen]);
 
     const initializeApp = useCallback(async () => {
         const jsonSettings = await getJsonSettings();
@@ -707,11 +717,11 @@ const App = () => {
     useEffect(() => {
         initializeApp();
 
-        function unsubscribeForeground() {
-            setupNotificationListeners(setActiveScreen, setScreens, (workId, chapterId) =>
-                handleNotificationOpen(workId, chapterId),
-            );
-        }
+        const unsubscribeForeground = setupNotificationListeners(
+            setActiveScreen,
+            setScreens,
+            (workId, chapterId) => handleNotificationOpenRef.current?.(workId, chapterId),
+        );
 
         const checkInitialNotification = async () => {
             const initialNotification = await notifee.getInitialNotification();
@@ -721,7 +731,7 @@ const App = () => {
                     setActiveScreen('update');
                 } else if (initialNotification.notification.data?.action === 'OPEN_WORK') {
                     const { workId, chapterId } = initialNotification.notification.data;
-                    setTimeout(() => handleNotificationOpen(workId, chapterId), 1000);
+                    setTimeout(() => handleNotificationOpenRef.current?.(workId, chapterId), 1000);
                 }
             }
         };
@@ -729,12 +739,11 @@ const App = () => {
         checkInitialNotification();
 
         return () => {
-            if (database) {
-                database.close();
+            if (typeof unsubscribeForeground === 'function') {
+                unsubscribeForeground();
             }
-            unsubscribeForeground();
         };
-    }, [initializeApp, setActiveScreen, setScreens, handleNotificationOpen]);
+    }, [initializeApp, setActiveScreen, setScreens]);
 
     const handleDoubleTap = screenId => {
         DeviceEventEmitter.emit('doubleTap', screenId);
@@ -878,26 +887,35 @@ const App = () => {
     };
 
     if (loading || !currentTheme) {
+        const loadingTheme = currentTheme || themes.light;
+        const isDark = theme === 'dark' || theme === 'black';
         return (
             <>
+                <StatusBar
+                    barStyle={isDark ? 'light-content' : 'dark-content'}
+                    backgroundColor={loadingTheme.backgroundColor}
+                />
                 <SafeAreaView
-                    style={[
-                        styles.container,
-                        { backgroundColor: currentTheme?.backgroundColor || 'white' },
-                    ]}
+                    style={[styles.container, { backgroundColor: loadingTheme.backgroundColor }]}
                 >
                     <View style={styles.loadingContainer}>
                         <Image
-                            style={{ width: 200, height: 200, marginBottom: 50 }}
+                            style={{ width: 140, height: 140, marginBottom: 28 }}
                             source={require('./res/CO3.png')}
+                            resizeMode="contain"
                         />
-                        <ActivityIndicator size="50" color={currentTheme.primaryColor} />
-                        <Text style={{ color: currentTheme.textColor }}>
+                        <ActivityIndicator size="large" color={loadingTheme.primaryColor} />
+                        <Text
+                            style={[
+                                styles.loadingText,
+                                { color: loadingTheme.secondaryTextColor, marginTop: 14 },
+                            ]}
+                        >
                             {t('general_loading')}
                         </Text>
                     </View>
                 </SafeAreaView>
-                <CustomToast currentTheme={currentTheme} />
+                <CustomToast currentTheme={loadingTheme} />
             </>
         );
     }
@@ -913,6 +931,7 @@ const App = () => {
                     <MainOnboardScreen
                         setTheme={saveTheme}
                         currentTheme={currentTheme}
+                        theme={theme}
                         onFinish={() => {
                             jsonSettings.finishedOnboarding = true;
                             saveJsonSettings(jsonSettings).then(

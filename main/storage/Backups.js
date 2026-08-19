@@ -34,7 +34,7 @@ async function _restoreAsyncStorage(dataObject, { clearFirst = false } = {}) {
 
 function getDbPath() {
     return Platform.select({
-        android: `/data/data/com.co3/databases/library.db`,
+        android: `/data/data/org.eu.nl.syu.to3/databases/library.db`,
         ios: `${RNFS.LibraryDirectoryPath}/LocalDatabase/library.db`,
     });
 }

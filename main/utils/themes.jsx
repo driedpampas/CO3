@@ -1,14 +1,14 @@
 export const themes = {
     light: {
         name: 'light',
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#ffffff',
         textColor: '#171717',
         secondaryTextColor: '#525252',
         placeholderColor: '#a3a3a3',
         headerBackground: '#ffffff',
         cardBackground: '#ffffff',
-        inputBackground: '#ebebeb',
-        buttonBackground: '#ebebeb',
+        inputBackground: '#f5f5f5',
+        buttonBackground: '#f5f5f5',
         borderColor: '#e5e5e5',
         primaryColor: '#ea580c',
         iconColor: '#525252',
@@ -90,3 +90,5 @@ export const themes = {
         },
     },
 };
+
+themes.white = themes.light;

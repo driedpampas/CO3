@@ -11,33 +11,33 @@ export default function Step1({ currentTheme, setScreen }) {
                 showsVerticalScrollIndicator={false}
                 bounces={true}
             >
-                <View style={[styles.logoWrapper, { borderColor: currentTheme.borderColor }]}>
+                <View style={styles.heroSection}>
                     <Image
                         style={styles.logo}
                         source={require('../../res/CO3.png')}
                         resizeMode="contain"
                     />
+
+                    <Text style={[styles.appName, { color: currentTheme.textColor }]}>
+                        {t('general_app_name')}
+                    </Text>
+
+                    <Text style={[styles.tagline, { color: currentTheme.secondaryTextColor }]}>
+                        {t('onboard_step1_title')}
+                    </Text>
+
+                    <View style={[styles.divider, { backgroundColor: currentTheme.borderColor }]} />
+
+                    <Text style={[styles.body, { color: currentTheme.secondaryTextColor }]}>
+                        {`${t('onboard_step1_ligne1')}\n${t('onboard_step1_ligne2')}`}
+                    </Text>
                 </View>
-
-                <Text style={[styles.appName, { color: currentTheme.textColor }]}>
-                    {t('general_app_name')}
-                </Text>
-
-                <Text style={[styles.tagline, { color: currentTheme.secondaryTextColor }]}>
-                    {t('onboard_step1_title')}
-                </Text>
-
-                <View style={[styles.divider, { backgroundColor: currentTheme.borderColor }]} />
-
-                <Text style={[styles.body, { color: currentTheme.secondaryTextColor }]}>
-                    {`${t('onboard_step1_ligne1')}\n${t('onboard_step1_ligne2')}`}
-                </Text>
             </ScrollView>
 
-            <View style={[styles.bottomSection, { borderTopColor: currentTheme.borderColor }]}>
+            <View style={styles.bottomSection}>
                 <TouchableOpacity
                     style={[styles.nextButton, { backgroundColor: currentTheme.primaryColor }]}
-                    onPress={() => setScreen(prev => prev + 1)}
+                    onPress={() => setScreen(1)}
                     activeOpacity={0.85}
                 >
                     <Text style={styles.nextButtonText}>{t('onboard_step1_button')}</Text>
@@ -52,62 +52,59 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     scrollContent: {
-        alignItems: 'center',
-        paddingHorizontal: 32,
-        paddingTop: 48,
-        paddingBottom: 24,
+        paddingHorizontal: 20,
+        paddingTop: 32,
+        paddingBottom: 16,
         flexGrow: 1,
         justifyContent: 'center',
-    },
-    logoWrapper: {
-        width: 120,
-        height: 120,
         alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 28,
-        overflow: 'hidden',
+    },
+    heroSection: {
+        alignItems: 'center',
+        maxWidth: 360,
     },
     logo: {
         width: 100,
         height: 100,
+        marginBottom: 20,
     },
     appName: {
-        fontSize: 30,
+        fontSize: 28,
         fontWeight: '800',
         letterSpacing: -0.5,
         textAlign: 'center',
-        marginBottom: 8,
+        marginBottom: 6,
     },
     tagline: {
-        fontSize: 16,
-        fontWeight: '400',
+        fontSize: 15,
+        fontWeight: '500',
         textAlign: 'center',
-        marginBottom: 32,
+        marginBottom: 20,
     },
     divider: {
         height: 1,
-        width: 48,
-        marginBottom: 24,
+        width: 40,
+        marginBottom: 20,
     },
     body: {
-        fontSize: 15,
-        lineHeight: 24,
+        fontSize: 14,
+        lineHeight: 22,
         textAlign: 'center',
     },
     bottomSection: {
-        paddingHorizontal: 32,
-        paddingTop: 16,
-        paddingBottom: 32,
-        borderTopWidth: StyleSheet.hairlineWidth,
+        paddingHorizontal: 16,
+        paddingTop: 12,
+        paddingBottom: 12,
     },
     nextButton: {
-        paddingVertical: 16,
+        height: 50,
         borderRadius: 14,
         alignItems: 'center',
+        justifyContent: 'center',
     },
     nextButtonText: {
         color: '#ffffff',
-        fontSize: 17,
+        fontSize: 16,
         fontWeight: '700',
         letterSpacing: 0.2,
     },

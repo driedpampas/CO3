@@ -95,10 +95,15 @@ class DatabaseManager {
 
     async close() {
         if (this.db) {
-            if (this.db.close) {
-                await this.db.close();
+            try {
+                if (this.db.close) {
+                    await this.db.close();
+                }
+            } catch (error) {
+                console.warn('Error closing database:', error);
+            } finally {
+                this.db = null;
             }
-            this.db = null;
         }
     }
 
@@ -287,7 +292,7 @@ export async function exportDb(db) {
             const exportFileName = 'CO3-DatabaseManager-Export.db';
 
             const dbPath = Platform.select({
-                android: `/data/data/com.co3/databases/${dbFileName}`,
+                android: `/data/data/org.eu.nl.syu.to3/databases/${dbFileName}`,
                 ios: `${RNFS.LibraryDirectoryPath}/LocalDatabase/${dbFileName}`,
             });
 

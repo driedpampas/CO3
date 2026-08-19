@@ -5,7 +5,7 @@ import { availableLanguages, changeLanguage } from '../../storage/LanguageManage
 import { getFlagImage } from '../../utils/FlagUtils';
 
 export default function Step2({ currentTheme, setScreen }) {
-    const { t, i18n } = useTranslation(); // i18n is reactive
+    const { t, i18n } = useTranslation();
     const currentLng = i18n.language;
 
     const languages = availableLanguages.map(lang => ({
@@ -32,16 +32,21 @@ export default function Step2({ currentTheme, setScreen }) {
                     {t('onboard_step2_language_sub')}
                 </Text>
 
-                <View style={styles.grid}>
+                {/* Language Cards */}
+                <View style={styles.cardList}>
                     {languages.map(lang => {
                         const isActive = lang.key === currentLng;
+                        const flagSource = getFlagImage(lang.flag);
+
                         return (
                             <TouchableOpacity
                                 key={lang.key}
                                 style={[
                                     styles.languageCard,
                                     {
-                                        backgroundColor: currentTheme.cardBackground || '#fff',
+                                        backgroundColor: isActive
+                                            ? `${currentTheme.primaryColor}10`
+                                            : currentTheme.cardBackground,
                                         borderColor: isActive
                                             ? currentTheme.primaryColor
                                             : currentTheme.borderColor,
@@ -51,39 +56,73 @@ export default function Step2({ currentTheme, setScreen }) {
                                 onPress={() => selectLanguage(lang.key)}
                                 activeOpacity={0.85}
                             >
-                                <Image
-                                    source={getFlagImage(lang.flag)}
-                                    style={styles.flag}
-                                    resizeMode="contain"
-                                />
-                                <Text
+                                <View style={styles.cardLeft}>
+                                    {flagSource ? (
+                                        <Image
+                                            source={flagSource}
+                                            style={styles.flag}
+                                            resizeMode="cover"
+                                        />
+                                    ) : (
+                                        <View
+                                            style={[
+                                                styles.flagFallback,
+                                                { backgroundColor: currentTheme.inputBackground },
+                                            ]}
+                                        >
+                                            <Icon
+                                                name="public"
+                                                size={20}
+                                                color={currentTheme.secondaryTextColor}
+                                            />
+                                        </View>
+                                    )}
+                                    <View style={styles.labelWrapper}>
+                                        <Text
+                                            style={[
+                                                styles.languageLabel,
+                                                { color: currentTheme.textColor },
+                                            ]}
+                                        >
+                                            {lang.label}
+                                        </Text>
+                                        <Text
+                                            style={[
+                                                styles.languageSubcode,
+                                                { color: currentTheme.secondaryTextColor },
+                                            ]}
+                                        >
+                                            {lang.key.toUpperCase()}
+                                        </Text>
+                                    </View>
+                                </View>
+
+                                <View
                                     style={[
-                                        styles.languageLabel,
-                                        { color: currentTheme.textColor },
+                                        styles.radioCircle,
+                                        {
+                                            borderColor: isActive
+                                                ? currentTheme.primaryColor
+                                                : currentTheme.borderColor,
+                                            backgroundColor: isActive
+                                                ? currentTheme.primaryColor
+                                                : 'transparent',
+                                        },
                                     ]}
                                 >
-                                    {lang.label}
-                                </Text>
-                                {isActive && (
-                                    <View
-                                        style={[
-                                            styles.activeBadge,
-                                            { backgroundColor: currentTheme.primaryColor },
-                                        ]}
-                                    >
-                                        <Icon name="check" size={12} color="#fff" />
-                                    </View>
-                                )}
+                                    {isActive && <Icon name="check" size={14} color="#ffffff" />}
+                                </View>
                             </TouchableOpacity>
                         );
                     })}
                 </View>
             </ScrollView>
 
+            {/* Navigation Footer */}
             <View style={[styles.navRow, { borderTopColor: currentTheme.borderColor }]}>
                 <TouchableOpacity
                     style={[styles.backButton, { borderColor: currentTheme.borderColor }]}
-                    onPress={() => setScreen(prev => Math.max(0, prev - 1))}
+                    onPress={() => setScreen(0)}
                     activeOpacity={0.7}
                 >
                     <Icon name="arrow-back" size={20} color={currentTheme.textColor} />
@@ -91,10 +130,11 @@ export default function Step2({ currentTheme, setScreen }) {
 
                 <TouchableOpacity
                     style={[styles.nextButton, { backgroundColor: currentTheme.primaryColor }]}
-                    onPress={() => setScreen(prev => prev + 1)}
+                    onPress={() => setScreen(2)}
                     activeOpacity={0.85}
                 >
                     <Text style={styles.nextButtonText}>{t('onboard_step2_button')}</Text>
+                    <Icon name="arrow-forward" size={18} color="#ffffff" />
                 </TouchableOpacity>
             </View>
         </View>
@@ -106,71 +146,79 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     scrollContent: {
-        paddingHorizontal: 32,
-        paddingTop: 48,
-        paddingBottom: 24,
+        paddingHorizontal: 16,
+        paddingTop: 24,
+        paddingBottom: 16,
         flexGrow: 1,
     },
     heading: {
-        fontSize: 28,
+        fontSize: 26,
         fontWeight: '800',
         letterSpacing: -0.5,
         marginBottom: 8,
     },
     subheading: {
-        fontSize: 15,
-        lineHeight: 22,
-        marginBottom: 32,
+        fontSize: 14,
+        lineHeight: 20,
+        marginBottom: 20,
     },
-    grid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'space-between',
-        gap: 12,
+    cardList: {
+        gap: 10,
     },
     languageCard: {
-        width: '47%',
-        aspectRatio: 1,
-        borderRadius: 14,
+        flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-        padding: 12,
-        borderWidth: 1,
-        position: 'relative',
+        justifyContent: 'space-between',
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+        borderRadius: 14,
+    },
+    cardLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 14,
     },
     flag: {
-        width: 90,
-        height: 67,
-        marginBottom: 12,
-        borderRadius: 4,
-        alignSelf: 'center',
+        width: 38,
+        height: 28,
+        borderRadius: 6,
+    },
+    flagFallback: {
+        width: 38,
+        height: 28,
+        borderRadius: 6,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    labelWrapper: {
+        gap: 2,
     },
     languageLabel: {
-        fontSize: 15,
-        fontWeight: '600',
-        textAlign: 'center',
+        fontSize: 16,
+        fontWeight: '700',
     },
-    activeBadge: {
-        position: 'absolute',
-        top: 8,
-        right: 8,
-        width: 20,
-        height: 20,
-        borderRadius: 10,
+    languageSubcode: {
+        fontSize: 12,
+        fontWeight: '500',
+    },
+    radioCircle: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        borderWidth: 2,
         alignItems: 'center',
         justifyContent: 'center',
     },
     navRow: {
         flexDirection: 'row',
-        gap: 12,
-        paddingHorizontal: 32,
-        paddingTop: 16,
-        paddingBottom: 32,
-        borderTopWidth: StyleSheet.hairlineWidth,
+        gap: 10,
+        paddingHorizontal: 16,
+        paddingTop: 12,
+        paddingBottom: 12,
     },
     backButton: {
-        width: 52,
-        height: 52,
+        width: 50,
+        height: 50,
         borderRadius: 14,
         borderWidth: 1,
         alignItems: 'center',
@@ -178,14 +226,16 @@ const styles = StyleSheet.create({
     },
     nextButton: {
         flex: 1,
-        height: 52,
+        height: 50,
         borderRadius: 14,
+        flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
+        gap: 8,
     },
     nextButtonText: {
         color: '#ffffff',
-        fontSize: 17,
+        fontSize: 16,
         fontWeight: '700',
         letterSpacing: 0.2,
     },

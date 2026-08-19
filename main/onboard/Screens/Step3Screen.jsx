@@ -5,27 +5,36 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 const THEMES = [
     {
         key: 'light',
-        label: 'light',
+        labelKey: 'screen_preferences_label_theme_light',
         icon: 'wb-sunny',
         bg: '#ffffff',
-        text: '#111827',
-        preview: ['#ffffff', '#f3f4f6', '#e5e7eb'],
+        cardBg: '#f5f5f5',
+        text: '#171717',
+        subtext: '#737373',
+        accent: '#ea580c',
+        border: '#e5e5e5',
     },
     {
         key: 'dark',
-        label: 'dark',
+        labelKey: 'screen_preferences_label_theme_dark',
         icon: 'brightness-3',
-        bg: '#1f2937',
-        text: '#f3f4f6',
-        preview: ['#1f2937', '#374151', '#4b5563'],
+        bg: '#121212',
+        cardBg: '#1e1e1e',
+        text: '#f5f5f5',
+        subtext: '#a3a3a3',
+        accent: '#f97316',
+        border: '#333333',
     },
     {
         key: 'black',
-        label: 'black',
+        labelKey: 'screen_preferences_label_theme_black',
         icon: 'brightness-1',
         bg: '#000000',
-        text: '#f9fafb',
-        preview: ['#000000', '#111111', '#1a1a1a'],
+        cardBg: '#0c0c0c',
+        text: '#ffffff',
+        subtext: '#888888',
+        accent: '#f97316',
+        border: '#222222',
     },
 ];
 
@@ -46,9 +55,11 @@ export default function Step3({ currentTheme, setScreen, theme, setTheme }) {
                     {t('onboard_step3_sub')}
                 </Text>
 
+                {/* Theme Selection Cards */}
                 <View style={styles.themeList}>
                     {THEMES.map(themeItem => {
                         const isActive = theme === themeItem.key;
+
                         return (
                             <TouchableOpacity
                                 key={themeItem.key}
@@ -65,22 +76,86 @@ export default function Step3({ currentTheme, setScreen, theme, setTheme }) {
                                 onPress={() => setTheme(themeItem.key)}
                                 activeOpacity={0.85}
                             >
-                                <View style={styles.previewStrips}>
-                                    {themeItem.preview.map((color, i) => (
-                                        <View
-                                            key={i}
-                                            style={[
-                                                styles.strip,
-                                                { backgroundColor: color, opacity: 1 - i * 0.15 },
-                                            ]}
-                                        />
-                                    ))}
+                                {/* Miniature UI Mockup */}
+                                <View
+                                    style={[
+                                        styles.mockupHeader,
+                                        { backgroundColor: themeItem.cardBg },
+                                    ]}
+                                >
+                                    <View
+                                        style={[
+                                            styles.mockupDot,
+                                            { backgroundColor: themeItem.accent },
+                                        ]}
+                                    />
+                                    <View
+                                        style={[
+                                            styles.mockupBar,
+                                            {
+                                                backgroundColor: themeItem.border,
+                                                width: '45%',
+                                            },
+                                        ]}
+                                    />
                                 </View>
-                                <View style={styles.themeCardBottom}>
-                                    <Icon name={themeItem.icon} size={18} color={themeItem.text} />
-                                    <Text style={[styles.themeLabel, { color: themeItem.text }]}>
-                                        {t(`screen_preferences_label_theme_${themeItem.label}`)}
-                                    </Text>
+
+                                <View style={styles.mockupBody}>
+                                    <View
+                                        style={[
+                                            styles.mockupLine,
+                                            {
+                                                backgroundColor: themeItem.text,
+                                                opacity: 0.8,
+                                                width: '80%',
+                                            },
+                                        ]}
+                                    />
+                                    <View
+                                        style={[
+                                            styles.mockupLine,
+                                            {
+                                                backgroundColor: themeItem.subtext,
+                                                opacity: 0.5,
+                                                width: '95%',
+                                            },
+                                        ]}
+                                    />
+                                    <View
+                                        style={[
+                                            styles.mockupLine,
+                                            {
+                                                backgroundColor: themeItem.subtext,
+                                                opacity: 0.3,
+                                                width: '60%',
+                                            },
+                                        ]}
+                                    />
+                                </View>
+
+                                {/* Theme Label Bar */}
+                                <View
+                                    style={[
+                                        styles.themeCardBottom,
+                                        {
+                                            borderTopColor: themeItem.border,
+                                            backgroundColor: themeItem.cardBg,
+                                        },
+                                    ]}
+                                >
+                                    <View style={styles.labelRow}>
+                                        <Icon
+                                            name={themeItem.icon}
+                                            size={16}
+                                            color={themeItem.text}
+                                        />
+                                        <Text
+                                            style={[styles.themeLabel, { color: themeItem.text }]}
+                                        >
+                                            {t(themeItem.labelKey)}
+                                        </Text>
+                                    </View>
+
                                     {isActive && (
                                         <View
                                             style={[
@@ -88,7 +163,7 @@ export default function Step3({ currentTheme, setScreen, theme, setTheme }) {
                                                 { backgroundColor: currentTheme.primaryColor },
                                             ]}
                                         >
-                                            <Icon name="check" size={12} color="#fff" />
+                                            <Icon name="check" size={12} color="#ffffff" />
                                         </View>
                                     )}
                                 </View>
@@ -97,6 +172,7 @@ export default function Step3({ currentTheme, setScreen, theme, setTheme }) {
                     })}
                 </View>
 
+                {/* Info Callout */}
                 <View
                     style={[
                         styles.infoBox,
@@ -106,17 +182,25 @@ export default function Step3({ currentTheme, setScreen, theme, setTheme }) {
                         },
                     ]}
                 >
-                    <Icon name="tune" size={16} color={currentTheme.secondaryTextColor} />
+                    <View
+                        style={[
+                            styles.infoIconWrap,
+                            { backgroundColor: `${currentTheme.primaryColor}18` },
+                        ]}
+                    >
+                        <Icon name="tune" size={18} color={currentTheme.primaryColor} />
+                    </View>
                     <Text style={[styles.infoText, { color: currentTheme.secondaryTextColor }]}>
                         {t('onboard_step3_info_text')}
                     </Text>
                 </View>
             </ScrollView>
 
+            {/* Navigation Footer */}
             <View style={[styles.navRow, { borderTopColor: currentTheme.borderColor }]}>
                 <TouchableOpacity
                     style={[styles.backButton, { borderColor: currentTheme.borderColor }]}
-                    onPress={() => setScreen(prev => prev - 1)}
+                    onPress={() => setScreen(1)}
                     activeOpacity={0.7}
                 >
                     <Icon name="arrow-back" size={20} color={currentTheme.textColor} />
@@ -124,10 +208,11 @@ export default function Step3({ currentTheme, setScreen, theme, setTheme }) {
 
                 <TouchableOpacity
                     style={[styles.nextButton, { backgroundColor: currentTheme.primaryColor }]}
-                    onPress={() => setScreen(prev => prev + 1)}
+                    onPress={() => setScreen(3)}
                     activeOpacity={0.85}
                 >
                     <Text style={styles.nextButtonText}>{t('onboard_step3_button')}</Text>
+                    <Icon name="arrow-forward" size={18} color="#ffffff" />
                 </TouchableOpacity>
             </View>
         </View>
@@ -135,88 +220,114 @@ export default function Step3({ currentTheme, setScreen, theme, setTheme }) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1 },
+    container: {
+        flex: 1,
+    },
     scrollContent: {
-        paddingHorizontal: 32,
-        paddingTop: 48,
-        paddingBottom: 24,
+        paddingHorizontal: 16,
+        paddingTop: 24,
+        paddingBottom: 16,
         flexGrow: 1,
     },
     heading: {
-        fontSize: 28,
+        fontSize: 26,
         fontWeight: '800',
         letterSpacing: -0.5,
         marginBottom: 8,
     },
     subheading: {
-        fontSize: 15,
-        lineHeight: 22,
-        marginBottom: 32,
-    },
-    themeList: {
-        flexDirection: 'row',
-        gap: 12,
+        fontSize: 14,
+        lineHeight: 20,
         marginBottom: 20,
     },
+    themeList: {
+        gap: 12,
+        marginBottom: 16,
+    },
     themeCard: {
-        flex: 1,
-        borderRadius: 14,
+        borderRadius: 16,
         overflow: 'hidden',
-        height: 120,
-        justifyContent: 'space-between',
     },
-    previewStrips: {
-        flex: 1,
-        padding: 10,
-        gap: 5,
+    mockupHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        paddingHorizontal: 16,
+        paddingVertical: 10,
     },
-    strip: {
+    mockupDot: {
+        width: 8,
         height: 8,
         borderRadius: 4,
+    },
+    mockupBar: {
+        height: 6,
+        borderRadius: 3,
+    },
+    mockupBody: {
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        gap: 6,
+    },
+    mockupLine: {
+        height: 6,
+        borderRadius: 3,
     },
     themeCardBottom: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 10,
-        paddingBottom: 10,
-        gap: 6,
+        justifyContent: 'space-between',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderTopWidth: 1,
+    },
+    labelRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
     },
     themeLabel: {
-        fontSize: 13,
-        fontWeight: '600',
-        flex: 1,
+        fontSize: 15,
+        fontWeight: '700',
     },
     activeBadge: {
-        width: 18,
-        height: 18,
-        borderRadius: 9,
+        width: 22,
+        height: 22,
+        borderRadius: 11,
         alignItems: 'center',
         justifyContent: 'center',
     },
     infoBox: {
         flexDirection: 'row',
-        alignItems: 'flex-start',
-        gap: 10,
+        alignItems: 'center',
+        gap: 12,
         padding: 14,
-        borderRadius: 12,
+        borderRadius: 14,
         borderWidth: 1,
+    },
+    infoIconWrap: {
+        width: 36,
+        height: 36,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
     },
     infoText: {
         fontSize: 13,
-        lineHeight: 20,
+        lineHeight: 18,
         flex: 1,
     },
     navRow: {
         flexDirection: 'row',
-        gap: 12,
-        paddingHorizontal: 32,
-        paddingTop: 16,
-        paddingBottom: 32,
-        borderTopWidth: StyleSheet.hairlineWidth,
+        gap: 10,
+        paddingHorizontal: 16,
+        paddingTop: 12,
+        paddingBottom: 12,
     },
     backButton: {
-        width: 52,
-        height: 52,
+        width: 50,
+        height: 50,
         borderRadius: 14,
         borderWidth: 1,
         alignItems: 'center',
@@ -224,14 +335,16 @@ const styles = StyleSheet.create({
     },
     nextButton: {
         flex: 1,
-        height: 52,
+        height: 50,
         borderRadius: 14,
+        flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
+        gap: 8,
     },
     nextButtonText: {
         color: '#ffffff',
-        fontSize: 17,
+        fontSize: 16,
         fontWeight: '700',
         letterSpacing: 0.2,
     },

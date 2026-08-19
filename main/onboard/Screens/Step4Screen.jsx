@@ -18,7 +18,7 @@ const SUPPORT_ITEMS = [
         descriptionKey: 'onboard_step4_co3_desc',
         ctaKey: 'onboard_step4_co3_cta',
         url: 'https://ko-fi.com/tbvns',
-        color: '#6366f1',
+        color: '#ea580c',
         icon: 'coffee',
     },
 ];
@@ -33,12 +33,6 @@ export default function Step4({ currentTheme, setScreen, onFinish }) {
                 showsVerticalScrollIndicator={false}
                 bounces={true}
             >
-                <View
-                    style={[styles.iconCircle, { backgroundColor: currentTheme.inputBackground }]}
-                >
-                    <Icon name="volunteer-activism" size={36} color={currentTheme.primaryColor} />
-                </View>
-
                 <Text style={[styles.heading, { color: currentTheme.textColor }]}>
                     {t('onboard_step4_title')}
                 </Text>
@@ -46,6 +40,7 @@ export default function Step4({ currentTheme, setScreen, onFinish }) {
                     {t('onboard_step4_sub')}
                 </Text>
 
+                {/* Support Cards */}
                 <View style={styles.cardList}>
                     {SUPPORT_ITEMS.map(item => (
                         <View
@@ -61,7 +56,7 @@ export default function Step4({ currentTheme, setScreen, onFinish }) {
                             <View
                                 style={[
                                     styles.cardIconWrap,
-                                    { backgroundColor: `${item.color}22` },
+                                    { backgroundColor: `${item.color}18` },
                                 ]}
                             >
                                 <Icon name={item.icon} size={22} color={item.color} />
@@ -83,8 +78,8 @@ export default function Step4({ currentTheme, setScreen, onFinish }) {
                                     onPress={() => Linking.openURL(item.url)}
                                     activeOpacity={0.85}
                                 >
-                                    <Icon name="open-in-new" size={14} color="#fff" />
                                     <Text style={styles.ctaText}>{t(item.ctaKey)}</Text>
+                                    <Icon name="open-in-new" size={14} color="#ffffff" />
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -92,10 +87,11 @@ export default function Step4({ currentTheme, setScreen, onFinish }) {
                 </View>
             </ScrollView>
 
+            {/* Navigation Footer */}
             <View style={[styles.navRow, { borderTopColor: currentTheme.borderColor }]}>
                 <TouchableOpacity
                     style={[styles.backButton, { borderColor: currentTheme.borderColor }]}
-                    onPress={() => setScreen(prev => prev - 1)}
+                    onPress={() => setScreen(2)}
                     activeOpacity={0.7}
                 >
                     <Icon name="arrow-back" size={20} color={currentTheme.textColor} />
@@ -107,42 +103,37 @@ export default function Step4({ currentTheme, setScreen, onFinish }) {
                     activeOpacity={0.85}
                 >
                     <Text style={styles.nextButtonText}>{t('onboard_step4_button')}</Text>
-                    <Icon name="arrow-forward" size={18} color="#fff" />
+                    <Icon name="check" size={20} color="#ffffff" />
                 </TouchableOpacity>
             </View>
         </View>
     );
 }
 
-// styles identical to your original Step3 – omitted for brevity, keep as is
 const styles = StyleSheet.create({
-    container: { flex: 1 },
+    container: {
+        flex: 1,
+    },
     scrollContent: {
-        paddingHorizontal: 32,
-        paddingTop: 48,
-        paddingBottom: 24,
+        paddingHorizontal: 16,
+        paddingTop: 24,
+        paddingBottom: 16,
         flexGrow: 1,
     },
-    iconCircle: {
-        width: 64,
-        height: 64,
-        borderRadius: 20,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 24,
-    },
     heading: {
-        fontSize: 28,
+        fontSize: 26,
         fontWeight: '800',
         letterSpacing: -0.5,
         marginBottom: 8,
     },
     subheading: {
-        fontSize: 15,
-        lineHeight: 22,
-        marginBottom: 28,
+        fontSize: 14,
+        lineHeight: 20,
+        marginBottom: 20,
     },
-    cardList: { gap: 14 },
+    cardList: {
+        gap: 12,
+    },
     card: {
         borderRadius: 16,
         borderWidth: 1,
@@ -153,36 +144,48 @@ const styles = StyleSheet.create({
     cardIconWrap: {
         width: 44,
         height: 44,
-        borderRadius: 12,
+        borderRadius: 14,
         alignItems: 'center',
         justifyContent: 'center',
         flexShrink: 0,
     },
-    cardBody: { flex: 1, gap: 6 },
-    cardTitle: { fontSize: 15, fontWeight: '700' },
-    cardDesc: { fontSize: 13, lineHeight: 19 },
+    cardBody: {
+        flex: 1,
+        gap: 6,
+    },
+    cardTitle: {
+        fontSize: 15,
+        fontWeight: '700',
+    },
+    cardDesc: {
+        fontSize: 13,
+        lineHeight: 19,
+    },
     ctaButton: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 6,
         alignSelf: 'flex-start',
-        paddingVertical: 7,
-        paddingHorizontal: 12,
-        borderRadius: 8,
+        paddingVertical: 8,
+        paddingHorizontal: 14,
+        borderRadius: 10,
         marginTop: 4,
     },
-    ctaText: { color: '#fff', fontSize: 13, fontWeight: '600' },
+    ctaText: {
+        color: '#ffffff',
+        fontSize: 13,
+        fontWeight: '700',
+    },
     navRow: {
         flexDirection: 'row',
-        gap: 12,
-        paddingHorizontal: 32,
-        paddingTop: 16,
-        paddingBottom: 32,
-        borderTopWidth: StyleSheet.hairlineWidth,
+        gap: 10,
+        paddingHorizontal: 16,
+        paddingTop: 12,
+        paddingBottom: 12,
     },
     backButton: {
-        width: 52,
-        height: 52,
+        width: 50,
+        height: 50,
         borderRadius: 14,
         borderWidth: 1,
         alignItems: 'center',
@@ -190,7 +193,7 @@ const styles = StyleSheet.create({
     },
     nextButton: {
         flex: 1,
-        height: 52,
+        height: 50,
         borderRadius: 14,
         flexDirection: 'row',
         alignItems: 'center',
@@ -199,7 +202,7 @@ const styles = StyleSheet.create({
     },
     nextButtonText: {
         color: '#ffffff',
-        fontSize: 17,
+        fontSize: 16,
         fontWeight: '700',
         letterSpacing: 0.2,
     },

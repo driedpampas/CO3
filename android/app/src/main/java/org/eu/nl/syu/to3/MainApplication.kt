@@ -1,4 +1,4 @@
-package com.co3
+package org.eu.nl.syu.to3
 
 import android.app.Application
 import androidx.lifecycle.ProcessLifecycleOwner

@@ -384,11 +384,9 @@ export const setupNotificationListeners = (setActiveScreen, setScreens, openWork
         }
     };
 
-    notifee.onForegroundEvent(({ type, detail }) => {
+    const unsubscribe = notifee.onForegroundEvent(({ type, detail }) => {
         if (type === EventType.PRESS) handlePress(detail);
     });
 
-    notifee.onBackgroundEvent(async ({ type, detail }) => {
-        if (type === EventType.PRESS) handlePress(detail);
-    });
+    return unsubscribe;
 };
