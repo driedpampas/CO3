@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import AppLogo from '../../components/common/AppLogo';
 
 export default function Step1({ currentTheme, setScreen }) {
     const { t } = useTranslation();
@@ -12,11 +13,7 @@ export default function Step1({ currentTheme, setScreen }) {
                 bounces={true}
             >
                 <View style={styles.heroSection}>
-                    <Image
-                        style={styles.logo}
-                        source={require('../../res/logo.png')}
-                        resizeMode="contain"
-                    />
+                    <AppLogo size={120} style={styles.logo} />
 
                     <Text style={[styles.appName, { color: currentTheme.textColor }]}>
                         {t('general_app_name')}
@@ -64,8 +61,6 @@ const styles = StyleSheet.create({
         maxWidth: 360,
     },
     logo: {
-        width: 100,
-        height: 100,
         marginBottom: 20,
     },
     appName: {

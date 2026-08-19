@@ -13,7 +13,6 @@ import {
     Alert,
     BackHandler,
     DeviceEventEmitter,
-    Image,
     Linking,
     Platform,
     StatusBar,
@@ -30,6 +29,7 @@ import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-
 import SystemNavigationBar from 'react-native-system-navigation-bar';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import SideMenu from './components/app/SideMenu';
+import AppLogo from './components/common/AppLogo';
 import CustomToast from './components/common/CustomToast';
 import MainOnboardScreen from './onboard/MainOnboardScreen';
 import BrowseScreen from './screens/Browse';
@@ -897,11 +897,7 @@ const App = () => {
                     style={[styles.container, { backgroundColor: loadingTheme.backgroundColor }]}
                 >
                     <View style={styles.loadingContainer}>
-                        <Image
-                            style={{ width: 140, height: 140, marginBottom: 28 }}
-                            source={require('./res/logo.png')}
-                            resizeMode="contain"
-                        />
+                        <AppLogo size={140} style={{ marginBottom: 28 }} />
                         <ActivityIndicator size="large" color={loadingTheme.primaryColor} />
                         <Text
                             style={[

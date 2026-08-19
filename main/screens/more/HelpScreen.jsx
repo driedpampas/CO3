@@ -1,9 +1,10 @@
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Image, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import AppLogo from '../../components/common/AppLogo';
 
 export default function HelpScreen({ route }) {
     const { currentTheme } = route.params;
@@ -35,7 +36,7 @@ export default function HelpScreen({ route }) {
 
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.heroSection}>
-                    <Image style={styles.logo} source={require('../../res/logo.png')} />
+                    <AppLogo size={80} style={styles.logo} />
                     <Text style={[styles.appTitle, { color: theme.textColor }]}>
                         {t('general_app_name')} Help & Support
                     </Text>
@@ -114,9 +115,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
     },
     logo: {
-        width: 72,
-        height: 72,
-        borderRadius: 18,
         marginBottom: 12,
     },
     appTitle: {

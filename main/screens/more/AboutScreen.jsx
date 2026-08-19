@@ -1,11 +1,12 @@
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import InAppBrowser from 'react-native-inappbrowser-reborn';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { co3Version } from '../../constant';
+import AppLogo from '../../components/common/AppLogo';
 
 export default function AboutScreen({ route }) {
     const { setScreens, currentTheme, db } = route.params;
@@ -48,7 +49,7 @@ export default function AboutScreen({ route }) {
                             }
                         }}
                     >
-                        <Image style={styles.logo} source={require('../../res/logo.png')} />
+                        <AppLogo size={90} style={styles.logo} />
                     </TouchableOpacity>
                     <Text style={[styles.appTitle, { color: theme.textColor }]}>
                         {t('general_app_name')}
@@ -158,9 +159,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
     },
     logo: {
-        width: 80,
-        height: 80,
-        borderRadius: 20,
         marginBottom: 12,
     },
     appTitle: {
