@@ -1820,15 +1820,14 @@ const AdvancedSearchScreen = ({
                         </View>
                     </View>
                 </FilterSection>
-                <TouchableOpacity
-                    style={[styles.button, { backgroundColor: currentTheme.primaryColor }]}
-                    onPress={handleSearch}
-                >
-                    <Text style={styles.buttonText}>
-                        {t('screen_advancedSearch_search_button')}
-                    </Text>
-                </TouchableOpacity>
             </ScrollView>
+
+            <TouchableOpacity
+                style={[styles.fab, { backgroundColor: currentTheme.primaryColor }]}
+                onPress={handleSearch}
+            >
+                <Icon name="search" size={24} color="white" />
+            </TouchableOpacity>
         </SafeAreaView>
     );
 };
@@ -1846,7 +1845,10 @@ const styles = StyleSheet.create({
     headerTitle: { fontSize: 20, fontWeight: 'bold' },
     closeButton: { fontSize: 16, fontWeight: '600' },
     container: { flex: 1 },
-    contentContainer: { padding: 16 },
+    contentContainer: {
+        padding: 16,
+        paddingBottom: 80,
+    },
     inputGroup: { marginBottom: 16 },
     label: { fontSize: 16, fontWeight: '500', marginBottom: 8 },
     input: {
@@ -1903,12 +1905,23 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     radioInner: { width: 12, height: 12, borderRadius: 6 },
-    button: {
-        padding: 15,
-        borderRadius: 8,
+    fab: {
+        position: 'absolute',
+        right: 14,
+        bottom: 20,
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        justifyContent: 'center',
         alignItems: 'center',
-        marginTop: 20,
-        marginBottom: 100,
+        elevation: 6,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3,
     },
     buttonText: { color: 'white', fontSize: 18, fontWeight: 'bold' },
     autocompleteContainer: {
