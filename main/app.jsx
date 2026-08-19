@@ -316,7 +316,6 @@ const TopBar = ({
     setSearchTerm,
     setActiveScreen,
 }) => {
-    const insets = useSafeAreaInsets();
     const showSearch =
         activeScreen === 'library' || activeScreen === 'search' || activeScreen === 'browse';
 
@@ -328,7 +327,6 @@ const TopBar = ({
                 styles.header,
                 {
                     backgroundColor: currentTheme.headerBackground,
-                    paddingTop: insets.top,
                     borderColor: currentTheme.borderColor,
                 },
             ]}
