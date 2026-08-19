@@ -130,7 +130,7 @@ const AppWrapper = () => {
                   iconColor: '#525252',
                   inputBackground: '#ebebeb',
                   borderColor: '#e5e5e5',
-                  primaryColor: '#ea580c',
+                  primaryColor: '#7c3aed',
                   buttonBackground: '#ebebeb',
                   placeholderColor: '#a3a3a3',
                   cardBackground: '#ffffff',

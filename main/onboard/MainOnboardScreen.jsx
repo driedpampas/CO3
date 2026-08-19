@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useRef, useState } from 'react';
-import { Animated, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Step1 from './Screens/Step1Screen';
 import Step2 from './Screens/Step2Screen';
@@ -9,8 +9,6 @@ import Step4 from './Screens/Step4Screen';
 
 export default function MainOnboardScreen({ currentTheme, theme, setTheme, onFinish }) {
     const [screen, setScreen] = useState(0);
-    const fadeAnim = useRef(new Animated.Value(1)).current;
-    const slideAnim = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
         AsyncStorage.getItem('WordReplaceRules').then(value => {
@@ -32,54 +30,24 @@ export default function MainOnboardScreen({ currentTheme, theme, setTheme, onFin
         });
     }, []);
 
-    const changeStep = nextStep => {
-        Animated.parallel([
-            Animated.timing(fadeAnim, {
-                toValue: 0,
-                duration: 120,
-                useNativeDriver: true,
-            }),
-            Animated.timing(slideAnim, {
-                toValue: nextStep > screen ? -12 : 12,
-                duration: 120,
-                useNativeDriver: true,
-            }),
-        ]).start(() => {
-            setScreen(nextStep);
-            slideAnim.setValue(nextStep > screen ? 12 : -12);
-            Animated.parallel([
-                Animated.timing(fadeAnim, {
-                    toValue: 1,
-                    duration: 180,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(slideAnim, {
-                    toValue: 0,
-                    duration: 180,
-                    useNativeDriver: true,
-                }),
-            ]).start();
-        });
-    };
-
     const renderScreen = () => {
         switch (screen) {
             case 0:
-                return <Step1 currentTheme={currentTheme} setScreen={changeStep} />;
+                return <Step1 currentTheme={currentTheme} setScreen={setScreen} />;
             case 1:
-                return <Step2 currentTheme={currentTheme} setScreen={changeStep} />;
+                return <Step2 currentTheme={currentTheme} setScreen={setScreen} />;
             case 2:
                 return (
                     <Step3
                         currentTheme={currentTheme}
-                        setScreen={changeStep}
+                        setScreen={setScreen}
                         theme={theme}
                         setTheme={setTheme}
                     />
                 );
             case 3:
                 return (
-                    <Step4 currentTheme={currentTheme} setScreen={changeStep} onFinish={onFinish} />
+                    <Step4 currentTheme={currentTheme} setScreen={setScreen} onFinish={onFinish} />
                 );
             default:
                 return null;
@@ -95,7 +63,7 @@ export default function MainOnboardScreen({ currentTheme, theme, setTheme, onFin
                     return (
                         <TouchableOpacity
                             key={i}
-                            onPress={() => changeStep(i)}
+                            onPress={() => setScreen(i)}
                             activeOpacity={0.7}
                             style={[
                                 styles.dot,
@@ -111,18 +79,8 @@ export default function MainOnboardScreen({ currentTheme, theme, setTheme, onFin
                 })}
             </View>
 
-            {/* Screen Content with transition */}
-            <Animated.View
-                style={[
-                    styles.contentWrapper,
-                    {
-                        opacity: fadeAnim,
-                        transform: [{ translateX: slideAnim }],
-                    },
-                ]}
-            >
-                {renderScreen()}
-            </Animated.View>
+            {/* Screen Content */}
+            <View style={styles.contentWrapper}>{renderScreen()}</View>
         </SafeAreaView>
     );
 }

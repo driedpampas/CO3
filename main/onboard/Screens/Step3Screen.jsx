@@ -1,40 +1,41 @@
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { themes } from '../../utils/themes';
 
 const THEMES = [
     {
         key: 'light',
         labelKey: 'screen_preferences_label_theme_light',
         icon: 'wb-sunny',
-        bg: '#ffffff',
-        cardBg: '#f5f5f5',
-        text: '#171717',
-        subtext: '#737373',
-        accent: '#ea580c',
-        border: '#e5e5e5',
+        bg: themes.light.backgroundColor,
+        cardBg: themes.light.inputBackground,
+        text: themes.light.textColor,
+        subtext: themes.light.secondaryTextColor,
+        accent: themes.light.primaryColor,
+        border: themes.light.borderColor,
     },
     {
         key: 'dark',
         labelKey: 'screen_preferences_label_theme_dark',
         icon: 'brightness-3',
-        bg: '#121212',
-        cardBg: '#1e1e1e',
-        text: '#f5f5f5',
-        subtext: '#a3a3a3',
-        accent: '#f97316',
-        border: '#333333',
+        bg: themes.dark.backgroundColor,
+        cardBg: themes.dark.cardBackground,
+        text: themes.dark.textColor,
+        subtext: themes.dark.secondaryTextColor,
+        accent: themes.dark.primaryColor,
+        border: themes.dark.borderColor,
     },
     {
         key: 'black',
         labelKey: 'screen_preferences_label_theme_black',
         icon: 'brightness-1',
-        bg: '#000000',
-        cardBg: '#0c0c0c',
-        text: '#ffffff',
-        subtext: '#888888',
-        accent: '#f97316',
-        border: '#222222',
+        bg: themes.black.backgroundColor,
+        cardBg: themes.black.cardBackground,
+        text: themes.black.textColor,
+        subtext: themes.black.secondaryTextColor,
+        accent: themes.black.primaryColor,
+        border: themes.black.borderColor,
     },
 ];
 
@@ -68,7 +69,7 @@ export default function Step3({ currentTheme, setScreen, theme, setTheme }) {
                                     {
                                         backgroundColor: themeItem.bg,
                                         borderColor: isActive
-                                            ? currentTheme.primaryColor
+                                            ? themeItem.accent
                                             : currentTheme.borderColor,
                                         borderWidth: isActive ? 2 : 1,
                                     },
@@ -160,7 +161,7 @@ export default function Step3({ currentTheme, setScreen, theme, setTheme }) {
                                         <View
                                             style={[
                                                 styles.activeBadge,
-                                                { backgroundColor: currentTheme.primaryColor },
+                                                { backgroundColor: themeItem.accent },
                                             ]}
                                         >
                                             <Icon name="check" size={12} color="#ffffff" />
@@ -172,32 +173,14 @@ export default function Step3({ currentTheme, setScreen, theme, setTheme }) {
                     })}
                 </View>
 
-                {/* Info Callout */}
-                <View
-                    style={[
-                        styles.infoBox,
-                        {
-                            backgroundColor: currentTheme.inputBackground,
-                            borderColor: currentTheme.borderColor,
-                        },
-                    ]}
-                >
-                    <View
-                        style={[
-                            styles.infoIconWrap,
-                            { backgroundColor: `${currentTheme.primaryColor}18` },
-                        ]}
-                    >
-                        <Icon name="tune" size={18} color={currentTheme.primaryColor} />
-                    </View>
-                    <Text style={[styles.infoText, { color: currentTheme.secondaryTextColor }]}>
-                        {t('onboard_step3_info_text')}
-                    </Text>
-                </View>
+                {/* Plain Info Text */}
+                <Text style={[styles.infoText, { color: currentTheme.secondaryTextColor }]}>
+                    {t('onboard_step3_info_text')}
+                </Text>
             </ScrollView>
 
             {/* Navigation Footer */}
-            <View style={[styles.navRow, { borderTopColor: currentTheme.borderColor }]}>
+            <View style={styles.navRow}>
                 <TouchableOpacity
                     style={[styles.backButton, { borderColor: currentTheme.borderColor }]}
                     onPress={() => setScreen(1)}
@@ -297,26 +280,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    infoBox: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-        padding: 14,
-        borderRadius: 14,
-        borderWidth: 1,
-    },
-    infoIconWrap: {
-        width: 36,
-        height: 36,
-        borderRadius: 10,
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexShrink: 0,
-    },
     infoText: {
         fontSize: 13,
-        lineHeight: 18,
-        flex: 1,
+        lineHeight: 19,
+        textAlign: 'center',
+        marginTop: 4,
+        marginBottom: 12,
+        paddingHorizontal: 8,
     },
     navRow: {
         flexDirection: 'row',

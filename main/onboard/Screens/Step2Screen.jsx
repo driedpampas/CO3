@@ -119,7 +119,7 @@ export default function Step2({ currentTheme, setScreen }) {
             </ScrollView>
 
             {/* Navigation Footer */}
-            <View style={[styles.navRow, { borderTopColor: currentTheme.borderColor }]}>
+            <View style={styles.navRow}>
                 <TouchableOpacity
                     style={[styles.backButton, { borderColor: currentTheme.borderColor }]}
                     onPress={() => setScreen(0)}
