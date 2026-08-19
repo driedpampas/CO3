@@ -1,5 +1,5 @@
 {
-    "general_app_name": "Client Of Our Own",
+    "general_app_name": "Tales of Our Own",
     "general_global_search_placeholder": "Rechercher des œuvres...",
     "general_loading": "Chargement...",
     "general_retry": "Réessayer",
@@ -27,17 +27,17 @@
     "onboard_step2_button": "Continuer",
 
     "onboard_step3_title": "Choisissez votre thème",
-    "onboard_step3_sub": "Choisissez l'apparence de CO3. Vous pouvez toujours la changer plus tard.",
+    "onboard_step3_sub": "Choisissez l'apparence de Tales. Vous pouvez toujours la changer plus tard.",
     "onboard_step3_info_text": "Plus d'options d'affichage, taille de police, densité d'affichage, etc. sont disponibles dans le menu Préférences.",
     "onboard_step3_button": "Continuer",
 
     "onboard_step4_title": "Soutenir l'écosystème",
-    "onboard_step4_sub": "CO3 sera toujours 100 % gratuit. Mais si vous souhaitez contribuer, voici comment :",
+    "onboard_step4_sub": "Tales of Our Own sera toujours 100 % gratuit. Mais si vous souhaitez contribuer, voici comment :",
     "onboard_step4_ao3_label": "Archive of Our Own",
     "onboard_step4_ao3_desc": "AO3 est une organisation à but non lucratif gérée par des fans, pour des fans. Les dons permettent de maintenir les serveurs en fonctionnement pour tous.",
     "onboard_step4_ao3_cta": "Faire un don à AO3",
-    "onboard_step4_co3_label": "Développement de CO3",
-    "onboard_step4_co3_desc": "CO3 est développé et maintenu sur du temps libre. Tout soutien aide à apporter de nouvelles fonctionnalités.",
+    "onboard_step4_co3_label": "Développement de Tales of Our Own",
+    "onboard_step4_co3_desc": "Tales of Our Own est développé et maintenu sur du temps libre. Tout soutien aide à apporter de nouvelles fonctionnalités.",
     "onboard_step4_co3_cta": "Offrez-moi un café",
     "onboard_step4_button": "Commencer à lire",
 
@@ -276,9 +276,9 @@
     "screen_word_replacer_duplicate_message": "Une règle nommée \"{{trimmedName}}\" existe déjà.",
     "screen_word_replacer_empty_message": "Aucune règle pour le moment. Appuyez sur le bouton ci-dessous pour en ajouter une.",
 
-    "screen_about_title": "À propos de CO3",
+    "screen_about_title": "À propos de Tales of Our Own",
     "screen_about_sub": "Le lecteur mobile open source pour AO3",
-    "screen_about_text_1": "CO3 est un projet open source qui a pour but de rendre la lecture d'AO3 sur mobile bien plus simple.",
+    "screen_about_text_1": "Tales of Our Own est un projet open source qui a pour but de rendre la lecture d'AO3 sur mobile bien plus simple.",
     "screen_about_text_2": "L'application suit la liscence GPL V3, est sans pubs, sans abonnement et sans la moindre fonctionnalité de paiement, et ce pour toujours.",
     "screen_about_news": "Qu'est-ce qui est nouveau ?",
     "screen_about_source": "Code source",

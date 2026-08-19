@@ -311,7 +311,7 @@ const SideMenu = ({
                                         ]}
                                         onPress={() => Linking.openURL('https://ko-fi.com/tbvns')}
                                     >
-                                        <Text style={styles.supportButtonText}>CO3</Text>
+                                        <Text style={styles.supportButtonText}>Tales</Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>

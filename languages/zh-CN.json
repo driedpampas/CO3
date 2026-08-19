@@ -1,5 +1,5 @@
 {
-    "general_app_name": "Client Of Our Own",
+    "general_app_name": "Tales of Our Own",
     "general_global_search_placeholder": "搜索作品, 作者等...",
     "general_loading": "加载中...",
     "general_retry": "重试",
@@ -27,17 +27,17 @@
     "onboard_step2_button": "继续",
 
     "onboard_step3_title": "选择你的主题",
-    "onboard_step3_sub": "选择CO3的外观样式, 之后可以随时更改.",
+    "onboard_step3_sub": "选择Tales的外观样式, 之后可以随时更改.",
     "onboard_step3_info_text": "更多显示选项, 字体大小, 视图密度等, 均可在偏好设置菜单中调整.",
     "onboard_step3_button": "继续",
 
     "onboard_step4_title": "支持生态系统",
-    "onboard_step4_sub": "CO3将永远保持100%免费.但如果你想要回馈, 方法如下:",
+    "onboard_step4_sub": "Tales of Our Own将永远保持100%免费.但如果你想要回馈, 方法如下:",
     "onboard_step4_ao3_label": "AO3作品库",
     "onboard_step4_ao3_desc": "AO3是由同人爱好者运营的非营利组织, 捐款用于维持服务器运行, 让所有人受益.",
     "onboard_step4_ao3_cta": "向AO3捐款",
-    "onboard_step4_co3_label": "CO3开发",
-    "onboard_step4_co3_desc": "CO3利用业余时间构建和维护, 任何支持都有助于新功能的持续推出.",
+    "onboard_step4_co3_label": "Tales of Our Own开发",
+    "onboard_step4_co3_desc": "Tales of Our Own利用业余时间构建和维护, 任何支持都有助于新功能的持续推出.",
     "onboard_step4_co3_cta": "请我一杯咖啡",
     "onboard_step4_button": "开始阅读",
 
@@ -276,9 +276,9 @@
     "screen_word_replacer_duplicate_message": "名为 \"{{trimmedName}}\" 的规则已存在。",
     "screen_word_replacer_empty_message": "暂无规则，点击下方按钮添加。",
 
-    "screen_about_title": "关于CO3",
+    "screen_about_title": "关于Tales of Our Own",
     "screen_about_sub": "一个开源的AO3移动阅读器",
-    "screen_about_text_1": "CO3是一个开源项目, 旨在让在移动设备上阅读AO3变得更加便捷.",
+    "screen_about_text_1": "Tales of Our Own是一个开源项目, 旨在让在移动设备上阅读AO3变得更加便捷.",
     "screen_about_text_2": "它遵循GPL V3许可证, 将永远免费, 无广告、无订阅、无付费功能.",
     "screen_about_news": "更新内容",
     "screen_about_source": "源代码",

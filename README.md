@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/c168f8ee-cd36-4896-b591-87be5d3ad0fe" alt="Logo for the CO3 project">
+  <img src="https://github.com/user-attachments/assets/c168f8ee-cd36-4896-b591-87be5d3ad0fe" alt="Logo for the Tales of Our Own project">
 </p>
 <p align="center">
   <a href="https://github.com/tbvns/CO3/actions/workflows/android-build.yml">
@@ -11,12 +11,12 @@
 </p>
 <p align="center">
   <a href="https://tbvns.xyz/discord">
-    <img src="https://img.shields.io/badge/-CO3%20Discord%20Server-%237289DA?style=flat&logo=discord&logoColor=white" alt="Build Android APK">
+    <img src="https://img.shields.io/badge/-Tales%20Discord%20Server-%237289DA?style=flat&logo=discord&logoColor=white" alt="Build Android APK">
   </a>
 </p>
 
-# Client of our own
-CO3 is a free reader app for **Archive of Our Own** (AO3). We built it because other AO3 apps charge money for features that should be free. </br>
+# Tales of Our Own
+Tales of Our Own is a free reader app for **Archive of Our Own** (AO3). We built it because other AO3 apps charge money for features that should be free. </br>
 The goal is to give you a better reading experience on your phone with features like native AMOLED support, local reading history, and custom categories to organize your stories.
 
 > [!TIP]
@@ -39,10 +39,10 @@ We recommend you use F-Droid to install the client, this will allow for auto-upd
 
 <p align="center">
   <a href="https://f-droid.org/packages/com.co3/">
-    <img src="https://f-droid.org/badge/get-it-on.png" alt="Get CO3 from F-Droid" width="220">
+    <img src="https://f-droid.org/badge/get-it-on.png" alt="Get Tales from F-Droid" width="220">
   </a>
   <a href="https://github.com/tbvns/CO3/releases">
-    <img src="https://user-images.githubusercontent.com/663460/26973090-f8fdc986-4d14-11e7-995a-e7c5e79ed925.png" alt="Get CO3 APK from GitHub" width="220" />
+    <img src="https://user-images.githubusercontent.com/663460/26973090-f8fdc986-4d14-11e7-995a-e7c5e79ed925.png" alt="Get Tales APK from GitHub" width="220" />
   </a>
 </p>
 
@@ -64,7 +64,7 @@ You can get IOS dev builds [here](https://github.com/tbvns/CO3/actions/workflows
 </a>
 
 # Logo and name usage
-The name "CO3" or "Client Of Our Own" and the project logo are copyright © Tbvns and are not covered by the GPL license. You may not publish this application or any derivative under the same name or logo on the Google Play Store, Apple App Store, or any other proprietary app store. Redistribution via F-Droid or direct APK sideloading is permitted.
+The name "Tales of Our Own" or "Tales" and the project logo are copyright © Tbvns and are not covered by the GPL license. You may not publish this application or any derivative under the same name or logo on the Google Play Store, Apple App Store, or any other proprietary app store. Redistribution via F-Droid or direct APK sideloading is permitted.
 
 # License
 Copyright (C) 2026 Tbvns

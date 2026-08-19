@@ -173,7 +173,7 @@ export async function exportBackup(db) {
         const backupDir = getBackupDir();
         await RNFS.mkdir(backupDir, { NSURLIsExcludedFromBackupKey: false });
 
-        const fileName = `CO3-backup-${Date.now()}.zip`;
+        const fileName = `Tales-backup-${Date.now()}.zip`;
         const outputPath = `${backupDir}/${fileName}`;
 
         await RNFS.writeFile(outputPath, zipBase64, 'base64');

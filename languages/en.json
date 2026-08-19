@@ -1,5 +1,5 @@
 {
-    "general_app_name": "Client Of Our Own",
+    "general_app_name": "Tales of Our Own",
     "general_global_search_placeholder": "Search works, authors...",
     "general_loading": "Loading...",
     "general_retry": "Retry",
@@ -27,17 +27,17 @@
     "onboard_step2_button": "Continue",
 
     "onboard_step3_title": "Pick your theme",
-    "onboard_step3_sub": "Choose how CO3 looks. You can always change this later.",
+    "onboard_step3_sub": "Choose how Tales looks. You can always change this later.",
     "onboard_step3_info_text": "More display options, font size, view density, and more, are available in the Preferences menu.",
     "onboard_step3_button": "Continue",
 
     "onboard_step4_title": "Support the ecosystem",
-    "onboard_step4_sub": "CO3 will always be 100% free. But if you'd like to give back, here's how:",
+    "onboard_step4_sub": "Tales of Our Own will always be 100% free. But if you'd like to give back, here's how:",
     "onboard_step4_ao3_label": "Archive of Our Own",
     "onboard_step4_ao3_desc": "AO3 is a non-profit run by fans, for fans. Donations keep the servers running for everyone.",
     "onboard_step4_ao3_cta": "Donate to AO3",
-    "onboard_step4_co3_label": "CO3 Development",
-    "onboard_step4_co3_desc": "CO3 is built and maintained in spare time. Any support helps keep new features coming.",
+    "onboard_step4_co3_label": "Tales of Our Own Development",
+    "onboard_step4_co3_desc": "Tales of Our Own is built and maintained in spare time. Any support helps keep new features coming.",
     "onboard_step4_co3_cta": "Buy me a coffee",
     "onboard_step4_button": "Start reading",
 
@@ -278,9 +278,9 @@
     "screen_word_replacer_duplicate_message": "A rule named \"{{trimmedName}}\" already exists.",
     "screen_word_replacer_empty_message": "No rules yet. Tap the button below to add one.",
 
-    "screen_about_title": "About CO3",
+    "screen_about_title": "About Tales of Our Own",
     "screen_about_sub": "The Open Source AO3 Mobile Reader",
-    "screen_about_text_1": "CO3 is an open source project which aims at making reading on AO3 with a mobile device a lot easier.",
+    "screen_about_text_1": "Tales of Our Own is an open source project which aims at making reading on AO3 with a mobile device a lot easier.",
     "screen_about_text_2": "It follows the GPL V3 licence, and will be free of ads, of subscription and of any paid features, forever.",
     "screen_about_news": "What's new ?",
     "screen_about_source": "Source code",

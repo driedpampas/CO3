@@ -289,7 +289,7 @@ export async function exportDb(db) {
 
         if (Platform.OS === 'ios' || Platform.OS === 'android') {
             const dbFileName = 'library.db';
-            const exportFileName = 'CO3-DatabaseManager-Export.db';
+            const exportFileName = 'Tales-DatabaseManager-Export.db';
 
             const dbPath = Platform.select({
                 android: `/data/data/org.eu.nl.syu.to3/databases/${dbFileName}`,

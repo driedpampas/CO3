@@ -7,7 +7,7 @@ let db;
 
 function getDb() {
     if (!db) {
-        const userDataPath = path.join(app.getPath('userData'), 'CO3');
+        const userDataPath = path.join(app.getPath('userData'), 'Tales');
         fs.mkdirSync(userDataPath, { recursive: true });
         db = new Database(path.join(userDataPath, 'library.db'));
     }
