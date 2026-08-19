@@ -418,7 +418,7 @@ const PreferencesScreen = ({ route }) => {
                             {availableLanguages.map(lang => (
                                 <CustomDropdown.Item
                                     key={lang.code}
-                                    label={lang.label}
+                                    label={lang.emoji ? `${lang.emoji}  ${lang.label}` : lang.label}
                                     value={lang.code}
                                 />
                             ))}

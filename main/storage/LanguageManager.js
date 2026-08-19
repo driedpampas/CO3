@@ -10,18 +10,21 @@ export const availableLanguages = [
         code: 'en',
         label: 'English',
         flag: 'GB',
+        emoji: '🇬🇧',
         translation: en,
     },
     {
         code: 'fr',
         label: 'Français',
         flag: 'FR',
+        emoji: '🇫🇷',
         translation: fr,
     },
     {
         code: 'zh-CN',
         label: '简体中文',
         flag: 'CN',
+        emoji: '🇨🇳',
         translation: cn,
     },
 ];

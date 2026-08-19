@@ -1,12 +1,10 @@
-const flagContext =
-    typeof require.context === 'function'
-        ? require.context('../res/flags-png-hd', false, /\.png$/)
-        : null;
-
-export const getFlagImage = iso => {
+export const getFlagEmoji = iso => {
+    if (!iso || typeof iso !== 'string') return '🌐';
     try {
-        return flagContext ? flagContext(`./${iso}.png`) : null;
+        return iso
+            .toUpperCase()
+            .replace(/./g, char => String.fromCodePoint(char.charCodeAt(0) + 127397));
     } catch {
-        return null; // no flag for this code
+        return '🌐';
     }
 };

@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { availableLanguages, changeLanguage } from '../../storage/LanguageManager';
-import { getFlagImage } from '../../utils/FlagUtils';
+import { getFlagEmoji } from '../../utils/FlagUtils';
 
 export default function Step2({ currentTheme, setScreen }) {
     const { t, i18n } = useTranslation();
@@ -11,7 +11,7 @@ export default function Step2({ currentTheme, setScreen }) {
     const languages = availableLanguages.map(lang => ({
         key: lang.code,
         label: lang.label,
-        flag: lang.flag,
+        emoji: lang.emoji || getFlagEmoji(lang.flag),
     }));
 
     const selectLanguage = async lng => {
@@ -36,7 +36,6 @@ export default function Step2({ currentTheme, setScreen }) {
                 <View style={styles.cardList}>
                     {languages.map(lang => {
                         const isActive = lang.key === currentLng;
-                        const flagSource = getFlagImage(lang.flag);
 
                         return (
                             <TouchableOpacity
@@ -57,26 +56,14 @@ export default function Step2({ currentTheme, setScreen }) {
                                 activeOpacity={0.85}
                             >
                                 <View style={styles.cardLeft}>
-                                    {flagSource ? (
-                                        <Image
-                                            source={flagSource}
-                                            style={styles.flag}
-                                            resizeMode="cover"
-                                        />
-                                    ) : (
-                                        <View
-                                            style={[
-                                                styles.flagFallback,
-                                                { backgroundColor: currentTheme.inputBackground },
-                                            ]}
-                                        >
-                                            <Icon
-                                                name="public"
-                                                size={20}
-                                                color={currentTheme.secondaryTextColor}
-                                            />
-                                        </View>
-                                    )}
+                                    <View
+                                        style={[
+                                            styles.emojiContainer,
+                                            { backgroundColor: currentTheme.inputBackground },
+                                        ]}
+                                    >
+                                        <Text style={styles.emojiText}>{lang.emoji}</Text>
+                                    </View>
                                     <View style={styles.labelWrapper}>
                                         <Text
                                             style={[
@@ -178,17 +165,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: 14,
     },
-    flag: {
-        width: 38,
-        height: 28,
-        borderRadius: 6,
-    },
-    flagFallback: {
-        width: 38,
-        height: 28,
-        borderRadius: 6,
+    emojiContainer: {
+        width: 42,
+        height: 42,
+        borderRadius: 10,
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    emojiText: {
+        fontSize: 24,
     },
     labelWrapper: {
         gap: 2,
