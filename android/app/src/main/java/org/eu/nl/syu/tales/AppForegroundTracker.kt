@@ -1,4 +1,4 @@
-package org.eu.nl.syu.to3
+package org.eu.nl.syu.tales
 
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner

@@ -199,7 +199,7 @@ const UpdateScreen = ({
 
     return (
         <View style={[styles.container, { backgroundColor: currentTheme.backgroundColor }]}>
-            {/* Header with last update time and refresh button */}
+            {/* Consolidate header with last update info and refresh icon */}
             <View
                 style={[
                     styles.headerBar,
@@ -231,7 +231,7 @@ const UpdateScreen = ({
                 >
                     <Icon
                         name="refresh"
-                        size={24}
+                        size={20}
                         color={refreshing ? currentTheme.placeholderColor : currentTheme.iconColor}
                     />
                 </TouchableOpacity>
@@ -239,6 +239,10 @@ const UpdateScreen = ({
 
             <ScrollView
                 style={styles.scrollView}
+                contentContainerStyle={[
+                    styles.scrollContent,
+                    updates.length === 0 && styles.emptyScrollContent,
+                ]}
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
@@ -363,6 +367,13 @@ const styles = StyleSheet.create({
     scrollView: {
         flex: 1,
     },
+    scrollContent: {
+        flexGrow: 1,
+    },
+    emptyScrollContent: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     section: {
         marginTop: 10,
     },
@@ -373,11 +384,10 @@ const styles = StyleSheet.create({
         marginBottom: 6,
     },
     emptyContainer: {
-        flex: 1,
-        justifyContent: 'center',
         alignItems: 'center',
-        paddingTop: 60,
+        justifyContent: 'center',
         paddingHorizontal: 24,
+        paddingVertical: 40,
     },
     emptyText: {
         fontSize: 16,

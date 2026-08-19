@@ -1,8 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-    Animated,
     DeviceEventEmitter,
     ScrollView,
     StyleSheet,
@@ -37,17 +36,7 @@ const MoreScreen = ({
     const navigation = useNavigation();
 
     const insets = useSafeAreaInsets();
-    const fadeAnim = useRef(new Animated.Value(0)).current;
-
     const { t } = useTranslation();
-
-    useEffect(() => {
-        Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 500,
-            useNativeDriver: true,
-        }).start();
-    }, [fadeAnim]);
 
     const handlePress = useCallback(
         screenName => {
@@ -306,22 +295,7 @@ const MoreScreen = ({
                     ]}
                 >
                     {menuItems.map((item, index) => (
-                        <Animated.View
-                            key={item.name}
-                            style={[
-                                {
-                                    opacity: fadeAnim,
-                                    transform: [
-                                        {
-                                            translateX: fadeAnim.interpolate({
-                                                inputRange: [0, 1],
-                                                outputRange: [-20, 0],
-                                            }),
-                                        },
-                                    ],
-                                },
-                            ]}
-                        >
+                        <View key={item.name}>
                             <TouchableOpacity
                                 style={[
                                     styles.menuItem,
@@ -350,7 +324,7 @@ const MoreScreen = ({
                                     color={currentTheme.placeholderColor}
                                 />
                             </TouchableOpacity>
-                        </Animated.View>
+                        </View>
                     ))}
                 </View>
             </View>

@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
-import { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
@@ -13,38 +13,45 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import * as Stats from '../../storage/Stats';
 
-function StatCard({ icon, label, value, currentTheme, accent }) {
+function StatTile({ icon, label, value, subtext, currentTheme, accent }) {
     const isLoading = value === undefined || value === null;
 
     return (
         <View
             style={[
-                styles.statCard,
+                styles.statTile,
                 {
                     backgroundColor: currentTheme.cardBackground,
                     borderColor: currentTheme.borderColor,
                 },
             ]}
         >
-            <View
-                style={[
-                    styles.iconBadge,
-                    styles.iconBadgeMargin,
-                    { backgroundColor: `${accent}22` },
-                ]}
-            >
-                <Icon name={icon} size={22} color={accent} />
+            <View style={styles.tileHeader}>
+                <View style={[styles.iconBadge, { backgroundColor: `${accent}18` }]}>
+                    <Icon name={icon} size={20} color={accent} />
+                </View>
+                {subtext ? (
+                    <Text style={[styles.tileSubtext, { color: currentTheme.secondaryTextColor }]}>
+                        {subtext}
+                    </Text>
+                ) : null}
             </View>
-            <Text style={[styles.statLabel, { color: currentTheme.secondaryTextColor }]}>
-                {label}
-            </Text>
-            {isLoading ? (
-                <ActivityIndicator size="small" color={accent} style={styles.spinner} />
-            ) : (
-                <Text style={[styles.statValue, { color: currentTheme.textColor }]}>
-                    {String(value)}
+
+            <View style={styles.tileBody}>
+                {isLoading ? (
+                    <ActivityIndicator size="small" color={accent} style={styles.spinner} />
+                ) : (
+                    <Text style={[styles.tileValue, { color: currentTheme.textColor }]}>
+                        {String(value)}
+                    </Text>
+                )}
+                <Text
+                    style={[styles.tileLabel, { color: currentTheme.secondaryTextColor }]}
+                    numberOfLines={1}
+                >
+                    {label}
                 </Text>
-            )}
+            </View>
         </View>
     );
 }
@@ -63,9 +70,7 @@ function AuthorList({
     chapterDAO,
 }) {
     const isLoading = authors === undefined || authors === null;
-
     const navigation = useNavigation();
-
     const { t } = useTranslation();
 
     function onBack() {
@@ -75,18 +80,18 @@ function AuthorList({
     return (
         <View
             style={[
-                styles.wideCard,
+                styles.sectionCard,
                 {
                     backgroundColor: currentTheme.cardBackground,
                     borderColor: currentTheme.borderColor,
                 },
             ]}
         >
-            <View style={styles.wideCardHeader}>
-                <View style={[styles.iconBadge, { backgroundColor: `${accent}22` }]}>
-                    <Icon name="person" size={22} color={accent} />
+            <View style={styles.sectionCardHeader}>
+                <View style={[styles.iconBadge, { backgroundColor: `${accent}18` }]}>
+                    <Icon name="person" size={20} color={accent} />
                 </View>
-                <Text style={[styles.wideCardLabel, { color: currentTheme.secondaryTextColor }]}>
+                <Text style={[styles.sectionCardTitle, { color: currentTheme.textColor }]}>
                     {t('screen_stats_favorite_author')}
                 </Text>
             </View>
@@ -96,7 +101,7 @@ function AuthorList({
             ) : Array.isArray(authors) && authors.length > 0 ? (
                 authors.map((item, i) => (
                     <TouchableOpacity
-                        key={i}
+                        key={item.author || i}
                         style={[
                             styles.listRow,
                             i < authors.length - 1 && {
@@ -107,32 +112,47 @@ function AuthorList({
                         activeOpacity={0.6}
                         onPress={() => {
                             navigation.push('User', {
-                                currentTheme: currentTheme,
+                                currentTheme,
                                 username: item.author,
-                                onBack: onBack,
-                                setScreens: setScreens,
-                                workDAO: workDAO,
-                                libraryDAO: libraryDAO,
-                                historyDAO: historyDAO,
-                                settingsDAO: settingsDAO,
-                                progressDAO: progressDAO,
-                                kudoHistoryDAO: kudoHistoryDAO,
-                                chapterDAO: chapterDAO,
+                                onBack,
+                                setScreens,
+                                workDAO,
+                                libraryDAO,
+                                historyDAO,
+                                settingsDAO,
+                                progressDAO,
+                                kudoHistoryDAO,
+                                chapterDAO,
                             });
                         }}
                     >
-                        <Text style={[styles.rankText, { color: currentTheme.secondaryTextColor }]}>
-                            {i + 1}
-                        </Text>
+                        <View
+                            style={[
+                                styles.rankBadge,
+                                {
+                                    backgroundColor:
+                                        i === 0 ? `${accent}25` : currentTheme.inputBackground,
+                                },
+                            ]}
+                        >
+                            <Text
+                                style={[
+                                    styles.rankText,
+                                    { color: i === 0 ? accent : currentTheme.secondaryTextColor },
+                                ]}
+                            >
+                                {i + 1}
+                            </Text>
+                        </View>
                         <Text
                             style={[styles.listRowText, { color: currentTheme.textColor }]}
                             numberOfLines={1}
                         >
                             {item.author}
                         </Text>
-                        <View style={[styles.countBadge, { backgroundColor: `${accent}22` }]}>
+                        <View style={[styles.countBadge, { backgroundColor: `${accent}18` }]}>
                             <Text style={[styles.countText, { color: accent }]}>
-                                {item.author_count && item.author_count === 1
+                                {item.author_count === 1
                                     ? t('screen_stats_work_count', { count: item.author_count })
                                     : t('screen_stats_work_count_plural', {
                                           count: item.author_count,
@@ -152,24 +172,23 @@ function AuthorList({
 
 function TagList({ tags, currentTheme, accent, openTagSearch }) {
     const isLoading = tags === undefined || tags === null;
-
     const { t } = useTranslation();
 
     return (
         <View
             style={[
-                styles.wideCard,
+                styles.sectionCard,
                 {
                     backgroundColor: currentTheme.cardBackground,
                     borderColor: currentTheme.borderColor,
                 },
             ]}
         >
-            <View style={styles.wideCardHeader}>
-                <View style={[styles.iconBadge, { backgroundColor: `${accent}22` }]}>
-                    <Icon name="local-offer" size={22} color={accent} />
+            <View style={styles.sectionCardHeader}>
+                <View style={[styles.iconBadge, { backgroundColor: `${accent}18` }]}>
+                    <Icon name="local-offer" size={20} color={accent} />
                 </View>
-                <Text style={[styles.wideCardLabel, { color: currentTheme.secondaryTextColor }]}>
+                <Text style={[styles.sectionCardTitle, { color: currentTheme.textColor }]}>
                     {t('screen_stats_preferred_tags')}
                 </Text>
             </View>
@@ -178,24 +197,22 @@ function TagList({ tags, currentTheme, accent, openTagSearch }) {
                 <ActivityIndicator size="small" color={accent} style={styles.spinner} />
             ) : Array.isArray(tags) && tags.length > 0 ? (
                 <View style={styles.tagRow}>
-                    {tags.map((tag, i) => (
+                    {tags.map(tag => (
                         <TouchableOpacity
-                            key={i}
+                            key={tag.tag_name}
                             style={[
                                 styles.tag,
-                                { backgroundColor: `${accent}18`, borderColor: `${accent}40` },
+                                { backgroundColor: `${accent}12`, borderColor: `${accent}30` },
                             ]}
                             activeOpacity={0.7}
                             onPress={() => {
-                                openTagSearch(tag.tag_name);
+                                if (openTagSearch) openTagSearch(tag.tag_name);
                             }}
                         >
                             <Text style={[styles.tagText, { color: accent }]}>
                                 {tag.tag_name}
-                                <Text style={[styles.tagSep, { color: `${accent}88` }]}> · </Text>
-                                <Text style={[styles.tagCountText, { color: `${accent}aa` }]}>
-                                    {tag.usage_count}
-                                </Text>
+                                <Text style={{ opacity: 0.5 }}> · </Text>
+                                <Text style={styles.tagCountText}>{tag.usage_count}</Text>
                             </Text>
                         </TouchableOpacity>
                     ))}
@@ -225,30 +242,55 @@ export default function StatsScreen({ route }) {
     } = route.params;
 
     const navigation = useNavigation();
-
-    function onBack() {
-        navigation.goBack();
-    }
-
-    const [totalChapterRead, setTotalChapterRead] = useState();
-    const [totalWorksStarted, setTotalWorksStarted] = useState();
-    const [preferedTags, setPreferedTags] = useState();
-    const [preferedAuthor, setPreferedAuthor] = useState();
     const { t } = useTranslation();
 
+    const [filterRange, setFilterRange] = useState('all'); // 'all', '30', '7'
+    const [totalChapterRead, setTotalChapterRead] = useState();
+    const [totalWordsRead, setTotalWordsRead] = useState();
+    const [totalWorksStarted, setTotalWorksStarted] = useState();
+    const [totalWorksKudoed, setTotalWorksKudoed] = useState();
+    const [preferedTags, setPreferedTags] = useState();
+    const [preferedAuthor, setPreferedAuthor] = useState();
+
+    const loadStats = useCallback(async () => {
+        if (!databaseObj) return;
+
+        const daysLimit = filterRange === '7' ? 7 : filterRange === '30' ? 30 : null;
+
+        Stats.totalChaptersRead(databaseObj, daysLimit).then(setTotalChapterRead);
+        Stats.totalWordsRead(databaseObj, daysLimit).then(setTotalWordsRead);
+        Stats.totalWorksStarted(databaseObj).then(setTotalWorksStarted);
+        Stats.totalWorksKudoed(databaseObj).then(setTotalWorksKudoed);
+        Stats.preferredTag(databaseObj).then(setPreferedTags);
+        Stats.preferredAuthor(databaseObj).then(setPreferedAuthor);
+    }, [databaseObj, filterRange]);
+
     useEffect(() => {
-        Stats.totalChaptersRead(databaseObj).then(result => setTotalChapterRead(result));
-        Stats.totalWorksStarted(databaseObj).then(result => setTotalWorksStarted(result));
-        Stats.preferredTag(databaseObj).then(result => setPreferedTags(result));
-        Stats.preferredAuthor(databaseObj).then(result => setPreferedAuthor(result));
-    }, [databaseObj]);
+        loadStats();
+    }, [loadStats]);
+
+    const formatWordCount = count => {
+        if (!count) return '0';
+        if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
+        if (count >= 1000) return `${(count / 1000).toFixed(1)}k`;
+        return String(count);
+    };
+
+    const formatReadingTime = words => {
+        if (!words) return '0m';
+        const totalMinutes = Math.round(words / 220); // standard ~220 WPM
+        if (totalMinutes < 60) return `${totalMinutes}m`;
+        const hours = Math.floor(totalMinutes / 60);
+        const mins = totalMinutes % 60;
+        return `${hours}h ${mins}m`;
+    };
 
     const accent = currentTheme.primaryColor;
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: currentTheme.backgroundColor }]}>
             <View style={[styles.header, { borderBottomColor: currentTheme.borderColor }]}>
-                <TouchableOpacity onPress={onBack} style={styles.backButton}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                     <Icon name="arrow-back" size={24} color={currentTheme.textColor} />
                 </TouchableOpacity>
                 <Text style={[styles.title, { color: currentTheme.textColor }]}>
@@ -257,27 +299,102 @@ export default function StatsScreen({ route }) {
             </View>
 
             <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-                <Text style={[styles.sectionLabel, { color: currentTheme.secondaryTextColor }]}>
+                {/* Time Range Filter Chips */}
+                <View style={styles.filterRow}>
+                    {[
+                        { key: 'all', label: 'All Time' },
+                        { key: '30', label: 'Past 30 Days' },
+                        { key: '7', label: 'Past 7 Days' },
+                    ].map(tab => (
+                        <TouchableOpacity
+                            key={tab.key}
+                            style={[
+                                styles.filterChip,
+                                filterRange === tab.key
+                                    ? { backgroundColor: accent, borderColor: accent }
+                                    : {
+                                          backgroundColor: currentTheme.cardBackground,
+                                          borderColor: currentTheme.borderColor,
+                                      },
+                            ]}
+                            onPress={() => setFilterRange(tab.key)}
+                        >
+                            <Text
+                                style={[
+                                    styles.filterChipText,
+                                    {
+                                        color:
+                                            filterRange === tab.key
+                                                ? '#ffffff'
+                                                : currentTheme.secondaryTextColor,
+                                    },
+                                ]}
+                            >
+                                {tab.label}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+                </View>
+
+                {/* Section: Reading Activity */}
+                <Text style={[styles.sectionHeading, { color: currentTheme.textColor }]}>
                     {t('screen_stats_reading_activity')}
                 </Text>
-                <View style={styles.cardRow}>
-                    <StatCard
+
+                <View style={styles.tileGrid}>
+                    <StatTile
+                        icon="auto-stories"
+                        label="Words Read"
+                        value={formatWordCount(totalWordsRead)}
+                        currentTheme={currentTheme}
+                        accent={accent}
+                    />
+                    <StatTile
+                        icon="schedule"
+                        label="Reading Time"
+                        value={formatReadingTime(totalWordsRead)}
+                        subtext="~220 wpm"
+                        currentTheme={currentTheme}
+                        accent={accent}
+                    />
+                    <StatTile
                         icon="menu-book"
                         label={t('screen_stats_chapter_read')}
                         value={totalChapterRead}
                         currentTheme={currentTheme}
                         accent={accent}
                     />
-                    <StatCard
-                        icon="auto-stories"
+                    <StatTile
+                        icon="bookmark"
                         label={t('screen_stats_work_started')}
                         value={totalWorksStarted}
                         currentTheme={currentTheme}
                         accent={accent}
                     />
+                    <StatTile
+                        icon="favorite"
+                        label="Kudosed Works"
+                        value={totalWorksKudoed}
+                        currentTheme={currentTheme}
+                        accent="#ef4444"
+                    />
+                    <StatTile
+                        icon="speed"
+                        label="Average Speed"
+                        value="220"
+                        subtext="words/min"
+                        currentTheme={currentTheme}
+                        accent={accent}
+                    />
                 </View>
 
-                <Text style={[styles.sectionLabel, { color: currentTheme.secondaryTextColor }]}>
+                {/* Section: Your Preferences */}
+                <Text
+                    style={[
+                        styles.sectionHeading,
+                        { color: currentTheme.textColor, marginTop: 12 },
+                    ]}
+                >
                     {t('screen_stats_your_preference')}
                 </Text>
 
@@ -300,7 +417,6 @@ export default function StatsScreen({ route }) {
                     currentTheme={currentTheme}
                     accent={accent}
                     openTagSearch={openTagSearch}
-                    setScreens={setScreens}
                 />
             </ScrollView>
         </SafeAreaView>
@@ -314,90 +430,102 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 20,
-        paddingVertical: 16,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
         borderBottomWidth: StyleSheet.hairlineWidth,
     },
     backButton: {
-        marginRight: 14,
-        padding: 2,
+        padding: 4,
     },
     title: {
-        fontSize: 22,
-        fontWeight: '700',
-        letterSpacing: 0.2,
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginLeft: 12,
     },
     content: {
-        padding: 20,
+        padding: 16,
         paddingBottom: 40,
     },
-    sectionLabel: {
-        fontSize: 11,
-        fontWeight: '700',
-        letterSpacing: 1.2,
-        marginBottom: 12,
-        marginTop: 8,
-    },
-    cardRow: {
+    filterRow: {
         flexDirection: 'row',
-        gap: 12,
-        marginBottom: 24,
+        gap: 8,
+        marginBottom: 16,
     },
-    statCard: {
-        flex: 1,
-        borderRadius: 14,
+    filterChip: {
+        paddingHorizontal: 14,
+        paddingVertical: 6,
+        borderRadius: 20,
         borderWidth: 1,
-        padding: 16,
-        minHeight: 110,
+    },
+    filterChipText: {
+        fontSize: 13,
+        fontWeight: '600',
+    },
+    sectionHeading: {
+        fontSize: 17,
+        fontWeight: '700',
+        marginBottom: 12,
+    },
+    tileGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 10,
+        marginBottom: 16,
+    },
+    statTile: {
+        width: '48.5%',
+        borderRadius: 12,
+        borderWidth: 1,
+        padding: 12,
         justifyContent: 'space-between',
+        minHeight: 96,
+    },
+    tileHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 8,
     },
     iconBadge: {
-        width: 38,
-        height: 38,
-        borderRadius: 10,
+        width: 32,
+        height: 32,
+        borderRadius: 8,
         alignItems: 'center',
         justifyContent: 'center',
     },
-    iconBadgeMargin: {
-        marginBottom: 10,
+    tileSubtext: {
+        fontSize: 11,
     },
-    statLabel: {
-        fontSize: 12,
-        fontWeight: '600',
-        letterSpacing: 0.3,
-        textTransform: 'uppercase',
+    tileBody: {
+        gap: 2,
     },
-    statValue: {
+    tileValue: {
         fontSize: 20,
         fontWeight: '700',
-        marginTop: 4,
+    },
+    tileLabel: {
+        fontSize: 12,
+        fontWeight: '500',
     },
     spinner: {
         alignSelf: 'flex-start',
-        marginTop: 6,
+        marginVertical: 4,
     },
-    wideCard: {
-        borderRadius: 14,
+    sectionCard: {
+        borderRadius: 12,
         borderWidth: 1,
-        padding: 16,
+        padding: 14,
         marginBottom: 12,
     },
-    wideCardHeader: {
-        flex: 1,
+    sectionCardHeader: {
         flexDirection: 'row',
         alignItems: 'center',
+        gap: 10,
         marginBottom: 12,
     },
-    wideCardLabel: {
-        fontSize: 12,
+    sectionCardTitle: {
+        fontSize: 15,
         fontWeight: '600',
-        letterSpacing: 0.4,
-        marginLeft: 10,
-        textTransform: 'uppercase',
-    },
-    emptyText: {
-        fontSize: 14,
-        fontStyle: 'italic',
     },
     listRow: {
         flexDirection: 'row',
@@ -405,15 +533,20 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         gap: 10,
     },
+    rankBadge: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
     rankText: {
-        fontSize: 13,
+        fontSize: 12,
         fontWeight: '700',
-        width: 20,
-        textAlign: 'center',
     },
     listRowText: {
         flex: 1,
-        fontSize: 15,
+        fontSize: 14,
         fontWeight: '500',
     },
     countBadge: {
@@ -428,23 +561,25 @@ const styles = StyleSheet.create({
     tagRow: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 8,
+        gap: 6,
     },
     tag: {
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 20,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 16,
         borderWidth: 1,
     },
     tagText: {
-        fontSize: 13,
+        fontSize: 12,
         fontWeight: '600',
     },
-    tagSep: {
-        fontWeight: '400',
-    },
     tagCountText: {
-        fontSize: 12,
+        fontSize: 11,
         fontWeight: '500',
+    },
+    emptyText: {
+        fontSize: 13,
+        fontStyle: 'italic',
+        paddingVertical: 4,
     },
 });

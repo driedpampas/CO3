@@ -1,4 +1,4 @@
-package org.eu.nl.syu.to3
+package org.eu.nl.syu.tales
 
 import android.app.Application
 import androidx.lifecycle.ProcessLifecycleOwner

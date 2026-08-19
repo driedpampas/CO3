@@ -380,7 +380,7 @@ const HistoryScreen = ({
                     styles.readButtonFab,
                     {
                         backgroundColor: currentTheme.primaryColor,
-                        bottom: 100 + insets.bottom,
+                        bottom: 72 + insets.bottom,
                     },
                 ]}
                 onPress={() => setShowCalendar(true)}

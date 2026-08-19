@@ -57,7 +57,7 @@
     "screen_library_subtitle_match_filter": " matching {{query}}",
     "screen_library_end": "No more works to load",
     "screen_library_empty": "Your library is empty",
-    "screen_library_empty_sub": "Your library is empty",
+    "screen_library_empty_sub": "Works you add to your library will appear here",
     "screen_library_no_result": "No matches found",
     "screen_library_no_result_sub": "No works found matching {{search_term}}",
     "screen_library_browse_works_button": "Browse Works",
@@ -499,9 +499,9 @@
     "component_empty_for_range_sub": "Try selecting different dates",
 
     "component_history_header_count_filtered": "{{totalCount}} entry in selected date range",
-    "component_history_header_count": "{{totalCount}} total entry",
+    "component_history_header_count": "{{totalCount}} entry",
     "component_history_header_count_filtered_plural": "{{totalCount}} entries in selected date range",
-    "component_history_header_count_plural": "{{totalCount}} total entries",
+    "component_history_header_count_plural": "{{totalCount}} entries",
     "component_history_header_clear_filter": "Clear Filter",
     "component_history_header_clear_history": "Clear",
 

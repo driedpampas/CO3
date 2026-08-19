@@ -23,9 +23,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "org.eu.nl.syu.to3"
+    namespace "org.eu.nl.syu.tales"
     defaultConfig {
-        applicationId "org.eu.nl.syu.to3"
+        applicationId "org.eu.nl.syu.tales"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 20

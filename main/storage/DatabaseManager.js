@@ -292,7 +292,7 @@ export async function exportDb(db) {
             const exportFileName = 'Tales-DatabaseManager-Export.db';
 
             const dbPath = Platform.select({
-                android: `/data/data/org.eu.nl.syu.to3/databases/${dbFileName}`,
+                android: `/data/data/org.eu.nl.syu.tales/databases/${dbFileName}`,
                 ios: `${RNFS.LibraryDirectoryPath}/LocalDatabase/${dbFileName}`,
             });
 

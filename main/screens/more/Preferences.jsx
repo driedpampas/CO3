@@ -4,11 +4,12 @@ import { keepLocalCopy, pick } from '@react-native-documents/picker';
 import { useNavigation } from '@react-navigation/native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { WebView } from 'react-native-webview';
 import CustomDropdown from '../../components/common/CustomDropdown';
+import Material3Switch from '../../components/common/Material3Switch';
 import {
     DOWNLOAD_WHILE_READING,
     getJsonSettings,
@@ -454,32 +455,21 @@ const PreferencesScreen = ({ route }) => {
                         />
                     </View>
 
-                    <View
-                        style={[styles.settingItem, { borderBottomColor: activeTheme.borderColor }]}
-                    >
+                    <View style={styles.settingItem}>
                         <View style={styles.switchContainer}>
                             <Text style={[{ color: activeTheme.textColor }, styles.settingText]}>
                                 {t('screen_preferences_setting_custom_size')}
                             </Text>
-                            <Switch
+                            <Material3Switch
                                 value={useCustomSize}
                                 onValueChange={toggleCustomSize}
-                                thumbColor={useCustomSize ? activeTheme.primaryColor : '#f4f3f4'}
-                                trackColor={{
-                                    false: '#767577',
-                                    true: `${activeTheme.primaryColor}40`,
-                                }}
+                                theme={activeTheme}
                             />
                         </View>
                     </View>
 
                     {useCustomSize && (
-                        <View
-                            style={[
-                                styles.settingItem,
-                                { borderBottomColor: activeTheme.borderColor },
-                            ]}
-                        >
+                        <View style={styles.settingItem}>
                             <Text style={[{ color: activeTheme.textColor }, styles.settingText]}>
                                 {t('screen_preferences_font_size_text', {
                                     size: fontSize.toFixed(1),
@@ -504,32 +494,21 @@ const PreferencesScreen = ({ route }) => {
                         </View>
                     )}
 
-                    <View
-                        style={[styles.settingItem, { borderBottomColor: activeTheme.borderColor }]}
-                    >
+                    <View style={styles.settingItem}>
                         <View style={styles.switchContainer}>
                             <Text style={[{ color: activeTheme.textColor }, styles.settingText]}>
                                 {t('screen_preferences_setting_custom_font')}
                             </Text>
-                            <Switch
+                            <Material3Switch
                                 value={useCustomFont}
                                 onValueChange={toggleCustomFont}
-                                thumbColor={useCustomFont ? activeTheme.primaryColor : '#f4f3f4'}
-                                trackColor={{
-                                    false: '#767577',
-                                    true: `${activeTheme.primaryColor}40`,
-                                }}
+                                theme={activeTheme}
                             />
                         </View>
                     </View>
 
                     {useCustomFont && (
-                        <View
-                            style={[
-                                styles.settingItem,
-                                { borderBottomColor: activeTheme.borderColor },
-                            ]}
-                        >
+                        <View style={styles.settingItem}>
                             <TouchableOpacity
                                 style={[
                                     styles.viewModeSelectButton,
@@ -561,43 +540,27 @@ const PreferencesScreen = ({ route }) => {
                         </View>
                     )}
 
-                    <View
-                        style={[styles.settingItem, { borderBottomColor: activeTheme.borderColor }]}
-                    >
+                    <View style={styles.settingItem}>
                         <View style={styles.switchContainer}>
                             <Text style={[{ color: activeTheme.textColor }, styles.settingText]}>
                                 {t('screen_preferences_setting_show_date')}
                             </Text>
-                            <Switch
+                            <Material3Switch
                                 value={showChapterDate}
                                 onValueChange={handleShowChapterDate}
-                                thumbColor={showChapterDate ? activeTheme.primaryColor : '#f4f3f4'}
-                                trackColor={{
-                                    false: '#767577',
-                                    true: `${activeTheme.primaryColor}40`,
-                                }}
+                                theme={activeTheme}
                             />
                         </View>
                     </View>
-                    <View
-                        style={[
-                            styles.settingItem,
-                            { borderBottomColor: activeTheme.borderColor },
-                            { borderBottomWidth: 0 },
-                        ]}
-                    >
+                    <View style={styles.settingItem}>
                         <View style={[styles.switchContainer]}>
                             <Text style={[{ color: activeTheme.textColor }, styles.settingText]}>
                                 {t('screen_preferences_setting_allow_text_select')}
                             </Text>
-                            <Switch
+                            <Material3Switch
                                 value={allowSelect}
                                 onValueChange={handleAllowSelect}
-                                thumbColor={allowSelect ? activeTheme.primaryColor : '#f4f3f4'}
-                                trackColor={{
-                                    false: '#767577',
-                                    true: `${activeTheme.primaryColor}40`,
-                                }}
+                                theme={activeTheme}
                             />
                         </View>
                     </View>
@@ -612,9 +575,7 @@ const PreferencesScreen = ({ route }) => {
                         </Text>
                     </View>
 
-                    <View
-                        style={[styles.settingItem, { borderBottomColor: activeTheme.borderColor }]}
-                    >
+                    <View style={styles.settingItem}>
                         <Text style={[{ color: activeTheme.textColor }, styles.settingText]}>
                             {t('screen_preferences_label_theme')}
                         </Text>
@@ -645,7 +606,7 @@ const PreferencesScreen = ({ route }) => {
                         </View>
                     </View>
 
-                    <View style={[styles.settingItem, { borderBottomWidth: 0 }]}>
+                    <View style={styles.settingItem}>
                         <Text style={[{ color: activeTheme.textColor }, styles.settingText]}>
                             {t('screen_preferences_label_view_mode')}
                         </Text>
@@ -676,62 +637,40 @@ const PreferencesScreen = ({ route }) => {
                         </View>
                     </View>
 
-                    <View
-                        style={[styles.settingItem, { borderBottomColor: activeTheme.borderColor }]}
-                    >
+                    <View style={styles.settingItem}>
                         <View style={styles.switchContainer}>
                             <Text style={[{ color: activeTheme.textColor }, styles.settingText]}>
                                 {t('screen_preferences_setting_show_full_desc')}
                             </Text>
-                            <Switch
+                            <Material3Switch
                                 value={preferDesc}
                                 onValueChange={handlePreferDesc}
-                                thumbColor={preferDesc ? activeTheme.primaryColor : '#f4f3f4'}
-                                trackColor={{
-                                    false: '#767577',
-                                    true: `${activeTheme.primaryColor}40`,
-                                }}
+                                theme={activeTheme}
                             />
                         </View>
                     </View>
 
-                    <View
-                        style={[styles.settingItem, { borderBottomColor: activeTheme.borderColor }]}
-                    >
+                    <View style={styles.settingItem}>
                         <View style={styles.switchContainer}>
                             <Text style={[{ color: activeTheme.textColor }, styles.settingText]}>
                                 {t('screen_preferences_setting_prefer_html')}
                             </Text>
-                            <Switch
+                            <Material3Switch
                                 value={preferHtml}
                                 onValueChange={handlePreferHtml}
-                                thumbColor={preferHtml ? activeTheme.primaryColor : '#f4f3f4'}
-                                trackColor={{
-                                    false: '#767577',
-                                    true: `${activeTheme.primaryColor}40`,
-                                }}
+                                theme={activeTheme}
                             />
                         </View>
                     </View>
-                    <View
-                        style={[
-                            styles.settingItem,
-                            { borderBottomColor: activeTheme.borderColor },
-                            { borderBottomWidth: 0 },
-                        ]}
-                    >
+                    <View style={styles.settingItem}>
                         <View style={styles.switchContainer}>
                             <Text style={[{ color: activeTheme.textColor }, styles.settingText]}>
                                 {t('screen_preferences_setting_show_status_badge')}
                             </Text>
-                            <Switch
+                            <Material3Switch
                                 value={showStatusBadge}
                                 onValueChange={handleShowStatusBadge}
-                                thumbColor={showStatusBadge ? activeTheme.primaryColor : '#f4f3f4'}
-                                trackColor={{
-                                    false: '#767577',
-                                    true: `${activeTheme.primaryColor}40`,
-                                }}
+                                theme={activeTheme}
                             />
                         </View>
                     </View>
@@ -746,30 +685,20 @@ const PreferencesScreen = ({ route }) => {
                         </Text>
                     </View>
 
-                    <View
-                        style={[styles.settingItem, { borderBottomColor: activeTheme.borderColor }]}
-                    >
+                    <View style={styles.settingItem}>
                         <View style={styles.switchContainer}>
                             <Text style={[{ color: activeTheme.textColor }, styles.settingText]}>
                                 {t('screen_preferences_setting_compact_notifications')}
                             </Text>
-                            <Switch
+                            <Material3Switch
                                 value={compactNotifications}
                                 onValueChange={handleCompactNotifications}
-                                thumbColor={
-                                    compactNotifications ? activeTheme.primaryColor : '#f4f3f4'
-                                }
-                                trackColor={{
-                                    false: '#767577',
-                                    true: `${activeTheme.primaryColor}40`,
-                                }}
+                                theme={activeTheme}
                             />
                         </View>
                     </View>
 
-                    <View
-                        style={[styles.settingItem, { borderBottomColor: activeTheme.borderColor }]}
-                    >
+                    <View style={styles.settingItem}>
                         <Text style={[{ color: activeTheme.textColor }, styles.settingText]}>
                             {t('screen_preferences_label_check_frequency')}
                         </Text>
@@ -789,27 +718,19 @@ const PreferencesScreen = ({ route }) => {
                         </CustomDropdown>
                     </View>
 
-                    <View
-                        style={[styles.settingItem, { borderBottomColor: activeTheme.borderColor }]}
-                    >
+                    <View style={styles.settingItem}>
                         <View style={styles.switchContainer}>
                             <Text style={[{ color: activeTheme.textColor }, styles.settingText]}>
                                 {t('screen_preferences_setting_sync_bookmarks')}
                             </Text>
-                            <Switch
+                            <Material3Switch
                                 value={syncBookmarksToLibrary}
                                 onValueChange={handleSyncBookmarksToLibrary}
-                                thumbColor={
-                                    syncBookmarksToLibrary ? activeTheme.primaryColor : '#f4f3f4'
-                                }
-                                trackColor={{
-                                    false: '#767577',
-                                    true: `${activeTheme.primaryColor}40`,
-                                }}
+                                theme={activeTheme}
                             />
                         </View>
                         {syncBookmarksToLibrary && (
-                            <View style={[styles.settingItem, { borderBottomWidth: 0 }]}>
+                            <View style={[styles.settingItem, { marginTop: 8 }]}>
                                 <Text
                                     style={[{ color: activeTheme.textColor }, styles.settingText]}
                                 >
@@ -833,7 +754,7 @@ const PreferencesScreen = ({ route }) => {
                         )}
                     </View>
 
-                    <View style={[styles.settingItem, { borderBottomWidth: 0 }]}>
+                    <View style={styles.settingItem}>
                         <Text style={[{ color: activeTheme.textColor }, styles.settingText]}>
                             {t('screen_preferences_label_network_restriction')}
                         </Text>
@@ -854,6 +775,7 @@ const PreferencesScreen = ({ route }) => {
                     </View>
                 </View>
 
+                {/* DOWNLOAD SETTINGS */}
                 <View style={[styles.section, { borderBottomWidth: 0 }]}>
                     <View style={styles.sectionHeader}>
                         <Icon name="download" size={20} color={activeTheme.iconColor} />
@@ -862,25 +784,19 @@ const PreferencesScreen = ({ route }) => {
                         </Text>
                     </View>
 
-                    <View
-                        style={[styles.settingItem, { borderBottomColor: activeTheme.borderColor }]}
-                    >
+                    <View style={styles.settingItem}>
                         <View style={styles.switchContainer}>
                             <Text style={[{ color: activeTheme.textColor }, styles.settingText]}>
                                 {t('screen_preferences_setting_download_update')}
                             </Text>
-                            <Switch
+                            <Material3Switch
                                 value={downloadOnUpdate}
                                 onValueChange={handleDownloadOnUpdateChange}
-                                thumbColor={downloadOnUpdate ? activeTheme.primaryColor : '#f4f3f4'}
-                                trackColor={{
-                                    false: '#767577',
-                                    true: `${activeTheme.primaryColor}40`,
-                                }}
+                                theme={activeTheme}
                             />
                         </View>
                     </View>
-                    <View style={[styles.settingItem, { borderBottomWidth: 0 }]}>
+                    <View style={styles.settingItem}>
                         <Text style={[{ color: activeTheme.textColor }, styles.settingText]}>
                             {t('screen_preferences_label_download_while_reading')}
                         </Text>
@@ -901,8 +817,14 @@ const PreferencesScreen = ({ route }) => {
                     </View>
                 </View>
 
-                {/* RESTART ONBOARDING */}
+                {/* ADVANCED / RESTART ONBOARDING */}
                 <View style={[styles.section, { borderBottomWidth: 0, marginBottom: 8 }]}>
+                    <View style={styles.sectionHeader}>
+                        <Icon name="build" size={20} color={activeTheme.iconColor} />
+                        <Text style={[{ color: activeTheme.textColor }, styles.sectionTitle]}>
+                            Advanced
+                        </Text>
+                    </View>
                     <TouchableOpacity
                         style={[
                             styles.restartButton,
@@ -954,36 +876,36 @@ const styles = StyleSheet.create({
     },
     content: {
         flex: 1,
-        padding: 20,
+        padding: 16,
     },
     section: {
-        marginBottom: 24,
-        paddingBottom: 24,
-        borderBottomWidth: 1,
+        marginBottom: 16,
+        paddingBottom: 8,
+        borderBottomWidth: 0,
     },
     sectionHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 16,
+        marginBottom: 10,
     },
     sectionTitle: {
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: '600',
-        marginLeft: 12,
+        marginLeft: 10,
     },
     previewContainer: {
         borderRadius: 8,
-        marginBottom: 20,
+        marginBottom: 16,
         overflow: 'hidden',
         borderWidth: 1,
     },
     settingItem: {
-        paddingVertical: 16,
-        borderBottomWidth: 1,
+        paddingVertical: 8,
+        borderBottomWidth: 0,
     },
     settingText: {
-        fontSize: 16,
-        marginBottom: 12,
+        fontSize: 15,
+        marginBottom: 4,
     },
     switchContainer: {
         flexDirection: 'row',

@@ -1,4 +1,4 @@
-package org.eu.nl.syu.to3
+package org.eu.nl.syu.tales
 
 import com.facebook.react.ReactPackage
 import com.facebook.react.bridge.NativeModule

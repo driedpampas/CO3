@@ -215,6 +215,51 @@ export default function ReadLaterScreen({ route }) {
     };
 
     const renderError = () => {
+        if (error?.isAuth || error?.message === t('screen_bookmarks_error_not_logged_in')) {
+            return (
+                <View
+                    style={[
+                        styles.centerContainer,
+                        { backgroundColor: currentTheme.backgroundColor },
+                    ]}
+                >
+                    <Icon name="account-circle" size={72} color={currentTheme.placeholderColor} />
+                    <Text
+                        style={[
+                            styles.emptyTitle,
+                            { color: currentTheme.textColor, marginTop: 16, marginBottom: 8 },
+                        ]}
+                    >
+                        {t('screen_login_title') || 'Log In Required'}
+                    </Text>
+                    <Text
+                        style={[
+                            styles.emptySubtitle,
+                            {
+                                color: currentTheme.secondaryTextColor,
+                                textAlign: 'center',
+                                marginBottom: 20,
+                                paddingHorizontal: 32,
+                            },
+                        ]}
+                    >
+                        {t('screen_bookmarks_error_not_logged_in')}
+                    </Text>
+                    <TouchableOpacity
+                        style={[
+                            styles.primaryButton,
+                            { backgroundColor: currentTheme.primaryColor },
+                        ]}
+                        onPress={() => navigation.push('Account', { currentTheme, setScreens })}
+                    >
+                        <Text style={styles.primaryButtonText}>
+                            {t('screen_login_title') || 'Log In'}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+            );
+        }
+
         return (
             <View
                 style={[styles.centerContainer, { backgroundColor: currentTheme.backgroundColor }]}
@@ -232,7 +277,7 @@ export default function ReadLaterScreen({ route }) {
                         {t('screen_read_later_error')}
                     </Text>
                     <Text style={[styles.errorMessage, { color: currentTheme.secondaryTextColor }]}>
-                        {error.message}
+                        {error?.message}
                     </Text>
                     <TouchableOpacity
                         style={[styles.retryButton, { backgroundColor: currentTheme.primaryColor }]}
@@ -354,6 +399,24 @@ const styles = StyleSheet.create({
         fontSize: 14,
         textAlign: 'center',
         marginBottom: 8,
+    },
+    emptyTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+    },
+    emptySubtitle: {
+        fontSize: 15,
+    },
+    primaryButton: {
+        paddingHorizontal: 28,
+        paddingVertical: 12,
+        borderRadius: 8,
+        marginTop: 8,
+    },
+    primaryButtonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '600',
     },
     retryButton: {
         paddingHorizontal: 20,

@@ -4,17 +4,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import RuleEditModal from '../../components/WordReplacer/RuleEditModal';
-
 const STORAGE_KEY = 'WordReplaceRules';
 
 export default function WordReplacer({ route }) {
     const { currentTheme } = route.params;
 
     const [rules, setRules] = useState([]);
-    const [modalVisible, setModalVisible] = useState(false);
-    const [editingRule, setEditingRule] = useState(null);
 
     const { t } = useTranslation();
     const navigation = useNavigation();
@@ -52,6 +47,14 @@ export default function WordReplacer({ route }) {
         return testTitle;
     }
 
+    function startEditing(rule) {
+        navigation.push('RuleEditor', {
+            rule: rule,
+            currentTheme: currentTheme,
+            onSave: updatedRule => saveRule(updatedRule, rule),
+        });
+    }
+
     async function addRule() {
         const newRule = {
             title: findValidTitle(),
@@ -60,48 +63,24 @@ export default function WordReplacer({ route }) {
             caseSensitive: false,
             useRegex: false,
         };
-        const updated = [...rules, newRule];
-        setRules(updated);
-        await saveRules(updated);
+        navigation.push('RuleEditor', {
+            rule: newRule,
+            currentTheme: currentTheme,
+            onSave: createdRule => {
+                setRules(prev => {
+                    const updated = [...prev, createdRule];
+                    saveRules(updated);
+                    return updated;
+                });
+            },
+        });
     }
 
-    function showDeleteConfirmation(rule) {
-        Alert.alert(
-            t('screen_word_replacer_delete_title'),
-            t('screen_word_replacer_delete_message', { rule: rule.title }),
-            [
-                { text: t('general_cancel'), onPress: () => {}, style: 'cancel' },
-                {
-                    text: t('general_delete'),
-                    onPress: () => removeRule(rule),
-                    style: 'destructive',
-                },
-            ],
-            { cancelable: false },
-        );
-    }
-
-    async function removeRule(removedRule) {
-        const updated = rules.filter(rule => rule !== removedRule);
-        setRules(updated);
-        await saveRules(updated);
-    }
-
-    function startEditing(rule) {
-        setEditingRule(rule);
-        setModalVisible(true);
-    }
-
-    function closeModal() {
-        setModalVisible(false);
-        setEditingRule(null);
-    }
-
-    async function saveRule(updatedRule) {
-        const trimmedTitle = updatedRule.title.trim() || editingRule.title;
+    async function saveRule(updatedRule, targetRule) {
+        const trimmedTitle = updatedRule.title.trim() || targetRule.title;
 
         const isDuplicate = rules.some(
-            rule => rule !== editingRule && rule.title.toLowerCase() === trimmedTitle.toLowerCase(),
+            rule => rule !== targetRule && rule.title.toLowerCase() === trimmedTitle.toLowerCase(),
         );
 
         if (isDuplicate) {
@@ -116,11 +95,10 @@ export default function WordReplacer({ route }) {
         }
 
         const finalRule = { ...updatedRule, title: trimmedTitle };
-        const updated = rules.map(rule => (rule === editingRule ? finalRule : rule));
+        const updated = rules.map(rule => (rule === targetRule ? finalRule : rule));
 
         setRules(updated);
         await saveRules(updated);
-        closeModal();
     }
 
     function onBack() {
@@ -263,14 +241,6 @@ export default function WordReplacer({ route }) {
                     <Text style={styles.addButtonText}>{t('screen_word_replacer_new_rule')}</Text>
                 </TouchableOpacity>
             </View>
-
-            <RuleEditModal
-                visible={modalVisible}
-                currentTheme={currentTheme}
-                rule={editingRule}
-                onClose={closeModal}
-                onSave={saveRule}
-            />
         </SafeAreaView>
     );
 }

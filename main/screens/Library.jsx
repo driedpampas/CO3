@@ -482,11 +482,20 @@ const LibraryScreen = ({
                     <TouchableOpacity
                         style={[
                             styles.addFirstButton,
-                            { backgroundColor: currentTheme.primaryColor },
+                            {
+                                borderColor: currentTheme.primaryColor,
+                                backgroundColor: 'transparent',
+                                borderWidth: 1,
+                            },
                         ]}
                         onPress={handleGoToBrowse}
                     >
-                        <Text style={styles.addFirstButtonText}>
+                        <Text
+                            style={[
+                                styles.addFirstButtonText,
+                                { color: currentTheme.primaryColor },
+                            ]}
+                        >
                             {t('screen_library_browse_works_button')}
                         </Text>
                     </TouchableOpacity>
@@ -633,7 +642,10 @@ const LibraryScreen = ({
                 data={works}
                 renderItem={renderItem}
                 keyExtractor={item => item.work.id}
-                contentContainerStyle={styles.contentContainer}
+                contentContainerStyle={[
+                    styles.contentContainer,
+                    works.length === 0 && styles.emptyContentContainer,
+                ]}
                 ListHeaderComponent={renderHeader}
                 ListFooterComponent={renderFooter}
                 ListEmptyComponent={renderEmpty}
@@ -674,6 +686,10 @@ const styles = StyleSheet.create({
     contentContainer: {
         padding: 10,
         paddingBottom: 70,
+    },
+    emptyContentContainer: {
+        flexGrow: 1,
+        justifyContent: 'center',
     },
     headerContainer: {
         marginBottom: 8,

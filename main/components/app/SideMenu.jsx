@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { co3Version } from '../../constant';
+import Material3Switch from '../common/Material3Switch';
 
 const SideMenu = ({
     isOpen,
@@ -119,15 +120,6 @@ const SideMenu = ({
             </TouchableOpacity>
         );
     };
-
-    const getSwitchColors = () => {
-        return {
-            thumbColor: localIncognito ? currentTheme.primaryColor : '#f4f3f4',
-            trackColor: { false: currentTheme.borderColor, true: `${currentTheme.primaryColor}80` },
-        };
-    };
-
-    const switchColors = getSwitchColors();
 
     return (
         <Modal visible={isOpen} transparent={true} animationType="slide" onRequestClose={onClose}>
@@ -274,47 +266,16 @@ const SideMenu = ({
                                             {t('component_side_menu_incognito_switch')}
                                         </Text>
                                     </View>
-                                    <Switch
+                                    <Material3Switch
                                         value={localIncognito}
                                         onValueChange={handleIncognitoToggle}
-                                        thumbColor={switchColors.thumbColor}
-                                        trackColor={switchColors.trackColor}
-                                        ios_backgroundColor={switchColors.trackColor.false}
+                                        theme={currentTheme}
                                     />
                                 </View>
                             </View>
                         </ScrollView>
 
                         <View style={[styles.footer, { borderTopColor: currentTheme.borderColor }]}>
-                            <View style={styles.supportSection}>
-                                <Text
-                                    style={[styles.sectionTitle, { color: currentTheme.textColor }]}
-                                >
-                                    {t('component_side_menu_support')}
-                                </Text>
-                                <View style={styles.supportContainer}>
-                                    <TouchableOpacity
-                                        style={[
-                                            styles.supportButton,
-                                            { backgroundColor: '#22c55e' },
-                                        ]}
-                                        onPress={() =>
-                                            Linking.openURL('https://archiveofourown.org/donate')
-                                        }
-                                    >
-                                        <Text style={styles.supportButtonText}>AO3</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        style={[
-                                            styles.supportButton,
-                                            { backgroundColor: '#6366f1' },
-                                        ]}
-                                        onPress={() => Linking.openURL('https://ko-fi.com/tbvns')}
-                                    >
-                                        <Text style={styles.supportButtonText}>Tales</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
                             <Text
                                 style={[styles.version, { color: currentTheme.secondaryTextColor }]}
                             >

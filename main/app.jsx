@@ -78,6 +78,7 @@ import StatsScreen from './screens/more/StatsScreen';
 import StorageScreen from './screens/more/StorageScreen';
 import UserWorkScreen from './screens/more/UserWorkScreen';
 import WordReplacer from './screens/more/WordReplacer';
+import RuleEditorScreen from './screens/more/RuleEditorScreen';
 import UserInfoScreen from './screens/UserInfo';
 
 export const AppContext = createContext();
@@ -297,6 +298,10 @@ const AppWrapper = () => {
                                     <Stack.Screen name={'Bookmarks'} component={BookmarksScreen} />
                                     <Stack.Screen name={'About'} component={AboutScreen} />
                                     <Stack.Screen name={'WordReplacer'} component={WordReplacer} />
+                                    <Stack.Screen
+                                        name={'RuleEditor'}
+                                        component={RuleEditorScreen}
+                                    />
                                 </Stack.Navigator>
                             </NavigationContainer>
                         </SafeAreaProvider>
@@ -360,13 +365,6 @@ const TopBar = ({
                     </Text>
                 </View>
             )}
-
-            <TouchableOpacity
-                style={[styles.menuButton, { backgroundColor: currentTheme.buttonBackground }]}
-                onPress={() => setIsSideMenuOpen(true)}
-            >
-                <Icon name="menu" size={24} color={currentTheme.iconColor} />
-            </TouchableOpacity>
         </View>
     );
 };

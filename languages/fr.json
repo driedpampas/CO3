@@ -57,7 +57,7 @@
     "screen_library_subtitle_match_filter": " correspondant à {{query}}",
     "screen_library_end": "Pas d'œuvre supplémentaire à charger",
     "screen_library_empty": "Votre bibliothèque est vide",
-    "screen_library_empty_sub": "Votre bibliothèque est vide",
+    "screen_library_empty_sub": "Les œuvres ajoutées à votre bibliothèque apparaîtront ici",
     "screen_library_no_result": "Aucune correspondance",
     "screen_library_no_result_sub": "Aucune œuvre en correspondance avec {{search_term}}",
     "screen_library_browse_works_button": "Parcourir les œuvres",
@@ -497,9 +497,9 @@
     "component_empty_for_range_sub": "Essayer de sélectionner des dates différentes",
 
     "component_history_header_count_filtered": "{{totalCount}} entrée pour cette période",
-    "component_history_header_count": "{{totalCount}} entrée au total",
+    "component_history_header_count": "{{totalCount}} entrée",
     "component_history_header_count_filtered_plural": "{{totalCount}} entrées pour cette période",
-    "component_history_header_count_plural": "{{totalCount}} entrées au total",
+    "component_history_header_count_plural": "{{totalCount}} entrées",
     "component_history_header_clear_filter": "Rénitialiser",
     "component_history_header_clear_history": "Vider",
 

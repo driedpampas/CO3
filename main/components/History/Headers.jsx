@@ -17,18 +17,18 @@ const HistoryHeader = ({
         <View style={styles.header}>
             <Text style={[styles.subtitle, { color: currentTheme.secondaryTextColor }]}>
                 {isFilterActive
-                    ? totalCount > 1
-                        ? t('component_history_header_count_filtered_plural', {
+                    ? totalCount === 1
+                        ? t('component_history_header_count_filtered', {
                               totalCount: totalCount,
                           })
-                        : t('component_history_header_count_filtered', {
+                        : t('component_history_header_count_filtered_plural', {
                               totalCount: totalCount,
                           })
-                    : totalCount > 1
-                      ? t('component_history_header_count_plural', {
+                    : totalCount === 1
+                      ? t('component_history_header_count', { totalCount: totalCount })
+                      : t('component_history_header_count_plural', {
                             totalCount: totalCount,
-                        })
-                      : t('component_history_header_count', { totalCount: totalCount })}
+                        })}
             </Text>
 
             <View style={styles.headerButtons}>

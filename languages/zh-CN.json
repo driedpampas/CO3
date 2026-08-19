@@ -57,7 +57,7 @@
     "screen_library_subtitle_match_filter": "匹配 {{query}}",
     "screen_library_end": "没有更多作品可加载",
     "screen_library_empty": "你的文库为空",
-    "screen_library_empty_sub": "你的文库为空",
+    "screen_library_empty_sub": "添加到文库的作品将显示在这里",
     "screen_library_no_result": "未找到匹配结果",
     "screen_library_no_result_sub": "未找到匹配 {{search_term}} 的作品",
     "screen_library_browse_works_button": "浏览作品",
@@ -497,9 +497,9 @@
     "component_empty_for_range_sub": "尝试选择不同的日期",
 
     "component_history_header_count_filtered": "所选日期范围内有 {{totalCount}} 条记录",
-    "component_history_header_count": "共 {{totalCount}} 条记录",
+    "component_history_header_count": "{{totalCount}} 条记录",
     "component_history_header_count_filtered_plural": "所选日期范围内有 {{totalCount}} 条记录",
-    "component_history_header_count_plural": "共 {{totalCount}} 条记录",
+    "component_history_header_count_plural": "{{totalCount}} 条记录",
     "component_history_header_clear_filter": "清除筛选",
     "component_history_header_clear_history": "清除",
 
