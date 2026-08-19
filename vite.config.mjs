@@ -15,14 +15,19 @@ function transformJsxInJsPlugin() {
             const cleanId = id.split('?')[0];
             if (
                 cleanId.endsWith('.js') &&
+                !cleanId.includes('.vite/deps') &&
                 (cleanId.includes('react-native') ||
                     cleanId.includes('web-mocks') ||
                     code.includes('</') ||
-                    code.includes('/>'))
+                    code.includes('/>') ||
+                    code.includes('@flow'))
             ) {
                 const result = babel.transformSync(code, {
                     filename: cleanId,
+                    configFile: false,
+                    babelrc: false,
                     presets: ['@babel/preset-react'],
+                    plugins: ['@babel/plugin-transform-flow-strip-types'],
                     sourceMaps: true,
                 });
                 return result ? { code: result.code, map: result.map } : null;
@@ -34,48 +39,184 @@ function transformJsxInJsPlugin() {
 export default defineConfig({
     base: './',
     plugins: [transformJsxInJsPlugin(), react()],
+    esbuild: {
+        loader: 'jsx',
+        include: /.*\.[tj]sx?$/,
+        exclude: [],
+    },
+    optimizeDeps: {
+        include: [
+            '@react-native/normalize-colors',
+            'react-native-web',
+            'react',
+            'react-dom',
+            'prop-types',
+            'hoist-non-react-statics',
+            'lodash',
+            'invariant',
+            'nullthrows',
+            'scheduler',
+            'react-is',
+            'setimmediate',
+            'buffer',
+            'jszip',
+            'ky',
+            'fast-html-parser',
+            'htmlparser2',
+            'entities',
+            'domhandler',
+            'react-i18next',
+        ],
+        exclude: [
+            'react-native',
+            'react-native-vector-icons',
+            'react-native-progress',
+            'react-native-portalize',
+            'react-native-device-info',
+            'react-native-restart',
+            'react-native-super-grid',
+            'react-native-html-parser',
+            'react-native-render-html',
+            'react-native-toast-message',
+            'react-native-calendars',
+            'react-native-svg',
+            'react-native-reanimated',
+            'react-native-worklets',
+            '@native-html/transient-render-engine',
+            '@expo/vector-icons',
+            '@react-navigation/bottom-tabs',
+            '@react-navigation/native',
+            '@react-navigation/native-stack',
+            '@react-navigation/elements',
+            '@react-navigation/core',
+            'react-native-fs',
+            '@react-native-documents/picker',
+            'react-native-notify-kit',
+            'react-native-sqlite-storage',
+            'react-native-webview',
+            'react-native-gesture-handler',
+            'react-native-screens',
+            '@react-native-community/slider',
+            'react-native-keychain',
+            'react-native-background-actions',
+            'react-native-system-navigation-bar',
+            '@react-native-cookies/cookies',
+            '@react-native-picker/picker',
+            '@react-native-async-storage/async-storage',
+            'react-native-linear-gradient',
+            'react-native-inappbrowser-reborn',
+        ],
+    },
     resolve: {
-        alias: {
-            'react-native': 'react-native-web',
-            'react-native-fs': path.resolve(__dirname, 'web-mocks/react-native-fs.js'),
-            '@react-native-documents/picker': path.resolve(__dirname, 'web-mocks/picker.js'),
-            'react-native-notify-kit': path.resolve(__dirname, 'web-mocks/notifee.js'),
-            'react-native-sqlite-storage': path.resolve(__dirname, 'web-mocks/sqlite.js'),
-            'react-native-webview': path.resolve(__dirname, 'web-mocks/webview.js'),
-            'react-native-gesture-handler': path.resolve(
-                __dirname,
-                'web-mocks/gesture-handler.js',
-            ),
-            'react-native-screens': path.resolve(__dirname, 'web-mocks/screens.js'),
-            '@react-native-community/slider': path.resolve(__dirname, 'web-mocks/slider.js'),
-            'react-native-keychain': path.resolve(__dirname, 'web-mocks/keychain.js'),
-            'react-native-background-actions': path.resolve(
-                __dirname,
-                'web-mocks/background-actions.js',
-            ),
-            'react-native-system-navigation-bar': path.resolve(
-                __dirname,
-                'web-mocks/navigation-bar.js',
-            ),
-            '@react-native-cookies/cookies': path.resolve(__dirname, 'web-mocks/cookies.js'),
-            '@react-native-picker/picker': path.resolve(__dirname, 'web-mocks/rn-picker.js'),
-            '@react-native-async-storage/async-storage': path.resolve(
-                __dirname,
-                'web-mocks/async-storage.js',
-            ),
-            'react-native-safe-area-context': path.resolve(
-                __dirname,
-                'web-mocks/safe-area-context.js',
-            ),
-            'react-native-linear-gradient': path.resolve(
-                __dirname,
-                'web-mocks/linear-gradient.js',
-            ),
-            'react-native-inappbrowser-reborn': path.resolve(
-                __dirname,
-                'web-mocks/inappbrowser.js',
-            ),
-        },
+        alias: [
+            {
+                find: 'react-native-vector-icons/MaterialIcons',
+                replacement: path.resolve(
+                    __dirname,
+                    'web-mocks/rn-vector-icons-MaterialIcons.jsx',
+                ),
+            },
+            {
+                find: 'react-native-vector-icons/MaterialCommunityIcons',
+                replacement: path.resolve(
+                    __dirname,
+                    'web-mocks/rn-vector-icons-MaterialCommunityIcons.jsx',
+                ),
+            },
+            { find: 'react-native', replacement: 'react-native-web' },
+            {
+                find: 'react-native-fs',
+                replacement: path.resolve(
+                    __dirname,
+                    'web-mocks/react-native-fs.js',
+                ),
+            },
+            {
+                find: '@react-native-documents/picker',
+                replacement: path.resolve(__dirname, 'web-mocks/picker.js'),
+            },
+            {
+                find: 'react-native-notify-kit',
+                replacement: path.resolve(__dirname, 'web-mocks/notifee.js'),
+            },
+            {
+                find: 'react-native-sqlite-storage',
+                replacement: path.resolve(__dirname, 'web-mocks/sqlite.js'),
+            },
+            {
+                find: 'react-native-webview',
+                replacement: path.resolve(__dirname, 'web-mocks/webview.jsx'),
+            },
+            {
+                find: 'react-native-gesture-handler',
+                replacement: path.resolve(
+                    __dirname,
+                    'web-mocks/gesture-handler.jsx',
+                ),
+            },
+            {
+                find: 'react-native-screens',
+                replacement: path.resolve(__dirname, 'web-mocks/screens.jsx'),
+            },
+            {
+                find: '@react-native-community/slider',
+                replacement: path.resolve(__dirname, 'web-mocks/slider.jsx'),
+            },
+            {
+                find: 'react-native-keychain',
+                replacement: path.resolve(__dirname, 'web-mocks/keychain.js'),
+            },
+            {
+                find: 'react-native-background-actions',
+                replacement: path.resolve(
+                    __dirname,
+                    'web-mocks/background-actions.js',
+                ),
+            },
+            {
+                find: 'react-native-system-navigation-bar',
+                replacement: path.resolve(
+                    __dirname,
+                    'web-mocks/navigation-bar.js',
+                ),
+            },
+            {
+                find: '@react-native-cookies/cookies',
+                replacement: path.resolve(__dirname, 'web-mocks/cookies.js'),
+            },
+            {
+                find: '@react-native-picker/picker',
+                replacement: path.resolve(__dirname, 'web-mocks/rn-picker.jsx'),
+            },
+            {
+                find: '@react-native-async-storage/async-storage',
+                replacement: path.resolve(
+                    __dirname,
+                    'web-mocks/async-storage.js',
+                ),
+            },
+            {
+                find: 'react-native-safe-area-context',
+                replacement: path.resolve(
+                    __dirname,
+                    'web-mocks/safe-area-context.jsx',
+                ),
+            },
+            {
+                find: 'react-native-linear-gradient',
+                replacement: path.resolve(
+                    __dirname,
+                    'web-mocks/linear-gradient.jsx',
+                ),
+            },
+            {
+                find: 'react-native-inappbrowser-reborn',
+                replacement: path.resolve(
+                    __dirname,
+                    'web-mocks/inappbrowser.js',
+                ),
+            },
+        ],
         extensions: [
             '.web.tsx',
             '.web.ts',

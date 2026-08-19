@@ -10,4 +10,5 @@ const Slider = ({ value, onValueChange, minimumValue = 0, maximumValue = 1, step
     style={style}
   />
 );
+export { Slider };
 export default Slider;

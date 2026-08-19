@@ -38,4 +38,5 @@ const LinearGradient = ({
   );
 };
 
+export { LinearGradient };
 export default LinearGradient;
