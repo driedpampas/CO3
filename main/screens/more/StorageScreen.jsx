@@ -271,7 +271,7 @@ export default function StorageScreen({ route }) {
         secondaryTextColor: '#525252',
         cardBackground: '#ffffff',
         borderColor: '#e5e5e5',
-        primaryColor: '#7c3aed',
+        primaryColor: '#990001',
         iconColor: '#525252',
         inputBackground: '#ebebeb',
     };

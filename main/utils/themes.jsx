@@ -1,3 +1,18 @@
+export const DEFAULT_THEME_COLOR = '#990001';
+
+export const PRESET_THEME_COLORS = [
+    { name: 'AO3 Red', color: '#990001' },
+    { name: 'Crimson', color: '#e11d48' },
+    { name: 'Orange', color: '#ea580c' },
+    { name: 'Amber', color: '#d97706' },
+    { name: 'Emerald', color: '#16a34a' },
+    { name: 'Teal', color: '#0d9488' },
+    { name: 'Blue', color: '#2563eb' },
+    { name: 'Indigo', color: '#4f46e5' },
+    { name: 'Purple', color: '#7c3aed' },
+    { name: 'Pink', color: '#db2777' },
+];
+
 export const themes = {
     light: {
         name: 'light',
@@ -10,10 +25,10 @@ export const themes = {
         inputBackground: '#f5f5f5',
         buttonBackground: '#f5f5f5',
         borderColor: '#e5e5e5',
-        primaryColor: '#7c3aed',
+        primaryColor: DEFAULT_THEME_COLOR,
         iconColor: '#525252',
-        tagBackground: '#f3e8ff',
-        tagTextColor: '#6d28d9',
+        tagBackground: '#fee2e2',
+        tagTextColor: '#990001',
         warningBackground: '#fee2e2',
         warningTextColor: '#b91c1c',
         warningMessageBackground: '#fef3c7',
@@ -25,7 +40,7 @@ export const themes = {
         tagExcludedTextColor: '#b91c1c',
         statusBadge: {
             clicked: '#f59e0b',
-            started: '#7c3aed',
+            started: DEFAULT_THEME_COLOR,
             finished: '#16a34a',
         },
     },
@@ -40,10 +55,10 @@ export const themes = {
         inputBackground: '#262626',
         buttonBackground: '#282828',
         borderColor: '#333333',
-        primaryColor: '#ea580c',
+        primaryColor: DEFAULT_THEME_COLOR,
         iconColor: '#a3a3a3',
-        tagBackground: '#2b1b12',
-        tagTextColor: '#fdba74',
+        tagBackground: '#2b1414',
+        tagTextColor: '#fca5a5',
         warningBackground: '#3b1414',
         warningTextColor: '#fca5a5',
         warningMessageBackground: '#2e1b0a',
@@ -55,7 +70,7 @@ export const themes = {
         tagExcludedTextColor: '#fca5a5',
         statusBadge: {
             clicked: '#f59e0b',
-            started: '#f97316',
+            started: DEFAULT_THEME_COLOR,
             finished: '#22c55e',
         },
     },
@@ -70,10 +85,10 @@ export const themes = {
         inputBackground: '#161616',
         buttonBackground: '#161616',
         borderColor: '#222222',
-        primaryColor: '#ea580c',
+        primaryColor: DEFAULT_THEME_COLOR,
         iconColor: '#888888',
-        tagBackground: '#221206',
-        tagTextColor: '#fdba74',
+        tagBackground: '#200808',
+        tagTextColor: '#fca5a5',
         warningBackground: '#2a0c0c',
         warningTextColor: '#ffcdd2',
         warningMessageBackground: '#241200',
@@ -85,10 +100,23 @@ export const themes = {
         tagExcludedTextColor: '#ffcdd2',
         statusBadge: {
             clicked: '#f59e0b',
-            started: '#f97316',
+            started: DEFAULT_THEME_COLOR,
             finished: '#22c55e',
         },
     },
 };
 
 themes.white = themes.light;
+
+export function getThemeWithColor(themeName, customColor) {
+    const base = themes[themeName] || themes.light;
+    const color = customColor || base.primaryColor || DEFAULT_THEME_COLOR;
+    return {
+        ...base,
+        primaryColor: color,
+        statusBadge: {
+            ...base.statusBadge,
+            started: color,
+        },
+    };
+}

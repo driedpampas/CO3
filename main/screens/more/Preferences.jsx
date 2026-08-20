@@ -2,13 +2,23 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Slider from '@react-native-community/slider';
 import { keepLocalCopy, pick } from '@react-native-documents/picker';
 import { useNavigation } from '@react-navigation/native';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+    Alert,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { WebView } from 'react-native-webview';
 import CustomDropdown from '../../components/common/CustomDropdown';
+import ColorPickerModal from '../../components/common/ColorPickerModal';
 import Material3Switch from '../../components/common/Material3Switch';
 import {
     DOWNLOAD_WHILE_READING,
@@ -17,11 +27,27 @@ import {
     UPDATE_INTERVALS,
     UPDATE_RESTRICTIONS,
 } from '../../storage/jsonSettings';
+import { AppContext } from '../../app';
 import { availableLanguages, changeLanguage } from '../../storage/LanguageManager';
-import { themes } from '../../utils/themes';
+import {
+    DEFAULT_THEME_COLOR,
+    PRESET_THEME_COLORS,
+    getThemeWithColor,
+    themes,
+} from '../../utils/themes';
 
 const PreferencesScreen = ({ route }) => {
-    const { currentTheme, settingsDAO, setTheme, setViewMode, onRestartOnboarding } = route.params;
+    const context = useContext(AppContext) || {};
+    const currentTheme = route?.params?.currentTheme || context.currentTheme;
+    const settingsDAO = route?.params?.settingsDAO || context.settingsDAO;
+    const setTheme = route?.params?.setTheme || context.setTheme;
+    const setViewMode = route?.params?.setViewMode || context.setViewMode;
+    const setJsonSettings = context.setJsonSettings;
+    const onRestartOnboarding =
+        route?.params?.onRestartOnboarding ||
+        (() => {
+            setJsonSettings?.(prev => ({ ...prev, finishedOnboarding: false }));
+        });
     const navigation = useNavigation();
 
     // DB Settings State
@@ -30,7 +56,14 @@ const PreferencesScreen = ({ route }) => {
     const [font, setFont] = useState('');
     const [fontFamily, setFontFamily] = useState('');
     const [useCustomFont, setUseCustomFont] = useState(false);
-    const [theme, setLocalTheme] = useState(currentTheme.name);
+    const [theme, setLocalTheme] = useState(currentTheme?.name || 'light');
+    const [localColor, setLocalColor] = useState(
+        route?.params?.customColor ||
+            context.customColor ||
+            currentTheme?.primaryColor ||
+            DEFAULT_THEME_COLOR,
+    );
+    const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
     const [localViewMode, setLocalViewMode] = useState('full');
 
     // JSON Settings State
@@ -48,7 +81,7 @@ const PreferencesScreen = ({ route }) => {
     const [updateRestriction, setUpdateRestriction] = useState(3);
     const [categories, setCategories] = useState();
 
-    const activeTheme = themes[theme] || currentTheme;
+    const activeTheme = useMemo(() => getThemeWithColor(theme, localColor), [theme, localColor]);
 
     const { t, i18n } = useTranslation(); // i18n is reactive
 
@@ -69,6 +102,9 @@ const PreferencesScreen = ({ route }) => {
             // Load JSON Settings (Functional)
             const jsonSettings = await getJsonSettings();
             if (jsonSettings) {
+                if (jsonSettings.customColor) {
+                    setLocalColor(jsonSettings.customColor);
+                }
                 setShowChapterDate(jsonSettings.showChapterDate || false);
                 setCompactNotifications(jsonSettings.compactNotifications || false);
                 setUpdateTime(jsonSettings.time || 1440);
@@ -135,6 +171,22 @@ const PreferencesScreen = ({ route }) => {
     };
 
     // --- Handlers ---
+
+    const handleColorChange = newColor => {
+        const resolved = newColor ? newColor.trim() : DEFAULT_THEME_COLOR;
+        setLocalColor(resolved);
+        const storedValue =
+            resolved.toLowerCase() === DEFAULT_THEME_COLOR.toLowerCase() ? null : resolved;
+        if (context.saveCustomColor) {
+            context.saveCustomColor(storedValue);
+        } else {
+            saveJsonSettingsData({ customColor: storedValue });
+        }
+    };
+
+    const handleResetColor = () => {
+        handleColorChange(DEFAULT_THEME_COLOR);
+    };
 
     const handleFontSizeChange = value => {
         const clampedValue = Math.min(Math.max(value, 0.5), 3);
@@ -336,40 +388,6 @@ const PreferencesScreen = ({ route }) => {
     }, [activeTheme, useCustomSize, fontSize, useCustomFont, fontFamily, font, t]);
 
     // --- Render Helpers ---
-
-    const ThemeButton = ({ themeKey, label, isActive, onPress }) => {
-        const buttonStyle = [
-            styles.themeButton,
-            { backgroundColor: isActive ? activeTheme.primaryColor : 'transparent' },
-        ];
-        const textStyle = [
-            styles.themeButtonText,
-            { color: isActive ? '#ffffff' : activeTheme.textColor },
-        ];
-
-        return (
-            <TouchableOpacity style={buttonStyle} onPress={onPress} activeOpacity={0.7}>
-                <Text style={textStyle}>{label}</Text>
-            </TouchableOpacity>
-        );
-    };
-
-    const ViewModeButton = ({ mode, label, isActive, onPress }) => {
-        const buttonStyle = [
-            styles.viewModeButton,
-            { backgroundColor: isActive ? activeTheme.primaryColor : 'transparent' },
-        ];
-        const textStyle = [
-            styles.viewModeButtonText,
-            { color: isActive ? '#ffffff' : activeTheme.textColor },
-        ];
-
-        return (
-            <TouchableOpacity style={buttonStyle} onPress={onPress} activeOpacity={0.7}>
-                <Text style={textStyle}>{label}</Text>
-            </TouchableOpacity>
-        );
-    };
 
     function onBack() {
         navigation.goBack();
@@ -579,30 +597,135 @@ const PreferencesScreen = ({ route }) => {
                         <Text style={[{ color: activeTheme.textColor }, styles.settingText]}>
                             {t('screen_preferences_label_theme')}
                         </Text>
-                        <View
-                            style={[
-                                styles.themeContainer,
-                                { backgroundColor: activeTheme.inputBackground },
-                            ]}
+                        <CustomDropdown
+                            selectedValue={theme}
+                            onValueChange={handleThemeChange}
+                            theme={activeTheme}
+                            style={{ marginTop: 8 }}
                         >
-                            <ThemeButton
-                                themeKey="light"
+                            <CustomDropdown.Item
                                 label={t('screen_preferences_label_theme_light')}
-                                isActive={theme === 'light'}
-                                onPress={() => handleThemeChange('light')}
+                                value="light"
                             />
-                            <ThemeButton
-                                themeKey="dark"
+                            <CustomDropdown.Item
                                 label={t('screen_preferences_label_theme_dark')}
-                                isActive={theme === 'dark'}
-                                onPress={() => handleThemeChange('dark')}
+                                value="dark"
                             />
-                            <ThemeButton
-                                themeKey="black"
+                            <CustomDropdown.Item
                                 label={t('screen_preferences_label_theme_black')}
-                                isActive={theme === 'black'}
-                                onPress={() => handleThemeChange('black')}
+                                value="black"
                             />
+                        </CustomDropdown>
+                    </View>
+
+                    <View style={styles.settingItem}>
+                        <Text style={[{ color: activeTheme.textColor }, styles.settingText]}>
+                            {t('screen_preferences_label_theme_color', 'Theme Color')}
+                        </Text>
+                        <View style={styles.themeColorRow}>
+                            <TouchableOpacity
+                                style={[
+                                    styles.colorOptionCard,
+                                    {
+                                        backgroundColor: activeTheme.inputBackground,
+                                        borderColor:
+                                            localColor?.toLowerCase() ===
+                                            DEFAULT_THEME_COLOR.toLowerCase()
+                                                ? activeTheme.primaryColor
+                                                : activeTheme.borderColor,
+                                    },
+                                ]}
+                                onPress={handleResetColor}
+                                activeOpacity={0.7}
+                            >
+                                <View
+                                    style={[
+                                        styles.colorDot,
+                                        { backgroundColor: DEFAULT_THEME_COLOR },
+                                    ]}
+                                />
+                                <Text
+                                    style={[
+                                        styles.colorOptionLabel,
+                                        { color: activeTheme.textColor },
+                                        localColor?.toLowerCase() ===
+                                            DEFAULT_THEME_COLOR.toLowerCase() && {
+                                            color: activeTheme.primaryColor,
+                                            fontWeight: '600',
+                                        },
+                                    ]}
+                                >
+                                    {t('screen_preferences_label_theme_color_default', 'Default')}
+                                </Text>
+                                {localColor?.toLowerCase() ===
+                                    DEFAULT_THEME_COLOR.toLowerCase() && (
+                                    <Icon
+                                        name="check"
+                                        size={18}
+                                        color={activeTheme.primaryColor}
+                                        style={styles.checkIcon}
+                                    />
+                                )}
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[
+                                    styles.colorOptionCard,
+                                    {
+                                        backgroundColor: activeTheme.inputBackground,
+                                        borderColor:
+                                            localColor?.toLowerCase() !==
+                                            DEFAULT_THEME_COLOR.toLowerCase()
+                                                ? activeTheme.primaryColor
+                                                : activeTheme.borderColor,
+                                    },
+                                ]}
+                                onPress={() => setIsColorPickerOpen(true)}
+                                activeOpacity={0.7}
+                            >
+                                <View
+                                    style={[
+                                        styles.colorDot,
+                                        {
+                                            backgroundColor:
+                                                localColor?.toLowerCase() !==
+                                                DEFAULT_THEME_COLOR.toLowerCase()
+                                                    ? localColor
+                                                    : '#e11d48',
+                                        },
+                                    ]}
+                                />
+                                <Text
+                                    style={[
+                                        styles.colorOptionLabel,
+                                        { color: activeTheme.textColor },
+                                        localColor?.toLowerCase() !==
+                                            DEFAULT_THEME_COLOR.toLowerCase() && {
+                                            color: activeTheme.primaryColor,
+                                            fontWeight: '600',
+                                        },
+                                    ]}
+                                    numberOfLines={1}
+                                >
+                                    {localColor?.toLowerCase() !== DEFAULT_THEME_COLOR.toLowerCase()
+                                        ? localColor
+                                        : t(
+                                              'screen_preferences_label_theme_color_custom',
+                                              'Custom...',
+                                          )}
+                                </Text>
+                                <Icon
+                                    name="palette"
+                                    size={18}
+                                    color={
+                                        localColor?.toLowerCase() !==
+                                        DEFAULT_THEME_COLOR.toLowerCase()
+                                            ? activeTheme.primaryColor
+                                            : activeTheme.iconColor
+                                    }
+                                    style={styles.paletteIcon}
+                                />
+                            </TouchableOpacity>
                         </View>
                     </View>
 
@@ -610,31 +733,25 @@ const PreferencesScreen = ({ route }) => {
                         <Text style={[{ color: activeTheme.textColor }, styles.settingText]}>
                             {t('screen_preferences_label_view_mode')}
                         </Text>
-                        <View
-                            style={[
-                                styles.viewModeContainer,
-                                { backgroundColor: activeTheme.inputBackground },
-                            ]}
+                        <CustomDropdown
+                            selectedValue={localViewMode}
+                            onValueChange={handleViewModeChange}
+                            theme={activeTheme}
+                            style={{ marginTop: 8 }}
                         >
-                            <ViewModeButton
-                                mode="full"
+                            <CustomDropdown.Item
                                 label={t('screen_preferences_label_view_mode_full')}
-                                isActive={localViewMode === 'full'}
-                                onPress={() => handleViewModeChange('full')}
+                                value="full"
                             />
-                            <ViewModeButton
-                                mode="med"
+                            <CustomDropdown.Item
                                 label={t('screen_preferences_label_view_mode_med')}
-                                isActive={localViewMode === 'med'}
-                                onPress={() => handleViewModeChange('med')}
+                                value="med"
                             />
-                            <ViewModeButton
-                                mode="small"
+                            <CustomDropdown.Item
                                 label={t('screen_preferences_label_view_mode_small')}
-                                isActive={localViewMode === 'small'}
-                                onPress={() => handleViewModeChange('small')}
+                                value="small"
                             />
-                        </View>
+                        </CustomDropdown>
                     </View>
 
                     <View style={styles.settingItem}>
@@ -854,6 +971,14 @@ const PreferencesScreen = ({ route }) => {
                     </TouchableOpacity>
                 </View>
             </ScrollView>
+
+            <ColorPickerModal
+                visible={isColorPickerOpen}
+                onClose={() => setIsColorPickerOpen(false)}
+                currentColor={localColor}
+                onApplyColor={handleColorChange}
+                theme={activeTheme}
+            />
         </SafeAreaView>
     );
 };
@@ -894,66 +1019,71 @@ const styles = StyleSheet.create({
         marginLeft: 10,
     },
     previewContainer: {
+        height: 180,
         borderRadius: 8,
+        borderWidth: 1,
         marginBottom: 16,
         overflow: 'hidden',
-        borderWidth: 1,
     },
     settingItem: {
-        paddingVertical: 8,
-        borderBottomWidth: 0,
-    },
-    settingText: {
-        fontSize: 15,
-        marginBottom: 4,
+        marginBottom: 16,
     },
     switchContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: 4,
+    },
+    settingText: {
+        fontSize: 16,
+        marginBottom: 8,
     },
     sliderContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+        gap: 12,
     },
     slider: {
         flex: 1,
-        marginRight: 12,
+        height: 40,
     },
     sizeInput: {
-        width: 60,
-        textAlign: 'center',
-        fontWeight: '600',
+        fontSize: 16,
+        minWidth: 40,
+        textAlign: 'right',
     },
-    themeContainer: {
+    themeColorRow: {
         flexDirection: 'row',
-        borderRadius: 8,
-        padding: 4,
+        gap: 12,
+        marginTop: 6,
     },
-    themeButton: {
+    colorOptionCard: {
         flex: 1,
-        paddingVertical: 8,
-        paddingHorizontal: 12,
-        borderRadius: 6,
+        flexDirection: 'row',
         alignItems: 'center',
-        marginHorizontal: 1,
+        paddingHorizontal: 14,
+        paddingVertical: 12,
+        borderRadius: 10,
+        borderWidth: 1.5,
+        gap: 10,
     },
-    themeButtonText: {
-        fontSize: 14,
+    colorDot: {
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: 'rgba(0, 0, 0, 0.1)',
+    },
+    colorOptionLabel: {
+        fontSize: 15,
         fontWeight: '500',
-    },
-    viewModeContainer: {
-        flexDirection: 'row',
-        borderRadius: 8,
-        padding: 4,
-    },
-    viewModeButton: {
         flex: 1,
-        paddingVertical: 8,
-        paddingHorizontal: 12,
-        borderRadius: 6,
-        alignItems: 'center',
-        marginHorizontal: 1,
+    },
+    checkIcon: {
+        marginLeft: 'auto',
+    },
+    paletteIcon: {
+        marginLeft: 'auto',
     },
     viewModeSelectButton: {
         flex: 1,
@@ -963,10 +1093,6 @@ const styles = StyleSheet.create({
         marginHorizontal: 1,
         borderWidth: 1,
         flexDirection: 'row',
-    },
-    viewModeButtonText: {
-        fontSize: 14,
-        fontWeight: '500',
     },
     restartButton: {
         flexDirection: 'row',

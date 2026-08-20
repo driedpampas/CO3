@@ -9,6 +9,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import DropdownArrow from './DropdownArrow';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -23,7 +24,12 @@ const CustomDropdown = ({
     disabled = false,
 }) => {
     const [isVisible, setIsVisible] = useState(false);
-    const [dropdownLayout, setDropdownLayout] = useState({ x: 0, y: 0, width: 0, height: 0 });
+    const [dropdownLayout, setDropdownLayout] = useState({
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+    });
     const dropdownRef = useRef(null);
 
     const options = React.Children.map(children, child => {
@@ -62,28 +68,28 @@ const CustomDropdown = ({
         setIsVisible(false);
     };
 
-    // Calculate modal position
     const getModalStyle = () => {
         const { x, y, width, height } = dropdownLayout;
-        const modalTop = y + height + 2; // Add small gap
+        const modalTop = y + height + 2;
         const modalLeft = x;
 
-        // Calculate actual content height
-        const itemHeight = 48; // Approximate height per item
+        const itemHeight = 48;
         const actualContentHeight = Math.min(options.length * itemHeight, maxHeight);
 
         const adjustedTop =
             modalTop + actualContentHeight > screenHeight ? y - actualContentHeight - 2 : modalTop;
-        const adjustedLeft = modalLeft + width > screenWidth ? screenWidth - width - 10 : modalLeft;
+        const adjustedLeft = modalLeft + width > screenWidth ? screenWidth - width - 12 : modalLeft;
 
         return {
             position: 'absolute',
             top: Math.max(10, adjustedTop),
             left: Math.max(10, adjustedLeft),
-            width: width,
+            width: Math.max(width, 140),
             maxHeight: maxHeight,
         };
     };
+
+    const arrowColor = theme?.iconColor || theme?.secondaryTextColor || theme?.textColor || '#666';
 
     return (
         <>
@@ -93,7 +99,9 @@ const CustomDropdown = ({
                     styles.dropdown,
                     {
                         backgroundColor: theme?.inputBackground || '#fff',
-                        borderColor: theme?.borderColor || '#ddd',
+                        borderColor: isVisible
+                            ? theme?.primaryColor || '#990001'
+                            : theme?.borderColor || '#ddd',
                     },
                     style,
                     disabled && styles.disabled,
@@ -116,9 +124,7 @@ const CustomDropdown = ({
                     {displayText}
                 </Text>
                 <View style={styles.iconContainer}>
-                    <Text style={[styles.dropdownIcon, { color: theme?.textColor || '#666' }]}>
-                        {isVisible ? '▲' : '▼'}
-                    </Text>
+                    <DropdownArrow size={20} color={arrowColor} isOpen={isVisible} />
                 </View>
             </TouchableOpacity>
 
@@ -137,7 +143,8 @@ const CustomDropdown = ({
                         style={[
                             styles.modalContent,
                             {
-                                backgroundColor: theme?.cardBackground || '#fff',
+                                backgroundColor:
+                                    theme?.cardBackground || theme?.backgroundColor || '#fff',
                                 borderColor: theme?.borderColor || '#ddd',
                             },
                             getModalStyle(),
@@ -147,49 +154,53 @@ const CustomDropdown = ({
                             showsVerticalScrollIndicator={true}
                             bounces={false}
                             keyboardShouldPersistTaps="handled"
+                            contentContainerStyle={styles.scrollContainer}
                         >
-                            {options.map((option, index) => (
-                                <TouchableOpacity
-                                    key={option.value}
-                                    style={[
-                                        styles.option,
-                                        selectedValue === option.value && [
-                                            styles.selectedOption,
-                                            {
-                                                backgroundColor: theme?.primaryColor
-                                                    ? `${theme.primaryColor}20`
-                                                    : '#f0f8ff',
-                                            },
-                                        ],
-                                        index === options.length - 1 && styles.lastOption,
-                                        { borderBottomColor: theme?.borderColor || '#eee' },
-                                    ]}
-                                    onPress={() => handleOptionPress(option.value)}
-                                >
-                                    <Text
+                            {options.map(option => {
+                                const isSelected = selectedValue === option.value;
+                                return (
+                                    <TouchableOpacity
+                                        key={option.value}
                                         style={[
-                                            styles.optionText,
-                                            { color: theme?.textColor || '#000' },
-                                            selectedValue === option.value && [
-                                                styles.selectedOptionText,
-                                                { color: theme?.primaryColor || '#007AFF' },
-                                            ],
+                                            styles.option,
+                                            isSelected && {
+                                                backgroundColor: theme?.primaryColor
+                                                    ? `${theme.primaryColor}18`
+                                                    : '#99000118',
+                                            },
                                         ]}
+                                        onPress={() => handleOptionPress(option.value)}
+                                        activeOpacity={0.7}
                                     >
-                                        {option.label}
-                                    </Text>
-                                    {selectedValue === option.value && (
                                         <Text
                                             style={[
-                                                styles.checkmark,
-                                                { color: theme?.primaryColor || '#007AFF' },
+                                                styles.optionText,
+                                                { color: theme?.textColor || '#000' },
+                                                isSelected && [
+                                                    styles.selectedOptionText,
+                                                    {
+                                                        color: theme?.primaryColor || '#990001',
+                                                    },
+                                                ],
                                             ]}
                                         >
-                                            ✓
+                                            {option.label}
                                         </Text>
-                                    )}
-                                </TouchableOpacity>
-                            ))}
+                                        {isSelected && (
+                                            <Text
+                                                style={[
+                                                    styles.checkmark,
+                                                    {
+                                                        color: theme?.primaryColor || '#990001',
+                                                    },
+                                                ]}
+                                            >
+                                                ✓
+                                            </Text>
+                                        )}
+                                    </TouchableOpacity>
+                                );
+                            })}
                         </ScrollView>
                     </View>
                 </TouchableOpacity>
@@ -198,14 +209,16 @@ const CustomDropdown = ({
     );
 };
 
+CustomDropdown.Item = ({ label, value }) => null;
+
 const styles = StyleSheet.create({
     dropdown: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 12,
-        paddingVertical: 12,
-        minHeight: 48,
+        paddingHorizontal: 16,
+        paddingVertical: 13,
+        minHeight: 50,
         borderWidth: 1,
         borderRadius: 8,
     },
@@ -213,7 +226,8 @@ const styles = StyleSheet.create({
         opacity: 0.5,
     },
     dropdownText: {
-        fontSize: 16,
+        fontSize: 15,
+        fontWeight: '400',
         flex: 1,
     },
     placeholderText: {
@@ -221,54 +235,52 @@ const styles = StyleSheet.create({
     },
     iconContainer: {
         marginLeft: 8,
-    },
-    dropdownIcon: {
-        fontSize: 12,
-        color: '#666',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+        backgroundColor: 'rgba(0, 0, 0, 0.25)',
     },
     modalContent: {
         borderRadius: 8,
+        overflow: 'hidden',
         ...Platform.select({
             ios: {
                 shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.25,
-                shadowRadius: 3.84,
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.2,
+                shadowRadius: 8,
             },
             android: {
-                elevation: 5,
+                elevation: 8,
+            },
+            web: {
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
             },
         }),
         borderWidth: 1,
+    },
+    scrollContainer: {
+        paddingVertical: 4,
     },
     option: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 16,
-        paddingVertical: 12,
+        paddingVertical: 14,
         minHeight: 48,
-        borderBottomWidth: 1,
-    },
-    lastOption: {
-        borderBottomWidth: 0,
-    },
-    selectedOption: {
-        // Background color applied inline with theme
     },
     optionText: {
-        fontSize: 16,
+        fontSize: 15,
         flex: 1,
     },
     selectedOptionText: {
-        fontWeight: '500',
+        fontWeight: '600',
     },
     checkmark: {
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: 'bold',
         marginLeft: 8,
     },

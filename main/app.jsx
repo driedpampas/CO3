@@ -51,7 +51,7 @@ import { WorkDAO } from './storage/dao/WorkDAO';
 import { getTempPreset, setTempPreset } from './storage/jsonSearches';
 import { getJsonSettings, saveJsonSettings } from './storage/jsonSettings';
 import { STORAGE_KEYS } from './utils/constants';
-import { themes } from './utils/themes';
+import { DEFAULT_THEME_COLOR, getThemeWithColor, themes } from './utils/themes';
 import { setAppIcon } from './utils/appIcon';
 import { checkTagCanonical } from './web/other/tagUtils';
 import { setup, setupNotificationListeners } from './web/updater';
@@ -95,6 +95,7 @@ const AppWrapper = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isSideMenuOpen, setIsSideMenuOpen] = useState(false);
     const [theme, setTheme] = useState('light');
+    const [customColor, setCustomColor] = useState(null);
     const [isIncognitoMode, setIsIncognitoMode] = useState(false);
     const [viewMode, setViewMode] = useState('full');
     const [books, setBooks] = useState([]);
@@ -123,22 +124,26 @@ const AppWrapper = () => {
     const [applyTempPreset, setApplyTempPreset] = useState(0);
 
     const currentTheme = useMemo(() => {
-        return themes?.[theme]
-            ? themes[theme]
-            : themes?.light || {
-                  backgroundColor: '#f5f5f5',
-                  textColor: '#171717',
-                  headerBackground: '#ffffff',
-                  iconColor: '#525252',
-                  inputBackground: '#ebebeb',
-                  borderColor: '#e5e5e5',
-                  primaryColor: '#7c3aed',
-                  buttonBackground: '#ebebeb',
-                  placeholderColor: '#a3a3a3',
-                  cardBackground: '#ffffff',
-                  secondaryTextColor: '#525252',
-              };
-    }, [theme]);
+        return getThemeWithColor(theme, customColor);
+    }, [theme, customColor]);
+
+    const saveCustomColor = useCallback(async newColor => {
+        try {
+            const normalizedColor = newColor ? newColor.trim() : null;
+            setCustomColor(normalizedColor);
+            const current = (await getJsonSettings()) || {};
+            await saveJsonSettings({
+                ...current,
+                customColor: normalizedColor,
+            });
+            setJsonSettings(prev => ({
+                ...(prev || {}),
+                customColor: normalizedColor,
+            }));
+        } catch (error) {
+            console.error('Error saving custom color:', error);
+        }
+    }, []);
 
     const contextRef = useRef({
         workDAO,
@@ -224,6 +229,9 @@ const AppWrapper = () => {
                     setActiveScreen,
                     setTheme,
                     theme,
+                    customColor,
+                    setCustomColor,
+                    saveCustomColor,
                     setViewMode,
                     kudoDAO,
                     kudoHistoryDAO,
@@ -496,6 +504,9 @@ const App = () => {
         setActiveScreen,
         setTheme,
         theme,
+        customColor,
+        setCustomColor,
+        saveCustomColor,
         setViewMode,
         kudoDAO,
         kudoHistoryDAO,
@@ -762,6 +773,9 @@ const App = () => {
     const initializeApp = useCallback(async () => {
         const jsonSettings = await getJsonSettings();
         setJsonSettings(jsonSettings);
+        if (jsonSettings?.customColor) {
+            setCustomColor(jsonSettings.customColor);
+        }
         setup(jsonSettings.time);
 
         if (Platform.OS === 'android') {
@@ -821,6 +835,7 @@ const App = () => {
         setupdateDAO,
         setChapterDAO,
         setTheme,
+        setCustomColor,
         setIsIncognitoMode,
         setViewMode,
         setBooks,
@@ -963,6 +978,9 @@ const App = () => {
         setActiveScreen,
         setTheme,
         theme,
+        customColor,
+        setCustomColor,
+        saveCustomColor,
         setViewMode,
         kudoDAO,
         kudoHistoryDAO,

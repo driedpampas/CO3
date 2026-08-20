@@ -36,7 +36,7 @@ export default function RuleEditorScreen() {
         inputBackground: '#f5f5f5',
         cardBackground: '#ffffff',
         borderColor: '#e5e5e5',
-        primaryColor: '#7c3aed',
+        primaryColor: '#990001',
         placeholderColor: '#a3a3a3',
     };
 

@@ -153,7 +153,7 @@ async function createCompleteHtml(chapterHtml, cssStyles, currentTheme, settings
     
     #workskin h1, #workskin h2, #workskin h3, #workskin h4, #workskin h5, #workskin h6 {
       color: var(--text-color, #333);
-      border-bottom: 2px solid var(--primary-color, #ea580c);
+      border-bottom: 2px solid var(--primary-color, #990001);
       padding-bottom: 8px;
       margin-bottom: 16px;
     }
@@ -164,7 +164,7 @@ async function createCompleteHtml(chapterHtml, cssStyles, currentTheme, settings
     }
     
     #workskin a {
-      color: var(--primary-color, #ea580c);
+      color: var(--primary-color, #990001);
     }
     
     #workskin a:hover {
@@ -172,7 +172,7 @@ async function createCompleteHtml(chapterHtml, cssStyles, currentTheme, settings
     }
     
     #workskin blockquote {
-      border-left: 4px solid var(--primary-color, #ea580c);
+      border-left: 4px solid var(--primary-color, #990001);
       background-color: var(--input-bg-color, #ebebeb);
       padding: 16px;
       margin: 16px 0;
@@ -195,7 +195,7 @@ async function createCompleteHtml(chapterHtml, cssStyles, currentTheme, settings
     }
     
     #workskin .title a {
-      color: var(--primary-color, #ea580c);
+      color: var(--primary-color, #990001);
       font-weight: bold;
     }
     

@@ -6,7 +6,7 @@ const LOGO_PATH =
 
 const ASPECT_RATIO = 415 / 600;
 
-export default function AppLogo({ size, width, height, color = '#990000', style, ...props }) {
+export default function AppLogo({ size, width, height, color = '#990001', style, ...props }) {
     let resolvedWidth = width;
     let resolvedHeight = height;
 

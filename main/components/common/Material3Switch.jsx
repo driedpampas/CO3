@@ -31,7 +31,7 @@ export default function Material3Switch({
         }
     };
 
-    const primaryColor = theme?.primaryColor || '#7c3aed';
+    const primaryColor = theme?.primaryColor || '#990001';
     const borderColor = theme?.borderColor || '#767577';
     const inputBackground = theme?.inputBackground || '#e0e0e0';
     const secondaryTextColor = theme?.secondaryTextColor || '#767577';

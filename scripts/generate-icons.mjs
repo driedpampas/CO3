@@ -16,7 +16,7 @@ const APPLOGO_JSX = path.join(ROOT, 'main/components/common/AppLogo.jsx');
 const ANDROID_RES = path.join(ROOT, 'android/app/src/main/res');
 const IOS_APPICONSET = path.join(ROOT, 'ios/CO3/Images.xcassets/AppIcon.appiconset');
 
-const COLOR_PRIMARY = '#990000';
+const COLOR_PRIMARY = '#990001';
 const COLOR_BG_LIGHT = '#ffffff';
 const COLOR_BG_DARK = '#121212';
 const COLOR_MONO = '#000000';
