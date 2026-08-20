@@ -1,13 +1,15 @@
 import { useNavigation } from '@react-navigation/native';
-import React from 'react';
+import React, { useContext } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { AppContext } from '../../app';
 import AppLogo from '../../components/common/AppLogo';
 
 export default function HelpScreen({ route }) {
-    const { currentTheme } = route.params;
+    const context = useContext(AppContext) || {};
+    const currentTheme = route?.params?.currentTheme || context.currentTheme;
     const navigation = useNavigation();
     const { t } = useTranslation();
 
@@ -20,7 +22,7 @@ export default function HelpScreen({ route }) {
         textColor: '#171717',
         secondaryTextColor: '#525252',
         borderColor: '#e5e5e5',
-        primaryColor: '#7c3aed',
+        primaryColor: '#990001',
     };
 
     return (

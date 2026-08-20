@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     Alert,
@@ -13,9 +13,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { AppContext } from '../../app';
 
 export default function CategoryScreen({ route }) {
-    const { currentTheme, libraryDAO } = route.params;
+    const context = useContext(AppContext) || {};
+    const currentTheme = route?.params?.currentTheme || context.currentTheme;
+    const libraryDAO = route?.params?.libraryDAO || context.libraryDAO;
 
     const [categories, setCategories] = useState([]);
     const [editingId, setEditingId] = useState(null);

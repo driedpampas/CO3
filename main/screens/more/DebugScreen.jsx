@@ -1,9 +1,12 @@
 import { useNavigation } from '@react-navigation/native';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { AppContext } from '../../app';
+import { database } from '../../storage/DatabaseManager';
 
 export default function DebugScreen({ route }) {
-    const { db } = route.params;
+    const context = useContext(AppContext) || {};
+    const db = route?.params?.db || context.databaseObj || database.db;
     const [sqlCmd, setSqlCmd] = useState('');
     const [logs, setLogs] = useState([]);
 

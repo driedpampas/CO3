@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StackActions, useNavigation } from '@react-navigation/native';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
@@ -21,6 +21,7 @@ import InAppBrowser from 'react-native-inappbrowser-reborn';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { AppContext } from '../app';
 import BookDetailsModal from '../components/Library/BookDetailsModal';
 import CategorySelectionModal from '../components/WorkScreen/CategorySelectionModal';
 import { WorkDescription } from '../components/WorkScreen/DescriptionComponent';
@@ -244,19 +245,19 @@ const ChapterItem = React.memo(({ chapter, index, currentTheme, onPress, showDat
 });
 
 export const ReaderWrapper = ({ route }) => {
-    const {
-        initialChapterData,
-        currentTheme,
-        chapterList,
-        historyDAO,
-        progressDAO,
-        settingsDAO,
-        jsonSettings,
-        libraryDAO,
-        chapterDAO,
-        kudoHistoryDAO,
-        workDAO,
-    } = route.params;
+    const context = useContext(AppContext) || {};
+    const params = route?.params || {};
+    const initialChapterData = params.initialChapterData;
+    const currentTheme = params.currentTheme || context.currentTheme;
+    const chapterList = params.chapterList;
+    const historyDAO = params.historyDAO || context.historyDAO;
+    const progressDAO = params.progressDAO || context.progressDAO;
+    const settingsDAO = params.settingsDAO || context.settingsDAO;
+    const jsonSettings = params.jsonSettings || context.jsonSettings;
+    const libraryDAO = params.libraryDAO || context.libraryDAO;
+    const chapterDAO = params.chapterDAO || context.chapterDAO;
+    const kudoHistoryDAO = params.kudoHistoryDAO || context.kudoHistoryDAO;
+    const workDAO = params.workDAO || context.workDAO;
 
     const { t } = useTranslation();
     const [chapterData, setChapterData] = useState(initialChapterData);
@@ -264,8 +265,10 @@ export const ReaderWrapper = ({ route }) => {
     const [error, setError] = useState(undefined);
 
     useEffect(() => {
-        libraryDAO.updateReadIndex(chapterData.workId);
-    }, [chapterData.workId, libraryDAO]);
+        if (libraryDAO && chapterData?.workId) {
+            libraryDAO.updateReadIndex(chapterData.workId);
+        }
+    }, [chapterData?.workId, libraryDAO]);
 
     const handleChapterChange = useCallback(newChapterData => {
         setError(false);
@@ -412,21 +415,21 @@ export const ReaderWrapper = ({ route }) => {
 };
 
 const ChapterInfoScreen = ({ route }) => {
-    const {
-        workId,
-        currentTheme,
-        libraryDAO,
-        workDAO,
-        setScreens,
-        settingsDAO,
-        historyDAO,
-        progressDAO,
-        loadChapter,
-        kudoHistoryDAO,
-        openTagSearch,
-        url,
-        chapterDAO,
-    } = route.params;
+    const context = useContext(AppContext) || {};
+    const params = route?.params || {};
+    const workId = params.workId;
+    const currentTheme = params.currentTheme || context.currentTheme;
+    const libraryDAO = params.libraryDAO || context.libraryDAO;
+    const workDAO = params.workDAO || context.workDAO;
+    const setScreens = params.setScreens || context.setScreens;
+    const settingsDAO = params.settingsDAO || context.settingsDAO;
+    const historyDAO = params.historyDAO || context.historyDAO;
+    const progressDAO = params.progressDAO || context.progressDAO;
+    const loadChapter = params.loadChapter;
+    const kudoHistoryDAO = params.kudoHistoryDAO || context.kudoHistoryDAO;
+    const openTagSearch = params.openTagSearch || context.openTagSearch;
+    const url = params.url;
+    const chapterDAO = params.chapterDAO || context.chapterDAO;
 
     const navigation = useNavigation();
 

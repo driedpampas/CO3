@@ -69,36 +69,15 @@ const LibraryScreen = ({
 
     useEffect(() => {
         const subscription = DeviceEventEmitter.addListener('doubleTap', _id => {
-            navigation.push('ReadLaterScreen', {
-                setScreens: setScreens,
+            navigation.push('ReadLater', {
                 currentTheme: currentTheme,
-                workDAO: workDAO,
-                libraryDAO: libraryDAO,
-                historyDAO: historyDAO,
-                settingsDAO: settingsDAO,
-                progressDAO: progressDAO,
-                kudoHistoryDAO: kudoHistoryDAO,
-                screens: screens,
-                chapterDAO: chapterDAO,
             });
         });
 
         return () => {
             subscription.remove();
         };
-    }, [
-        historyDAO,
-        workDAO,
-        settingsDAO,
-        progressDAO,
-        setScreens,
-        navigation.push,
-        currentTheme,
-        screens,
-        libraryDAO,
-        kudoHistoryDAO,
-        chapterDAO,
-    ]);
+    }, [navigation, currentTheme]);
 
     const loadCollections = useCallback(async () => {
         if (!libraryDAO) return;

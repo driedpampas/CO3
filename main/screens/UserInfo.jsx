@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
@@ -12,24 +12,16 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { AppContext } from '../app';
 import HtmlTextRenderer from '../components/common/HtmlTextRenderer';
 import LoadingSpinner from '../components/History/Spinner';
 import { getUserInfo, getUserInfoByPseud } from '../web/user/getUserInfo';
 
 export default function UserInfoScreen({ route }) {
-    const {
-        currentTheme,
-        username,
-        onBack,
-        setScreens,
-        workDAO,
-        libraryDAO,
-        historyDAO,
-        settingsDAO,
-        progressDAO,
-        kudoHistoryDAO,
-        chapterDAO,
-    } = route.params;
+    const context = useContext(AppContext) || {};
+    const params = route?.params || {};
+    const currentTheme = params.currentTheme || context.currentTheme;
+    const username = params.username;
 
     const navigation = useNavigation();
 
@@ -168,14 +160,6 @@ export default function UserInfoScreen({ route }) {
                                                     navigation.push('User', {
                                                         username: properUsername,
                                                         currentTheme: currentTheme,
-                                                        onBack: onBack,
-                                                        setScreens: setScreens,
-                                                        workDAO: workDAO,
-                                                        libraryDAO: libraryDAO,
-                                                        historyDAO: historyDAO,
-                                                        chapterDAO: chapterDAO,
-                                                        progressDAO: progressDAO,
-                                                        kudoHistoryDAO: kudoHistoryDAO,
                                                     });
                                                 }}
                                             >
@@ -219,16 +203,8 @@ export default function UserInfoScreen({ route }) {
                                 ]}
                                 onPress={() => {
                                     navigation.push('Bookmarks', {
-                                        setScreens: setScreens,
-                                        historyDAO: historyDAO,
-                                        settingsDAO: settingsDAO,
-                                        progressDAO: progressDAO,
-                                        workDAO: workDAO,
-                                        libraryDAO: libraryDAO,
-                                        kudoHistoryDAO: kudoHistoryDAO,
                                         currentTheme: currentTheme,
                                         username: properUsername,
-                                        chapterDAO: chapterDAO,
                                         pseud: properPseud,
                                     });
                                 }}
@@ -255,16 +231,8 @@ export default function UserInfoScreen({ route }) {
                                 ]}
                                 onPress={() => {
                                     navigation.push('UserWork', {
-                                        setScreens: setScreens,
-                                        historyDAO: historyDAO,
-                                        settingsDAO: settingsDAO,
-                                        progressDAO: progressDAO,
-                                        workDAO: workDAO,
-                                        libraryDAO: libraryDAO,
-                                        kudoHistoryDAO: kudoHistoryDAO,
                                         currentTheme: currentTheme,
                                         username: properUsername,
-                                        chapterDAO: chapterDAO,
                                         pseud: properPseud,
                                     });
                                 }}

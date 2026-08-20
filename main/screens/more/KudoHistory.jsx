@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     Alert,
@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { AppContext } from '../../app';
 import CalendarModal from '../../components/History/CalendarModal';
 import EmptyState from '../../components/History/Empty';
 import HistoryHeader from '../../components/History/Headers';
@@ -19,17 +20,17 @@ import KudoHistoryList from '../../components/History/KudoList';
 import LoadingSpinner from '../../components/History/Spinner';
 
 const KudoHistoryScreen = ({ route }) => {
-    const {
-        currentTheme,
-        workDAO,
-        libraryDAO,
-        setScreens,
-        historyDAO,
-        settingsDAO,
-        progressDAO,
-        kudoHistoryDAO,
-        chapterDAO,
-    } = route.params;
+    const context = useContext(AppContext) || {};
+    const params = route?.params || {};
+    const setScreens = params.setScreens || context.setScreens;
+    const currentTheme = params.currentTheme || context.currentTheme;
+    const workDAO = params.workDAO || context.workDAO;
+    const libraryDAO = params.libraryDAO || context.libraryDAO;
+    const historyDAO = params.historyDAO || context.historyDAO;
+    const settingsDAO = params.settingsDAO || context.settingsDAO;
+    const progressDAO = params.progressDAO || context.progressDAO;
+    const kudoHistoryDAO = params.kudoHistoryDAO || context.kudoHistoryDAO;
+    const chapterDAO = params.chapterDAO || context.chapterDAO;
 
     const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(true);

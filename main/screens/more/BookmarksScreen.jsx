@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
@@ -14,6 +14,7 @@ import {
 import InAppBrowser from 'react-native-inappbrowser-reborn';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { AppContext } from '../../app';
 import EmptyState from '../../components/History/Empty';
 import LoadingSpinner from '../../components/History/Spinner';
 import BookCard from '../../components/Library/BookCard';
@@ -21,19 +22,19 @@ import { getUsername } from '../../storage/Credentials';
 import { fetchBookmarks } from '../../web/other/bookmarks';
 
 export default function BookmarksScreen({ route }) {
-    const {
-        setScreens,
-        currentTheme,
-        workDAO,
-        libraryDAO,
-        historyDAO,
-        settingsDAO,
-        progressDAO,
-        kudoHistoryDAO,
-        username,
-        chapterDAO,
-        pseud,
-    } = route.params;
+    const context = useContext(AppContext) || {};
+    const params = route?.params || {};
+    const setScreens = params.setScreens || context.setScreens;
+    const currentTheme = params.currentTheme || context.currentTheme;
+    const workDAO = params.workDAO || context.workDAO;
+    const libraryDAO = params.libraryDAO || context.libraryDAO;
+    const historyDAO = params.historyDAO || context.historyDAO;
+    const settingsDAO = params.settingsDAO || context.settingsDAO;
+    const progressDAO = params.progressDAO || context.progressDAO;
+    const kudoHistoryDAO = params.kudoHistoryDAO || context.kudoHistoryDAO;
+    const chapterDAO = params.chapterDAO || context.chapterDAO;
+    const username = params.username;
+    const pseud = params.pseud;
     const [bookmarks, setBookmarks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);

@@ -1,13 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AppContext } from '../../app';
 const STORAGE_KEY = 'WordReplaceRules';
 
 export default function WordReplacer({ route }) {
-    const { currentTheme } = route.params;
+    const context = useContext(AppContext) || {};
+    const currentTheme = route?.params?.currentTheme || context.currentTheme;
 
     const [rules, setRules] = useState([]);
 

@@ -44,169 +44,62 @@ const MoreScreen = ({
                 case 'Preferences':
                     navigation.push('Preferences', {
                         currentTheme: currentTheme,
-                        theme: theme,
-                        setTheme: setTheme,
-                        viewMode: viewMode,
-                        setViewMode: setViewMode,
-                        isIncognitoMode: isIncognitoMode,
-                        toggleIncognitoMode: toggleIncognitoMode,
-                        settingsDAO: settingsDAO,
-                        setScreens: setScreens,
-                        onRestartOnboarding: () => {
-                            setJsonSettings(prev => ({ ...prev, finishedOnboarding: false }));
-                        },
                     });
                     break;
                 case 'Account':
                     navigation.push('Account', {
                         currentTheme: currentTheme,
-                        setScreens: setScreens,
                     });
                     break;
                 case 'KudosHistory':
                     navigation.push('KudosHistory', {
                         currentTheme: currentTheme,
-                        workDAO: workDAO,
-                        libraryDAO: libraryDAO,
-                        setScreens: setScreens,
-                        historyDAO: historyDAO,
-                        settingsDAO: settingsDAO,
-                        progressDAO: progressDAO,
-                        kudoHistoryDAO: kudoHistoryDAO,
-                        chapterDAO: chapterDAO,
                     });
                     break;
                 case 'Bookmarks':
                     navigation.push('Bookmarks', {
                         currentTheme: currentTheme,
-                        workDAO: workDAO,
-                        libraryDAO: libraryDAO,
-                        setScreens: setScreens,
-                        screens: screens,
-                        historyDAO: historyDAO,
-                        settingsDAO: settingsDAO,
-                        progressDAO: progressDAO,
-                        kudoHistoryDAO: kudoHistoryDAO,
-                        chapterDAO: chapterDAO,
                     });
                     break;
                 case 'ReadLater':
                     navigation.push('ReadLater', {
                         currentTheme: currentTheme,
-                        workDAO: workDAO,
-                        libraryDAO: libraryDAO,
-                        setScreens: setScreens,
-                        screens: screens,
-                        historyDAO: historyDAO,
-                        settingsDAO: settingsDAO,
-                        progressDAO: progressDAO,
-                        kudoHistoryDAO: kudoHistoryDAO,
-                        chapterDAO: chapterDAO,
                     });
                     break;
                 case 'Categories':
                     navigation.push('Categories', {
                         currentTheme: currentTheme,
-                        workDAO: workDAO,
-                        libraryDAO: libraryDAO,
-                        setScreens: setScreens,
-                        historyDAO: historyDAO,
-                        settingsDAO: settingsDAO,
-                        progressDAO: progressDAO,
-                        kudoHistoryDAO: kudoHistoryDAO,
                     });
                     break;
                 case 'Statistics':
                     navigation.push('Statistics', {
                         currentTheme: currentTheme,
-                        workDAO: workDAO,
-                        libraryDAO: libraryDAO,
-                        setScreens: setScreens,
-                        historyDAO: historyDAO,
-                        settingsDAO: settingsDAO,
-                        progressDAO: progressDAO,
-                        kudoHistoryDAO: kudoHistoryDAO,
-                        databaseObj: databaseObj,
-                        openTagSearch: openTagSearch,
-                        chapterDAO: chapterDAO,
                     });
                     break;
                 case 'Data and Storage':
                     navigation.push('Storage', {
                         currentTheme: currentTheme,
-                        workDAO: workDAO,
-                        libraryDAO: libraryDAO,
-                        setScreens: setScreens,
-                        historyDAO: historyDAO,
-                        settingsDAO: settingsDAO,
-                        progressDAO: progressDAO,
-                        kudoHistoryDAO: kudoHistoryDAO,
-                        databaseObj: databaseObj,
                     });
                     break;
                 case 'Word Replacer':
                     navigation.push('WordReplacer', {
                         currentTheme: currentTheme,
-                        workDAO: workDAO,
-                        libraryDAO: libraryDAO,
-                        setScreens: setScreens,
-                        historyDAO: historyDAO,
-                        settingsDAO: settingsDAO,
-                        progressDAO: progressDAO,
-                        kudoHistoryDAO: kudoHistoryDAO,
-                        databaseObj: databaseObj,
                     });
                     break;
                 case 'About':
                     navigation.push('About', {
                         currentTheme: currentTheme,
-                        workDAO: workDAO,
-                        libraryDAO: libraryDAO,
-                        setScreens: setScreens,
-                        historyDAO: historyDAO,
-                        settingsDAO: settingsDAO,
-                        progressDAO: progressDAO,
-                        kudoHistoryDAO: kudoHistoryDAO,
-                        db: databaseObj,
                     });
                     break;
                 case 'Help':
                     navigation.push('Help', {
                         currentTheme: currentTheme,
-                        workDAO: workDAO,
-                        libraryDAO: libraryDAO,
-                        setScreens: setScreens,
-                        historyDAO: historyDAO,
-                        settingsDAO: settingsDAO,
-                        progressDAO: progressDAO,
-                        kudoHistoryDAO: kudoHistoryDAO,
                     });
                     break;
             }
             console.log(`${screenName} pressed`);
         },
-        [
-            navigation,
-            currentTheme,
-            theme,
-            setTheme,
-            viewMode,
-            setViewMode,
-            isIncognitoMode,
-            toggleIncognitoMode,
-            settingsDAO,
-            setScreens,
-            setJsonSettings,
-            workDAO,
-            libraryDAO,
-            historyDAO,
-            progressDAO,
-            kudoHistoryDAO,
-            chapterDAO,
-            screens,
-            databaseObj,
-            openTagSearch,
-        ],
+        [navigation, currentTheme],
     );
 
     useEffect(() => {

@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { AppContext } from '../../app';
 import * as Stats from '../../storage/Stats';
 
 function StatTile({ icon, label, value, subtext, currentTheme, accent }) {
@@ -227,19 +228,19 @@ function TagList({ tags, currentTheme, accent, openTagSearch }) {
 }
 
 export default function StatsScreen({ route }) {
-    const {
-        currentTheme,
-        setScreens,
-        databaseObj,
-        openTagSearch,
-        workDAO,
-        libraryDAO,
-        historyDAO,
-        settingsDAO,
-        progressDAO,
-        kudoHistoryDAO,
-        chapterDAO,
-    } = route.params;
+    const context = useContext(AppContext) || {};
+    const params = route?.params || {};
+    const currentTheme = params.currentTheme || context.currentTheme;
+    const setScreens = params.setScreens || context.setScreens;
+    const databaseObj = params.databaseObj || context.databaseObj;
+    const openTagSearch = params.openTagSearch || context.openTagSearch;
+    const workDAO = params.workDAO || context.workDAO;
+    const libraryDAO = params.libraryDAO || context.libraryDAO;
+    const historyDAO = params.historyDAO || context.historyDAO;
+    const settingsDAO = params.settingsDAO || context.settingsDAO;
+    const progressDAO = params.progressDAO || context.progressDAO;
+    const kudoHistoryDAO = params.kudoHistoryDAO || context.kudoHistoryDAO;
+    const chapterDAO = params.chapterDAO || context.chapterDAO;
 
     const navigation = useNavigation();
     const { t } = useTranslation();

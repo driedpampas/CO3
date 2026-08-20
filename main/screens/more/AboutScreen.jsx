@@ -1,15 +1,17 @@
 import { useNavigation } from '@react-navigation/native';
-import React from 'react';
+import React, { useContext } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import InAppBrowser from 'react-native-inappbrowser-reborn';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { co3Version } from '../../constant';
+import { AppContext } from '../../app';
 import AppLogo from '../../components/common/AppLogo';
+import { co3Version } from '../../constant';
 
 export default function AboutScreen({ route }) {
-    const { setScreens, currentTheme, db } = route.params;
+    const context = useContext(AppContext) || {};
+    const currentTheme = route?.params?.currentTheme || context.currentTheme;
     const navigation = useNavigation();
     const { t } = useTranslation();
 
@@ -22,7 +24,7 @@ export default function AboutScreen({ route }) {
         textColor: '#171717',
         secondaryTextColor: '#525252',
         borderColor: '#e5e5e5',
-        primaryColor: '#7c3aed',
+        primaryColor: '#990001',
     };
 
     return (
@@ -42,10 +44,7 @@ export default function AboutScreen({ route }) {
                         disabled={!__DEV__}
                         onPress={() => {
                             if (__DEV__) {
-                                navigation.push('Debug', {
-                                    setScreens,
-                                    db,
-                                });
+                                navigation.push('Debug');
                             }
                         }}
                     >
