@@ -13,48 +13,11 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import BookCard from '../components/Library/BookCard';
 import CategorySelectionModal from '../components/WorkScreen/CategorySelectionModal.jsx';
 import { getJsonSettings } from '../storage/jsonSettings';
-
-const SortIcon = ({ color, size }) => (
-    <View
-        style={{
-            width: size,
-            height: size,
-            justifyContent: 'center',
-            alignItems: 'center',
-        }}
-    >
-        <View
-            style={{
-                width: size * 0.8,
-                height: size * 0.1,
-                backgroundColor: color,
-                borderRadius: size * 0.05,
-                marginBottom: size * 0.15,
-            }}
-        />
-        <View
-            style={{
-                width: size * 0.6,
-                height: size * 0.1,
-                backgroundColor: color,
-                borderRadius: size * 0.05,
-                marginBottom: size * 0.15,
-            }}
-        />
-        <View
-            style={{
-                width: size * 0.4,
-                height: size * 0.1,
-                backgroundColor: color,
-                borderRadius: size * 0.05,
-            }}
-        />
-    </View>
-);
 
 const LibraryScreen = ({
     searchTerm,
@@ -95,6 +58,8 @@ const LibraryScreen = ({
     const [showAllCollectionsModal, setShowAllCollectionsModal] = useState(false);
 
     const [jsonSettings, setJsonSettings] = useState();
+
+    const insets = useSafeAreaInsets();
 
     const pageSize = 20;
 
@@ -307,131 +272,102 @@ const LibraryScreen = ({
         setShowAllCollectionsModal(false);
     };
 
-    const getSortDisplayName = sort => {
-        switch (sort) {
-            case 'lastRead':
-                return t('screen_library_sort_selector_read');
-            case 'alphabetical':
-                return t('screen_library_sort_selector_alphabetical');
-            case 'dateAdded':
-                return t('screen_library_sort_selector_date');
-            default:
-                return t('screen_library_select_category_modal_title');
-        }
-    };
-
     const getTopCollections = () => {
         return collectionsWithCounts.slice(0, 3);
     };
 
     const hasMoreThanThreeCollections = collectionsWithCounts.length > 3;
 
-    const renderHeader = () => (
-        <View style={styles.headerContainer}>
-            <View style={styles.toolbarRow}>
-                {allCollections.length > 1 ? (
-                    <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        style={styles.collectionsScroll}
-                        contentContainerStyle={styles.collectionsScrollContent}
+    const renderHeader = () => {
+        if (allCollections.length <= 1) return null;
+        return (
+            <View style={styles.headerContainer}>
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.collectionsScroll}
+                    contentContainerStyle={styles.collectionsScrollContent}
+                >
+                    <TouchableOpacity
+                        style={[
+                            styles.collectionChip,
+                            {
+                                backgroundColor:
+                                    selectedCollection === null
+                                        ? currentTheme.primaryColor
+                                        : currentTheme.cardBackground,
+                                borderColor: currentTheme.borderColor,
+                            },
+                        ]}
+                        onPress={() => handleCollectionFilter(null)}
                     >
+                        <Text
+                            style={[
+                                styles.collectionChipText,
+                                {
+                                    color:
+                                        selectedCollection === null
+                                            ? 'white'
+                                            : currentTheme.textColor,
+                                },
+                            ]}
+                        >
+                            All
+                        </Text>
+                    </TouchableOpacity>
+
+                    {getTopCollections().map(collectionData => (
                         <TouchableOpacity
+                            key={collectionData.name}
                             style={[
                                 styles.collectionChip,
                                 {
                                     backgroundColor:
-                                        selectedCollection === null
+                                        selectedCollection === collectionData.name
                                             ? currentTheme.primaryColor
                                             : currentTheme.cardBackground,
-                                    borderColor: currentTheme.borderColor,
+                                    borderColor:
+                                        selectedCollection === collectionData.name
+                                            ? currentTheme.primaryColor
+                                            : currentTheme.borderColor,
                                 },
                             ]}
-                            onPress={() => handleCollectionFilter(null)}
+                            onPress={() => handleCollectionFilter(collectionData.name)}
                         >
                             <Text
                                 style={[
                                     styles.collectionChipText,
                                     {
                                         color:
-                                            selectedCollection === null
+                                            selectedCollection === collectionData.name
                                                 ? 'white'
                                                 : currentTheme.textColor,
                                     },
                                 ]}
                             >
-                                All
+                                {collectionData.name}
                             </Text>
                         </TouchableOpacity>
+                    ))}
 
-                        {getTopCollections().map(collectionData => (
-                            <TouchableOpacity
-                                key={collectionData.name}
-                                style={[
-                                    styles.collectionChip,
-                                    {
-                                        backgroundColor:
-                                            selectedCollection === collectionData.name
-                                                ? currentTheme.primaryColor
-                                                : currentTheme.cardBackground,
-                                        borderColor: currentTheme.borderColor,
-                                    },
-                                ]}
-                                onPress={() => handleCollectionFilter(collectionData.name)}
-                            >
-                                <Text
-                                    style={[
-                                        styles.collectionChipText,
-                                        {
-                                            color:
-                                                selectedCollection === collectionData.name
-                                                    ? 'white'
-                                                    : currentTheme.textColor,
-                                        },
-                                    ]}
-                                >
-                                    {collectionData.name}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
-
-                        {hasMoreThanThreeCollections && (
-                            <TouchableOpacity
-                                style={[
-                                    styles.collectionChip,
-                                    {
-                                        backgroundColor: currentTheme.cardBackground,
-                                        borderColor: currentTheme.borderColor,
-                                    },
-                                ]}
-                                onPress={() => setShowAllCollectionsModal(true)}
-                            >
-                                <Icon name="more-horiz" size={16} color={currentTheme.textColor} />
-                            </TouchableOpacity>
-                        )}
-                    </ScrollView>
-                ) : (
-                    <View style={{ flex: 1 }} />
-                )}
-
-                <TouchableOpacity
-                    style={[
-                        styles.sortButton,
-                        {
-                            backgroundColor: currentTheme.cardBackground,
-                            borderColor: currentTheme.borderColor,
-                        },
-                    ]}
-                    onPress={() => setShowSortModal(true)}
-                >
-                    <SortIcon color={currentTheme.textColor} size={14} />
-                    <Text style={[styles.sortButtonText, { color: currentTheme.textColor }]}>
-                        {getSortDisplayName(sortType)}
-                    </Text>
-                </TouchableOpacity>
+                    {hasMoreThanThreeCollections && (
+                        <TouchableOpacity
+                            style={[
+                                styles.collectionChip,
+                                {
+                                    backgroundColor: currentTheme.cardBackground,
+                                    borderColor: currentTheme.borderColor,
+                                },
+                            ]}
+                            onPress={() => setShowAllCollectionsModal(true)}
+                        >
+                            <Icon name="more-horiz" size={16} color={currentTheme.textColor} />
+                        </TouchableOpacity>
+                    )}
+                </ScrollView>
             </View>
-        </View>
-    );
+        );
+    };
 
     const renderFooter = () => {
         if (loadingMore) {
@@ -670,6 +606,20 @@ const LibraryScreen = ({
 
             {renderSortModal()}
 
+            {/* Sort FAB */}
+            <TouchableOpacity
+                style={[
+                    styles.fab,
+                    {
+                        backgroundColor: currentTheme.primaryColor,
+                        bottom: 72 + insets.bottom,
+                    },
+                ]}
+                onPress={() => setShowSortModal(true)}
+            >
+                <Icon name="sort" size={24} color="white" />
+            </TouchableOpacity>
+
             <CategorySelectionModal
                 visible={showAllCollectionsModal}
                 categories={allCollections}
@@ -694,24 +644,20 @@ const styles = StyleSheet.create({
     headerContainer: {
         marginBottom: 8,
     },
-    toolbarRow: {
-        flexDirection: 'row',
+    fab: {
+        position: 'absolute',
+        right: 14,
+        bottom: 80,
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        justifyContent: 'center',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 6,
-    },
-    sortButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 8,
-        paddingVertical: 5,
-        borderRadius: 6,
-        borderWidth: 1,
-        gap: 4,
-    },
-    sortButtonText: {
-        fontSize: 12,
-        fontWeight: '500',
+        elevation: 6,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3,
     },
     collectionsScroll: {
         flex: 1,

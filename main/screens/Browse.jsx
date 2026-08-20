@@ -3,11 +3,9 @@ import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
     Alert,
-    Animated,
-    BackHandler,
     DeviceEventEmitter,
-    Dimensions,
     FlatList,
+    Modal,
     RefreshControl,
     StyleSheet,
     Text,
@@ -60,37 +58,15 @@ const BrowseScreen = ({
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState(null);
 
-    const [searchMounted, setSearchMounted] = useState(true); // mount once, never unmount
-    const slideAnim = useRef(new Animated.Value(Dimensions.get('window').height)).current;
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
 
     const openSearch = useCallback(() => {
-        setSearchMounted(true);
-        Animated.timing(slideAnim, {
-            toValue: 0,
-            duration: 260,
-            useNativeDriver: true,
-        }).start();
-    }, [slideAnim]);
+        setIsSearchOpen(true);
+    }, []);
 
     const closeSearch = useCallback(() => {
-        Animated.timing(slideAnim, {
-            toValue: Dimensions.get('window').height,
-            duration: 220,
-            useNativeDriver: true,
-        }).start();
-    }, [slideAnim]);
-
-    useEffect(() => {
-        const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
-            if (searchMounted && slideAnim._value === 0) {
-                closeSearch();
-                return true;
-            }
-            return false;
-        });
-
-        return () => subscription.remove();
-    }, [searchMounted, slideAnim, closeSearch]);
+        setIsSearchOpen(false);
+    }, []);
 
     const [currentPage, setCurrentPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
@@ -645,22 +621,21 @@ const BrowseScreen = ({
                 </TouchableOpacity>
             )}
 
-            {searchMounted && (
-                <Animated.View
-                    style={[
-                        StyleSheet.absoluteFill,
-                        { transform: [{ translateY: slideAnim }], zIndex: 100 },
-                    ]}
-                >
-                    <AdvancedSearchScreen
-                        currentTheme={currentTheme}
-                        onClose={closeSearch}
-                        onSearch={handleSearchFilters}
-                        savedFilters={appliedFilters}
-                        tagMode={tagMode}
-                    />
-                </Animated.View>
-            )}
+            <Modal
+                visible={isSearchOpen}
+                animationType="slide"
+                onRequestClose={closeSearch}
+                presentationStyle="fullScreen"
+                statusBarTranslucent={true}
+            >
+                <AdvancedSearchScreen
+                    currentTheme={currentTheme}
+                    onClose={closeSearch}
+                    onSearch={handleSearchFilters}
+                    savedFilters={appliedFilters}
+                    tagMode={tagMode}
+                />
+            </Modal>
         </View>
     );
 };

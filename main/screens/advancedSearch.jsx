@@ -112,7 +112,6 @@ const AutocompleteInput = ({
     };
 
     const addItem = item => {
-        // Avoid adding duplicates
         if (
             !selectedItems.find(selected => selected.name.toLowerCase() === item.name.toLowerCase())
         ) {
@@ -140,6 +139,10 @@ const AutocompleteInput = ({
         }
     };
 
+    const tagColor = redText
+        ? theme.warningTextColor || theme.secondaryColor || '#ff4444'
+        : theme.primaryColor;
+
     return (
         <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: theme.textColor }]}>{label}</Text>
@@ -147,42 +150,40 @@ const AutocompleteInput = ({
                 style={[
                     styles.autocompleteContainer,
                     {
-                        borderColor: theme.borderColor,
+                        borderColor: isFocused ? theme.primaryColor : theme.borderColor,
                         backgroundColor: theme.inputBackground,
                     },
-                    isFocused && { borderColor: theme.primaryColor, borderWidth: 1.5 },
                 ]}
             >
-                <View style={styles.tagsContainer}>
-                    {selectedItems.map(item => (
-                        <View
-                            key={item.id}
-                            style={[styles.tag, { backgroundColor: theme.primaryColor }]}
-                        >
-                            <Text
+                {selectedItems.length > 0 && (
+                    <View style={styles.tagsContainer}>
+                        {selectedItems.map(item => (
+                            <View
+                                key={item.id}
                                 style={[
-                                    styles.tagText,
-                                    redText && { color: theme.secondaryTextColor },
+                                    styles.tag,
+                                    {
+                                        backgroundColor: redText
+                                            ? `${theme.warningBackground || '#ff4444'}20`
+                                            : `${theme.primaryColor}18`,
+                                        borderColor: tagColor,
+                                    },
                                 ]}
                             >
-                                {item.name}
-                            </Text>
-                            <TouchableOpacity
-                                onPress={() => handleRemoveItem(item)}
-                                style={styles.tagDelete}
-                            >
-                                <Text
-                                    style={[
-                                        styles.tagDeleteText,
-                                        redText && { color: theme.secondaryTextColor },
-                                    ]}
-                                >
-                                    ×
+                                <Text style={[styles.tagText, { color: tagColor }]}>
+                                    {item.name}
                                 </Text>
-                            </TouchableOpacity>
-                        </View>
-                    ))}
-                </View>
+                                <TouchableOpacity
+                                    onPress={() => handleRemoveItem(item)}
+                                    style={styles.tagDelete}
+                                    hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                                >
+                                    <Icon name="close" size={13} color={tagColor} />
+                                </TouchableOpacity>
+                            </View>
+                        ))}
+                    </View>
+                )}
                 <TextInput
                     style={[styles.autocompleteInput, { color: theme.textColor }]}
                     placeholder={selectedItems.length === 0 ? placeholder : ''}
@@ -214,13 +215,15 @@ const AutocompleteInput = ({
                     <ScrollView
                         keyboardShouldPersistTaps="handled"
                         showsVerticalScrollIndicator={false}
-                        style={styles.suggestionsScrollView}
                         nestedScrollEnabled={true}
                     >
                         {suggestions.map(item => (
                             <TouchableOpacity
                                 key={item.id}
-                                style={styles.suggestionItem}
+                                style={[
+                                    styles.suggestionItem,
+                                    { borderBottomColor: theme.borderColor },
+                                ]}
                                 onPress={() => handleSelectSuggestion(item)}
                             >
                                 <Text style={{ color: theme.textColor }}>{item.name}</Text>
@@ -233,7 +236,7 @@ const AutocompleteInput = ({
     );
 };
 
-const FilterSection = ({ title, children, theme, defaultOpen = false }) => {
+const FilterSection = ({ title, icon, children, theme, defaultOpen = false }) => {
     const [isOpen, setIsOpen] = useState(defaultOpen);
     return (
         <View
@@ -247,12 +250,32 @@ const FilterSection = ({ title, children, theme, defaultOpen = false }) => {
         >
             <TouchableOpacity
                 onPress={() => setIsOpen(!isOpen)}
-                style={[styles.sectionHeader, { backgroundColor: theme.inputBackground }]}
+                style={[
+                    styles.sectionHeader,
+                    {
+                        backgroundColor: theme.cardBackground,
+                        borderBottomColor: isOpen ? theme.borderColor : 'transparent',
+                        borderBottomWidth: isOpen ? 1 : 0,
+                    },
+                ]}
+                activeOpacity={0.7}
             >
-                <Text style={[styles.sectionTitle, { color: theme.textColor }]}>{title}</Text>
-                <Text style={[styles.sectionToggle, { color: theme.secondaryTextColor }]}>
-                    {isOpen ? '−' : '+'}
-                </Text>
+                <View style={styles.sectionHeaderLeft}>
+                    {icon && (
+                        <Icon
+                            name={icon}
+                            size={18}
+                            color={theme.primaryColor}
+                            style={styles.sectionIcon}
+                        />
+                    )}
+                    <Text style={[styles.sectionTitle, { color: theme.textColor }]}>{title}</Text>
+                </View>
+                <Icon
+                    name={isOpen ? 'expand-less' : 'expand-more'}
+                    size={22}
+                    color={theme.iconColor}
+                />
             </TouchableOpacity>
             {isOpen && <View style={styles.sectionContent}>{children}</View>}
         </View>
@@ -270,31 +293,26 @@ const CheckboxGroup = ({ title, options, selected, onSelect, theme }) => {
     return (
         <View style={styles.groupContainer}>
             <Text style={[styles.groupTitle, { color: theme.textColor }]}>{title}</Text>
-            {options.map(option => (
-                <TouchableOpacity
-                    key={option.value}
-                    style={styles.checkItem}
-                    onPress={() => handleToggle(option.value)}
-                >
-                    <View
-                        style={[
-                            styles.checkbox,
-                            { borderColor: theme.placeholderColor },
-                            selected.includes(option.value) && {
-                                backgroundColor: theme.primaryColor,
-                                borderColor: theme.primaryColor,
-                            },
-                        ]}
+            {options.map(option => {
+                const isChecked = selected.includes(option.value);
+                return (
+                    <TouchableOpacity
+                        key={option.value}
+                        style={styles.checkItem}
+                        onPress={() => handleToggle(option.value)}
+                        activeOpacity={0.7}
                     >
-                        {selected.includes(option.value) && (
-                            <Text style={styles.checkboxMark}>✓</Text>
-                        )}
-                    </View>
-                    <Text style={[styles.checkLabel, { color: theme.textColor }]}>
-                        {option.label}
-                    </Text>
-                </TouchableOpacity>
-            ))}
+                        <Icon
+                            name={isChecked ? 'check-box' : 'check-box-outline-blank'}
+                            size={22}
+                            color={isChecked ? theme.primaryColor : theme.iconColor}
+                        />
+                        <Text style={[styles.checkLabel, { color: theme.textColor }]}>
+                            {option.label}
+                        </Text>
+                    </TouchableOpacity>
+                );
+            })}
         </View>
     );
 };
@@ -303,49 +321,38 @@ const RadioGroup = ({ title, options, selected, onSelect, theme }) => {
     return (
         <View style={styles.groupContainer}>
             <Text style={[styles.groupTitle, { color: theme.textColor }]}>{title}</Text>
-            {options.map(option => (
-                <TouchableOpacity
-                    key={option.value}
-                    style={styles.checkItem}
-                    onPress={() => onSelect(option.value)}
-                >
-                    <View
-                        style={[
-                            styles.radio,
-                            { borderColor: theme.placeholderColor },
-                            selected === option.value && { borderColor: theme.primaryColor },
-                        ]}
+            {options.map(option => {
+                const isSelected = selected === option.value;
+                return (
+                    <TouchableOpacity
+                        key={option.value}
+                        style={styles.checkItem}
+                        onPress={() => onSelect(option.value)}
+                        activeOpacity={0.7}
                     >
-                        {selected === option.value && (
-                            <View
-                                style={[styles.radioInner, { backgroundColor: theme.primaryColor }]}
-                            />
-                        )}
-                    </View>
-                    <Text style={[styles.checkLabel, { color: theme.textColor }]}>
-                        {option.label}
-                    </Text>
-                </TouchableOpacity>
-            ))}
+                        <Icon
+                            name={isSelected ? 'radio-button-checked' : 'radio-button-unchecked'}
+                            size={22}
+                            color={isSelected ? theme.primaryColor : theme.iconColor}
+                        />
+                        <Text style={[styles.checkLabel, { color: theme.textColor }]}>
+                            {option.label}
+                        </Text>
+                    </TouchableOpacity>
+                );
+            })}
         </View>
     );
 };
 
 const ToggleCheckbox = ({ label, checked, onToggle, theme }) => {
     return (
-        <TouchableOpacity style={styles.checkItem} onPress={onToggle}>
-            <View
-                style={[
-                    styles.checkbox,
-                    { borderColor: theme.placeholderColor },
-                    checked && {
-                        backgroundColor: theme.primaryColor,
-                        borderColor: theme.primaryColor,
-                    },
-                ]}
-            >
-                {checked && <Text style={styles.checkboxMark}>✓</Text>}
-            </View>
+        <TouchableOpacity style={styles.checkItem} onPress={onToggle} activeOpacity={0.7}>
+            <Icon
+                name={checked ? 'check-box' : 'check-box-outline-blank'}
+                size={22}
+                color={checked ? theme.primaryColor : theme.iconColor}
+            />
             <Text style={[styles.checkLabel, { color: theme.textColor }]}>{label}</Text>
         </TouchableOpacity>
     );
@@ -1118,61 +1125,110 @@ const AdvancedSearchScreen = ({
         await loadPresetsFromStorage();
     };
 
+    const resetFilters = useCallback(() => {
+        setAnyField('');
+        setTitle('');
+        setCreator('');
+        setDate('');
+        setCompletionStatus('');
+        setCrossoverStatus('');
+        setSingleChapter(false);
+        setWordCount('');
+        setLanguage('');
+        setFandoms([]);
+        setRating('');
+        setWarnings([]);
+        setCategories([]);
+        setCharacters([]);
+        setRelationships([]);
+        setAdditionalTags([]);
+        setExcludedFandoms([]);
+        setExcludedCharacters([]);
+        setExcludedRelationships([]);
+        setExcludedAdditionalTags([]);
+        setExcludedRatings([]);
+        setExcludedWarnings([]);
+        setHits('');
+        setKudos('');
+        setComments('');
+        setBookmarks('');
+        setSortBy('revised_at');
+        setSortDirection('desc');
+        setPresetName('');
+    }, []);
+
     return (
         <SafeAreaView style={[styles.safeArea, { backgroundColor: currentTheme.backgroundColor }]}>
-            {/* Add preset modal */}
+            {/* Save Preset Modal */}
             <Modal
-                animationType="slide"
+                animationType="fade"
                 transparent={true}
                 visible={showAddModal}
-                onRequestClose={() => setShowAddModal(!showAddModal)}
+                onRequestClose={() => setShowAddModal(false)}
             >
-                <View style={styles.modal}>
-                    <View
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    activeOpacity={1}
+                    onPress={() => setShowAddModal(false)}
+                >
+                    <TouchableOpacity
+                        activeOpacity={1}
                         style={[
-                            styles.modalBg,
+                            styles.modalCard,
                             {
-                                backgroundColor: currentTheme.backgroundColor,
+                                backgroundColor: currentTheme.cardBackground,
                                 borderColor: currentTheme.borderColor,
                             },
                         ]}
                     >
-                        <View
-                            style={[styles.header, { borderBottomColor: currentTheme.borderColor }]}
-                        >
-                            <Text style={[styles.headerTitle, { color: currentTheme.textColor }]}>
-                                {t('screen_advancedSearch_save_preset_modal_title')}
-                            </Text>
-                            <TouchableOpacity onPress={() => setShowAddModal(false)}>
+                        <View style={styles.modalHeader}>
+                            <View style={styles.modalHeaderTitleWrap}>
                                 <Icon
-                                    style={[styles.icon, { color: currentTheme.iconColor }]}
-                                    name={'close'}
+                                    name="bookmark-add"
+                                    size={20}
+                                    color={currentTheme.primaryColor}
+                                    style={{ marginRight: 8 }}
                                 />
-                            </TouchableOpacity>
-                        </View>
-                        <View style={styles.modalContent}>
-                            <View style={styles.inputGroup}>
-                                <Text style={[styles.label, { color: currentTheme.textColor }]}>
-                                    {t('screen_advancedSearch_preset_name_label')}
+                                <Text
+                                    style={[styles.modalTitle, { color: currentTheme.textColor }]}
+                                >
+                                    {t('screen_advancedSearch_save_preset_modal_title')}
                                 </Text>
-                                <TextInput
-                                    style={[
-                                        styles.input,
-                                        {
-                                            color: currentTheme.textColor,
-                                            borderColor: currentTheme.borderColor,
-                                            backgroundColor: currentTheme.inputBackground,
-                                        },
-                                    ]}
-                                    placeholder={t('screen_advancedSearch_preset_name_placeholder')}
-                                    placeholderTextColor={currentTheme.placeholderColor}
-                                    value={presetName}
-                                    onChangeText={setPresetName}
-                                />
                             </View>
                             <TouchableOpacity
+                                onPress={() => setShowAddModal(false)}
+                                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                            >
+                                <Icon name="close" size={20} color={currentTheme.iconColor} />
+                            </TouchableOpacity>
+                        </View>
+                        <View style={styles.modalBody}>
+                            <Text
                                 style={[
-                                    styles.modalButton,
+                                    styles.modalInputLabel,
+                                    { color: currentTheme.secondaryTextColor },
+                                ]}
+                            >
+                                {t('screen_advancedSearch_preset_name_label')}
+                            </Text>
+                            <TextInput
+                                style={[
+                                    styles.input,
+                                    {
+                                        color: currentTheme.textColor,
+                                        borderColor: currentTheme.borderColor,
+                                        backgroundColor: currentTheme.inputBackground,
+                                    },
+                                ]}
+                                placeholder={t('screen_advancedSearch_preset_name_placeholder')}
+                                placeholderTextColor={currentTheme.placeholderColor}
+                                value={presetName}
+                                onChangeText={setPresetName}
+                                autoFocus={true}
+                            />
+                            <TouchableOpacity
+                                style={[
+                                    styles.primaryModalButton,
                                     { backgroundColor: currentTheme.primaryColor },
                                 ]}
                                 onPress={() => {
@@ -1180,138 +1236,210 @@ const AdvancedSearchScreen = ({
                                     setShowAddModal(false);
                                 }}
                             >
-                                <Text style={styles.buttonText}>
+                                <Text style={styles.primaryModalButtonText}>
                                     {presetExists
                                         ? t('screen_advancedSearch_update_button')
                                         : t('screen_advancedSearch_add_button')}
                                 </Text>
                             </TouchableOpacity>
                         </View>
-                    </View>
-                </View>
+                    </TouchableOpacity>
+                </TouchableOpacity>
             </Modal>
 
-            {/* Preset modal */}
+            {/* Presets List Modal */}
             <Modal
-                animationType="slide"
+                animationType="fade"
                 transparent={true}
                 visible={showPresetModal}
-                onRequestClose={() => setShowPresetModal(!showPresetModal)}
+                onRequestClose={() => setShowPresetModal(false)}
             >
-                <View style={styles.modal}>
-                    <View
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    activeOpacity={1}
+                    onPress={() => setShowPresetModal(false)}
+                >
+                    <TouchableOpacity
+                        activeOpacity={1}
                         style={[
-                            styles.modalBg,
+                            styles.modalCard,
                             {
-                                backgroundColor: currentTheme.backgroundColor,
+                                backgroundColor: currentTheme.cardBackground,
                                 borderColor: currentTheme.borderColor,
+                                maxHeight: '75%',
                             },
                         ]}
                     >
-                        <View
-                            style={[styles.header, { borderBottomColor: currentTheme.borderColor }]}
-                        >
-                            <Text style={[styles.headerTitle, { color: currentTheme.textColor }]}>
-                                {t('screen_advancedSearch_presets_button')}
-                            </Text>
-                            <TouchableOpacity onPress={() => setShowPresetModal(false)}>
+                        <View style={styles.modalHeader}>
+                            <View style={styles.modalHeaderTitleWrap}>
                                 <Icon
-                                    style={[styles.icon, { color: currentTheme.iconColor }]}
-                                    name={'close'}
+                                    name="bookmark-border"
+                                    size={20}
+                                    color={currentTheme.primaryColor}
+                                    style={{ marginRight: 8 }}
                                 />
+                                <Text
+                                    style={[styles.modalTitle, { color: currentTheme.textColor }]}
+                                >
+                                    {t('screen_advancedSearch_presets_button')}
+                                </Text>
+                            </View>
+                            <TouchableOpacity
+                                onPress={() => setShowPresetModal(false)}
+                                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                            >
+                                <Icon name="close" size={20} color={currentTheme.iconColor} />
                             </TouchableOpacity>
                         </View>
-                        <View style={styles.modalContent}>
-                            <ScrollView>
-                                {presets.map((p, index) => (
+                        <ScrollView style={styles.presetList} showsVerticalScrollIndicator={false}>
+                            {presets.map((p, index) => (
+                                <TouchableOpacity
+                                    key={index}
+                                    style={[
+                                        styles.presetItem,
+                                        {
+                                            backgroundColor: currentTheme.inputBackground,
+                                            borderColor: currentTheme.borderColor,
+                                        },
+                                    ]}
+                                    onPress={() => {
+                                        loadPreset(presets[index]);
+                                        setShowPresetModal(false);
+                                    }}
+                                >
+                                    <Icon
+                                        name="bookmark"
+                                        size={18}
+                                        color={currentTheme.primaryColor}
+                                        style={{ marginRight: 10 }}
+                                    />
+                                    <Text
+                                        style={[
+                                            styles.presetName,
+                                            { color: currentTheme.textColor },
+                                        ]}
+                                        numberOfLines={1}
+                                    >
+                                        {p.name}
+                                    </Text>
                                     <TouchableOpacity
-                                        key={index}
-                                        onPress={() => {
-                                            loadPreset(presets[index]);
-                                            setShowPresetModal(false);
+                                        onPress={() => deletePreset(index)}
+                                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                        style={styles.presetDeleteBtn}
+                                    >
+                                        <Icon
+                                            name="delete-outline"
+                                            size={20}
+                                            color={
+                                                currentTheme.warningTextColor ||
+                                                currentTheme.secondaryColor ||
+                                                '#ff4444'
+                                            }
+                                        />
+                                    </TouchableOpacity>
+                                </TouchableOpacity>
+                            ))}
+                            {presets.length === 0 && (
+                                <View style={styles.emptyPresets}>
+                                    <Icon
+                                        name="bookmark-border"
+                                        size={36}
+                                        color={currentTheme.placeholderColor}
+                                        style={{ opacity: 0.5, marginBottom: 8 }}
+                                    />
+                                    <Text
+                                        style={{
+                                            color: currentTheme.secondaryTextColor,
+                                            textAlign: 'center',
                                         }}
                                     >
-                                        <View
-                                            style={[
-                                                styles.modalPresetObject,
-                                                {
-                                                    backgroundColor: currentTheme.cardBackground,
-                                                    borderColor: currentTheme.borderColor,
-                                                },
-                                            ]}
-                                        >
-                                            <Text style={[{ color: currentTheme.textColor }]}>
-                                                {p.name}
-                                            </Text>
-                                            <TouchableOpacity onPress={() => deletePreset(index)}>
-                                                <Icon
-                                                    style={[
-                                                        styles.iconDelete,
-                                                        { color: currentTheme.warningTextColor },
-                                                    ]}
-                                                    name={'delete'}
-                                                />
-                                            </TouchableOpacity>
-                                        </View>
-                                    </TouchableOpacity>
-                                ))}
-                                {presets.length === 0 && (
-                                    <Text style={[{ color: currentTheme.textColor }]}>
                                         {t('screen_advancedSearch_no_presets')}
                                     </Text>
-                                )}
-                            </ScrollView>
-                        </View>
-                    </View>
-                </View>
+                                </View>
+                            )}
+                        </ScrollView>
+                    </TouchableOpacity>
+                </TouchableOpacity>
             </Modal>
 
-            <View style={[styles.header, { borderBottomColor: currentTheme.borderColor }]}>
-                <Text style={[styles.headerTitle, { color: currentTheme.textColor }]}>
+            {/* Header */}
+            <View
+                style={[
+                    styles.header,
+                    {
+                        borderBottomColor: currentTheme.borderColor,
+                        backgroundColor:
+                            currentTheme.headerBackground || currentTheme.backgroundColor,
+                    },
+                ]}
+            >
+                <TouchableOpacity
+                    onPress={onClose}
+                    style={styles.headerIconButton}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                    <Icon name="close" size={24} color={currentTheme.iconColor} />
+                </TouchableOpacity>
+
+                <Text
+                    style={[styles.headerTitle, { color: currentTheme.textColor }]}
+                    numberOfLines={1}
+                >
                     {t('screen_advancedSearch_title')}
                 </Text>
-                <TouchableOpacity onPress={() => setShowPresetModal(true)}>
-                    <Text style={[styles.closeButton, { color: currentTheme.primaryColor }]}>
-                        {t('screen_advancedSearch_presets_button')}
-                    </Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => setShowAddModal(true)}>
-                    <Text style={[styles.closeButton, { color: currentTheme.primaryColor }]}>
-                        {t('screen_advancedSearch_save_button')}
-                    </Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={onClose}>
-                    <Text style={[styles.closeButton, { color: currentTheme.primaryColor }]}>
-                        {t('screen_advancedSearch_close_button')}
-                    </Text>
-                </TouchableOpacity>
+
+                <View style={styles.headerActions}>
+                    <TouchableOpacity
+                        onPress={resetFilters}
+                        style={styles.headerIconButton}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                        <Icon name="restart-alt" size={22} color={currentTheme.iconColor} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={() => setShowPresetModal(true)}
+                        style={styles.headerIconButton}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                        <Icon name="bookmark-border" size={22} color={currentTheme.iconColor} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={() => setShowAddModal(true)}
+                        style={styles.headerIconButton}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                        <Icon name="bookmark-add" size={22} color={currentTheme.iconColor} />
+                    </TouchableOpacity>
+                </View>
             </View>
 
             <ScrollView
                 style={styles.container}
                 contentContainerStyle={styles.contentContainer}
                 keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
             >
-                {activeCanonicalTag ? (
+                {activeCanonicalTag && (
                     <View
                         style={[
                             styles.canonicalTagBanner,
                             {
-                                backgroundColor: `${currentTheme.primaryColor}22`,
+                                backgroundColor: `${currentTheme.primaryColor}18`,
                                 borderColor: currentTheme.primaryColor,
                             },
                         ]}
                     >
                         <Icon
                             name="local-offer"
-                            size={14}
-                            style={{ color: currentTheme.primaryColor, marginRight: 6 }}
+                            size={16}
+                            style={{ color: currentTheme.primaryColor, marginRight: 8 }}
                         />
                         <Text
                             style={[
                                 styles.canonicalTagBannerText,
                                 { color: currentTheme.primaryColor, flex: 1 },
                             ]}
+                            numberOfLines={1}
                         >
                             {t('screen_advancedSearch_canonical_tag_banner', {
                                 tag: activeCanonicalTag,
@@ -1320,45 +1448,20 @@ const AdvancedSearchScreen = ({
                         <TouchableOpacity
                             onPress={() => setCanonicalTagDismissed(true)}
                             style={styles.canonicalTagDismiss}
+                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                         >
                             <Icon
                                 name="close"
-                                size={14}
+                                size={16}
                                 style={{ color: currentTheme.primaryColor }}
                             />
                         </TouchableOpacity>
-                    </View>
-                ) : (
-                    <View
-                        style={[
-                            styles.canonicalTagBanner,
-                            {
-                                backgroundColor: currentTheme.warningMessageBackground,
-                                borderColor: currentTheme.warningMessageTextColor,
-                            },
-                        ]}
-                    >
-                        <Icon
-                            name="local-offer"
-                            size={14}
-                            style={{
-                                color: currentTheme.warningMessageTextColor,
-                                marginRight: 6,
-                            }}
-                        />
-                        <Text
-                            style={[
-                                styles.canonicalTagBannerText,
-                                { color: currentTheme.warningMessageTextColor, flex: 1 },
-                            ]}
-                        >
-                            {t('screen_advancedSearch_no_canonical_tag_banner')}
-                        </Text>
                     </View>
                 )}
 
                 <FilterSection
                     title={t('screen_advancedSearch_filter_work_info')}
+                    icon="description"
                     theme={currentTheme}
                     defaultOpen={true}
                 >
@@ -1513,6 +1616,7 @@ const AdvancedSearchScreen = ({
 
                 <FilterSection
                     title={t('screen_advancedSearch_filter_work_tags')}
+                    icon="local-offer"
                     theme={currentTheme}
                 >
                     <AutocompleteInput
@@ -1600,6 +1704,7 @@ const AdvancedSearchScreen = ({
                 {activeCanonicalTag && (
                     <FilterSection
                         title={t('screen_advancedSearch_filter_exclude')}
+                        icon="remove-circle-outline"
                         theme={currentTheme}
                     >
                         <AutocompleteInput
@@ -1671,7 +1776,11 @@ const AdvancedSearchScreen = ({
                     </FilterSection>
                 )}
 
-                <FilterSection title={t('screen_advancedSearch_filter_stats')} theme={currentTheme}>
+                <FilterSection
+                    title={t('screen_advancedSearch_filter_stats')}
+                    icon="insights"
+                    theme={currentTheme}
+                >
                     <View style={styles.inputGroup}>
                         <Text style={[styles.label, { color: currentTheme.textColor }]}>
                             {t('screen_advancedSearch_label_hits')}
@@ -1756,6 +1865,7 @@ const AdvancedSearchScreen = ({
 
                 <FilterSection
                     title={t('screen_advancedSearch_filter_search_options')}
+                    icon="tune"
                     theme={currentTheme}
                     defaultOpen={true}
                 >
@@ -1825,6 +1935,7 @@ const AdvancedSearchScreen = ({
             <TouchableOpacity
                 style={[styles.fab, { backgroundColor: currentTheme.primaryColor }]}
                 onPress={handleSearch}
+                activeOpacity={0.8}
             >
                 <Icon name="search" size={24} color="white" />
             </TouchableOpacity>
@@ -1836,193 +1947,244 @@ const styles = StyleSheet.create({
     safeArea: { flex: 1 },
     header: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: 16,
         paddingVertical: 12,
         borderBottomWidth: 1,
+        gap: 12,
     },
-    headerTitle: { fontSize: 20, fontWeight: 'bold' },
-    closeButton: { fontSize: 16, fontWeight: '600' },
+    headerIconButton: {
+        padding: 6,
+        borderRadius: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    headerTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        flex: 1,
+    },
+    headerActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+    },
     container: { flex: 1 },
     contentContainer: {
-        padding: 16,
+        padding: 14,
         paddingBottom: 80,
     },
-    inputGroup: { marginBottom: 16 },
-    label: { fontSize: 16, fontWeight: '500', marginBottom: 8 },
+    inputGroup: { marginBottom: 14 },
+    label: { fontSize: 14, fontWeight: '500', marginBottom: 6 },
     input: {
         borderWidth: 1,
-        borderRadius: 8,
+        borderRadius: 10,
         paddingHorizontal: 12,
-        paddingVertical: 10,
-        fontSize: 16,
+        paddingVertical: 9,
+        fontSize: 15,
     },
     CustomDropdownContainer: {
         borderWidth: 1,
-        borderRadius: 8,
+        borderRadius: 10,
         justifyContent: 'center',
     },
     sectionContainer: {
         borderWidth: 1,
-        borderRadius: 8,
-        marginBottom: 16,
+        borderRadius: 12,
+        marginBottom: 14,
         overflow: 'hidden',
     },
     sectionHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: 12,
+        paddingHorizontal: 14,
+        paddingVertical: 12,
     },
-    sectionTitle: { fontSize: 18, fontWeight: 'bold' },
-    sectionToggle: { fontSize: 24, fontWeight: 'bold' },
-    sectionContent: { padding: 12 },
-    groupContainer: { marginBottom: 16 },
+    sectionHeaderLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
+    sectionIcon: {
+        marginRight: 8,
+    },
+    sectionTitle: { fontSize: 15, fontWeight: '600' },
+    sectionContent: {
+        padding: 14,
+        paddingTop: 12,
+    },
+    groupContainer: { marginBottom: 14 },
     groupTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginBottom: 8,
-        marginTop: 8,
+        fontSize: 14,
+        fontWeight: '600',
+        marginBottom: 6,
+        marginTop: 4,
     },
-    checkItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8 },
-    checkLabel: { fontSize: 16, marginLeft: 12, flex: 1 },
-    checkbox: {
-        width: 24,
-        height: 24,
-        borderWidth: 2,
-        borderRadius: 4,
-        justifyContent: 'center',
+    checkItem: {
+        flexDirection: 'row',
         alignItems: 'center',
+        paddingVertical: 7,
+        gap: 10,
     },
-    checkboxMark: { color: 'white', fontWeight: 'bold' },
-    radio: {
-        width: 24,
-        height: 24,
-        borderRadius: 12,
-        borderWidth: 2,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    radioInner: { width: 12, height: 12, borderRadius: 6 },
+    checkLabel: { fontSize: 15, flex: 1 },
     fab: {
         position: 'absolute',
-        right: 14,
-        bottom: 20,
-        width: 48,
-        height: 48,
-        borderRadius: 24,
+        right: 16,
+        bottom: 24,
+        width: 52,
+        height: 52,
+        borderRadius: 26,
         justifyContent: 'center',
         alignItems: 'center',
         elevation: 6,
         shadowColor: '#000',
         shadowOffset: {
             width: 0,
-            height: 2,
+            height: 3,
         },
-        shadowOpacity: 0.25,
-        shadowRadius: 3,
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
     },
-    buttonText: { color: 'white', fontSize: 18, fontWeight: 'bold' },
     autocompleteContainer: {
         borderWidth: 1,
-        borderRadius: 8,
+        borderRadius: 10,
         paddingHorizontal: 10,
-        paddingVertical: 5,
-        minHeight: 48,
+        paddingVertical: 6,
+        minHeight: 44,
         justifyContent: 'center',
     },
     autocompleteInput: {
-        fontSize: 16,
-        paddingVertical: 5,
+        fontSize: 15,
+        paddingVertical: 4,
         flexGrow: 1,
     },
     tagsContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         alignItems: 'center',
+        gap: 6,
+        marginBottom: 4,
     },
     tag: {
         flexDirection: 'row',
         alignItems: 'center',
-        borderRadius: 15,
-        paddingVertical: 5,
-        paddingHorizontal: 10,
-        margin: 3,
+        borderRadius: 8,
+        borderWidth: 1,
+        paddingVertical: 4,
+        paddingHorizontal: 8,
     },
     tagText: {
-        color: 'white',
-        fontSize: 14,
-        marginRight: 6,
+        fontSize: 13,
+        fontWeight: '500',
+        marginRight: 4,
     },
     tagDelete: {
-        backgroundColor: 'rgba(255,255,255,0.2)',
-        borderRadius: 10,
-        width: 20,
-        height: 20,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    tagDeleteText: {
-        color: 'white',
-        fontWeight: 'bold',
-        fontSize: 14,
-        lineHeight: 18,
+        padding: 2,
     },
     suggestionsContainer: {
-        maxHeight: 150,
+        maxHeight: 160,
         borderWidth: 1,
-        borderRadius: 8,
+        borderRadius: 10,
         marginTop: 4,
         zIndex: 10,
+        overflow: 'hidden',
     },
     suggestionItem: {
-        padding: 12,
+        paddingHorizontal: 14,
+        paddingVertical: 10,
         borderBottomWidth: 1,
-        borderBottomColor: '#eee',
     },
-    modal: {
+    modalOverlay: {
         flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         justifyContent: 'center',
         alignItems: 'center',
+        padding: 20,
     },
-    modalBg: {
-        borderRadius: 12,
-        width: '80%',
+    modalCard: {
+        width: '100%',
+        maxWidth: 400,
+        borderRadius: 16,
         borderWidth: 1,
+        overflow: 'hidden',
+        elevation: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
     },
-    modalContent: {
-        padding: 16,
-    },
-    modalButton: {
-        padding: 15,
-        borderRadius: 8,
-        alignItems: 'center',
-    },
-    modalPresetObject: {
-        borderRadius: 12,
-        borderWidth: 1,
-        margin: 4,
-        padding: 8,
-        display: 'flex',
+    modalHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(128, 128, 128, 0.2)',
     },
-    icon: {
-        fontSize: 32,
+    modalHeaderTitleWrap: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
     },
-    iconDelete: {
-        fontSize: 24,
+    modalTitle: {
+        fontSize: 16,
+        fontWeight: '700',
+    },
+    modalBody: {
+        padding: 16,
+    },
+    modalInputLabel: {
+        fontSize: 13,
+        fontWeight: '500',
+        marginBottom: 6,
+    },
+    primaryModalButton: {
+        marginTop: 14,
+        paddingVertical: 12,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    primaryModalButtonText: {
+        color: 'white',
+        fontSize: 15,
+        fontWeight: '600',
+    },
+    presetList: {
+        padding: 12,
+    },
+    presetItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        borderRadius: 10,
+        borderWidth: 1,
+        marginBottom: 8,
+    },
+    presetName: {
+        fontSize: 14,
+        fontWeight: '500',
+        flex: 1,
+    },
+    presetDeleteBtn: {
+        padding: 4,
+    },
+    emptyPresets: {
+        padding: 24,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     canonicalTagBanner: {
         flexDirection: 'row',
         alignItems: 'center',
         borderWidth: 1,
-        borderRadius: 6,
-        paddingVertical: 8,
-        paddingHorizontal: 10,
-        marginBottom: 16,
+        borderRadius: 10,
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+        marginBottom: 14,
     },
     canonicalTagDismiss: {
         marginLeft: 8,
@@ -2030,7 +2192,7 @@ const styles = StyleSheet.create({
     },
     canonicalTagBannerText: {
         fontSize: 13,
-        flexShrink: 1,
+        fontWeight: '500',
     },
 });
 

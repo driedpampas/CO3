@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -7,12 +8,12 @@ import {
     ScrollView,
     StyleSheet,
     Text,
-    TouchableOpacity,
     View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import UpdateBookCard from '../components/Update/UpdateBookCard';
+import { STORAGE_KEYS } from '../utils/constants';
 import { run } from '../web/updater';
 
 const UpdateScreen = ({
@@ -20,7 +21,7 @@ const UpdateScreen = ({
     updateDAO,
     workDAO,
     setScreens,
-    screens,
+    screens: _screens,
     libraryDAO,
     settingsDAO,
     historyDAO,
@@ -29,11 +30,18 @@ const UpdateScreen = ({
     openTagSearch,
     databaseObj,
     chapterDAO,
+    lastUpdate: _lastUpdate,
+    setLastUpdate,
+    refreshing: refreshingProp,
+    setRefreshing: setRefreshingProp,
+    handleManualUpdate: handleManualUpdateProp,
 }) => {
     const [updates, setUpdates] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
-    const [lastUpdate, setLastUpdate] = useState(null);
+    const [localRefreshing, setLocalRefreshing] = useState(false);
+
+    const refreshing = refreshingProp !== undefined ? refreshingProp : localRefreshing;
+    const setRefreshing = setRefreshingProp || setLocalRefreshing;
 
     const navigation = useNavigation();
 
@@ -53,7 +61,7 @@ const UpdateScreen = ({
                     ? t('screen_update_time_minute_plural', { count: diffMins })
                     : t('screen_update_time_minute', { count: diffMins });
             if (diffHours < 24)
-                return diffMins > 1
+                return diffHours > 1
                     ? t('screen_update_time_hour_plural', { count: diffHours })
                     : t('screen_update_time_hour', { count: diffHours });
             return diffDays > 1
@@ -71,9 +79,24 @@ const UpdateScreen = ({
                 const sortedUpdates = allUpdates.sort((a, b) => b.date - a.date);
                 setUpdates(sortedUpdates);
 
+                let latestTimestamp = null;
+                const lastCheckedStr = await AsyncStorage.getItem(STORAGE_KEYS.LAST_UPDATE_CHECK);
+                if (lastCheckedStr) {
+                    const parsed = parseInt(lastCheckedStr, 10);
+                    if (!Number.isNaN(parsed)) {
+                        latestTimestamp = parsed;
+                    }
+                }
                 if (sortedUpdates.length > 0) {
-                    const latest = new Date(sortedUpdates[0].date);
-                    setLastUpdate(formatRelativeTime(latest));
+                    latestTimestamp = Math.max(latestTimestamp || 0, sortedUpdates[0].date);
+                }
+
+                if (latestTimestamp) {
+                    if (setLastUpdate) {
+                        setLastUpdate(formatRelativeTime(new Date(latestTimestamp)));
+                    }
+                } else if (setLastUpdate) {
+                    setLastUpdate(null);
                 }
             }
         } catch (error) {
@@ -81,11 +104,17 @@ const UpdateScreen = ({
         } finally {
             setLoading(false);
         }
-    }, [updateDAO, formatRelativeTime]);
+    }, [updateDAO, formatRelativeTime, setLastUpdate]);
 
     useEffect(() => {
         loadUpdates();
     }, [loadUpdates]);
+
+    useEffect(() => {
+        if (!refreshing) {
+            loadUpdates();
+        }
+    }, [refreshing, loadUpdates]);
 
     useEffect(() => {
         const subscription = DeviceEventEmitter.addListener('doubleTap', _id => {
@@ -102,7 +131,11 @@ const UpdateScreen = ({
         };
     }, []);
 
-    const handleManualUpdate = async () => {
+    const handleManualUpdate = useCallback(async () => {
+        if (handleManualUpdateProp) {
+            await handleManualUpdateProp();
+            return;
+        }
         setRefreshing(true);
         try {
             await run(databaseObj);
@@ -112,7 +145,7 @@ const UpdateScreen = ({
         } finally {
             setRefreshing(false);
         }
-    };
+    }, [handleManualUpdateProp, setRefreshing, databaseObj, loadUpdates]);
 
     const groupUpdatesByDate = updatesList => {
         const today = new Date();
@@ -167,7 +200,7 @@ const UpdateScreen = ({
         }
 
         navigation.push('Work', {
-            key: `update_$update.id}`,
+            key: `update_${update.id}`,
             workId: update.workId,
             currentTheme: currentTheme,
             libraryDAO: libraryDAO,
@@ -199,44 +232,6 @@ const UpdateScreen = ({
 
     return (
         <View style={[styles.container, { backgroundColor: currentTheme.backgroundColor }]}>
-            {/* Consolidate header with last update info and refresh icon */}
-            <View
-                style={[
-                    styles.headerBar,
-                    {
-                        backgroundColor: currentTheme.headerBackground,
-                        borderBottomColor: currentTheme.borderColor,
-                    },
-                ]}
-            >
-                <View style={styles.headerLeft}>
-                    {lastUpdate && (
-                        <Text
-                            style={[
-                                styles.lastUpdateText,
-                                { color: currentTheme.secondaryTextColor },
-                            ]}
-                        >
-                            {t('screen_update_last_updated', { last_update: lastUpdate })}
-                        </Text>
-                    )}
-                </View>
-                <TouchableOpacity
-                    style={[
-                        styles.refreshButton,
-                        { backgroundColor: currentTheme.buttonBackground },
-                    ]}
-                    onPress={handleManualUpdate}
-                    disabled={refreshing}
-                >
-                    <Icon
-                        name="refresh"
-                        size={20}
-                        color={refreshing ? currentTheme.placeholderColor : currentTheme.iconColor}
-                    />
-                </TouchableOpacity>
-            </View>
-
             <ScrollView
                 style={styles.scrollView}
                 contentContainerStyle={[
@@ -344,25 +339,6 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-    },
-    headerBar: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderBottomWidth: 1,
-    },
-    headerLeft: {
-        flex: 1,
-    },
-    lastUpdateText: {
-        fontSize: 12,
-        fontStyle: 'italic',
-    },
-    refreshButton: {
-        padding: 6,
-        borderRadius: 6,
     },
     scrollView: {
         flex: 1,

@@ -16,6 +16,7 @@ import { getJsonSettings } from '../storage/jsonSettings';
 import { Update } from '../storage/models/update';
 import { fetchBookmarks } from './other/bookmarks';
 import { fetchWorkFromWorkID } from './worksScreen/fetchWork';
+import { STORAGE_KEYS } from '../utils/constants';
 
 const { LibraryScheduler } = NativeModules;
 
@@ -150,6 +151,7 @@ export const run = async () => {
 
     try {
         await runUpdate(useCompactNotification, settings);
+        await AsyncStorage.setItem(STORAGE_KEYS.LAST_UPDATE_CHECK, String(Date.now()));
     } finally {
         try {
             await notifee.stopForegroundService();

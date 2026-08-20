@@ -14,7 +14,8 @@
         "web": "vite",
         "build:web": "vite build",
         "electron": "bun run build:web && electron .",
-        "electron:dev": "vite"
+        "electron:dev": "vite",
+        "generate:icons": "bun scripts/generate-icons.mjs"
     },
     "dependencies": {
         "@expo/vector-icons": "^14.1.0",

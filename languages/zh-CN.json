@@ -68,6 +68,7 @@
     "screen_library_select_category_modal_title": "选择收藏集",
 
     "screen_update_last_updated": "文库最后更新: {{last_update}}",
+    "screen_update_time_never": "从不",
     "screen_update_time_now": "刚刚",
     "screen_update_time_minute": "{{count}}分钟前",
     "screen_update_time_minute_plural": "{{count}}分钟前",
@@ -291,7 +292,7 @@
     "screen_help_discord": "在Discord上提问",
     "screen_help_github": "在GitHub上提交问题",
 
-    "screen_advancedSearch_title": "作品搜索",
+    "screen_advancedSearch_title": "筛选",
     "screen_advancedSearch_presets_button": "预设",
     "screen_advancedSearch_save_button": "保存",
     "screen_advancedSearch_close_button": "关闭",

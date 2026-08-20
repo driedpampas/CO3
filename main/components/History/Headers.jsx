@@ -4,7 +4,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const HistoryHeader = ({
     currentTheme,
-    totalCount,
+    totalCount: _totalCount,
     isFilterActive,
     hasHistory,
     onClearHistory,
@@ -13,24 +13,12 @@ const HistoryHeader = ({
 }) => {
     const { t } = useTranslation();
 
+    if (!isFilterActive && !hasHistory) {
+        return null;
+    }
+
     return (
         <View style={styles.header}>
-            <Text style={[styles.subtitle, { color: currentTheme.secondaryTextColor }]}>
-                {isFilterActive
-                    ? totalCount === 1
-                        ? t('component_history_header_count_filtered', {
-                              totalCount: totalCount,
-                          })
-                        : t('component_history_header_count_filtered_plural', {
-                              totalCount: totalCount,
-                          })
-                    : totalCount === 1
-                      ? t('component_history_header_count', { totalCount: totalCount })
-                      : t('component_history_header_count_plural', {
-                            totalCount: totalCount,
-                        })}
-            </Text>
-
             <View style={styles.headerButtons}>
                 {isFilterActive && (
                     <TouchableOpacity
@@ -69,17 +57,13 @@ const HistoryHeader = ({
 const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        justifyContent: 'flex-end',
         alignItems: 'center',
         marginBottom: 8,
     },
     headerButtons: {
         flexDirection: 'row',
         gap: 6,
-    },
-    subtitle: {
-        fontSize: 13,
-        fontWeight: '500',
     },
     clearFilterButton: {
         borderRadius: 6,

@@ -317,15 +317,22 @@ const AppWrapper = () => {
 const TopBar = ({
     currentTheme,
     activeScreen,
-    setIsSideMenuOpen,
+    _setIsSideMenuOpen,
     searchTerm,
     setSearchTerm,
     setActiveScreen,
+    lastUpdate,
+    refreshing,
+    onManualUpdate,
 }) => {
     const showSearch =
         activeScreen === 'library' || activeScreen === 'search' || activeScreen === 'browse';
 
     const { t } = useTranslation();
+
+    if (activeScreen === 'history') {
+        return null;
+    }
 
     return (
         <View
@@ -357,6 +364,39 @@ const TopBar = ({
                         }}
                         onChangeText={setSearchTerm}
                     />
+                </View>
+            ) : activeScreen === 'update' ? (
+                <View style={styles.updateHeaderContainer}>
+                    <View style={styles.updateHeaderLeft}>
+                        <Text
+                            style={[
+                                styles.lastUpdateText,
+                                { color: currentTheme.secondaryTextColor },
+                            ]}
+                            numberOfLines={1}
+                        >
+                            {t('screen_update_last_updated', {
+                                last_update: lastUpdate || t('screen_update_time_never'),
+                            })}
+                        </Text>
+                    </View>
+                    <TouchableOpacity
+                        style={[
+                            styles.refreshButton,
+                            { backgroundColor: currentTheme.buttonBackground },
+                        ]}
+                        onPress={onManualUpdate}
+                        disabled={refreshing}
+                        activeOpacity={0.7}
+                    >
+                        <Icon
+                            name="refresh"
+                            size={20}
+                            color={
+                                refreshing ? currentTheme.placeholderColor : currentTheme.iconColor
+                            }
+                        />
+                    </TouchableOpacity>
                 </View>
             ) : (
                 <View style={styles.titleHeader}>
@@ -493,11 +533,87 @@ const App = () => {
         setBooks,
     } = useContext(AppContext);
 
+    const [updateRefreshing, setUpdateRefreshing] = useState(false);
+    const [lastUpdate, setLastUpdate] = useState(null);
+
     const insets = useSafeAreaInsets();
     const { t } = useTranslation();
     const hasAddedInitialScreen = useRef(false);
 
     const navigation = useNavigation();
+
+    const formatRelativeTime = useCallback(
+        date => {
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 1) return t('screen_update_time_now');
+            if (diffMins < 60)
+                return diffMins > 1
+                    ? t('screen_update_time_minute_plural', { count: diffMins })
+                    : t('screen_update_time_minute', { count: diffMins });
+            if (diffHours < 24)
+                return diffHours > 1
+                    ? t('screen_update_time_hour_plural', { count: diffHours })
+                    : t('screen_update_time_hour', { count: diffHours });
+            return diffDays > 1
+                ? t('screen_update_time_day_plural', { count: diffDays })
+                : t('screen_update_time_day', { count: diffDays });
+        },
+        [t],
+    );
+
+    const updateLastUpdateTime = useCallback(async () => {
+        try {
+            let latestTimestamp = null;
+            const lastCheckedStr = await AsyncStorage.getItem(STORAGE_KEYS.LAST_UPDATE_CHECK);
+            if (lastCheckedStr) {
+                const parsed = parseInt(lastCheckedStr, 10);
+                if (!Number.isNaN(parsed)) {
+                    latestTimestamp = parsed;
+                }
+            }
+
+            if (updateDAO) {
+                const allUpdates = await updateDAO.getAll();
+                const sortedUpdates = allUpdates.sort((a, b) => b.date - a.date);
+                if (sortedUpdates.length > 0) {
+                    latestTimestamp = Math.max(latestTimestamp || 0, sortedUpdates[0].date);
+                }
+            }
+
+            if (latestTimestamp) {
+                setLastUpdate(formatRelativeTime(new Date(latestTimestamp)));
+            } else {
+                setLastUpdate(null);
+            }
+        } catch (e) {
+            console.error('Error updating last update time:', e);
+        }
+    }, [updateDAO, formatRelativeTime]);
+
+    useEffect(() => {
+        if (updateDAO) {
+            updateLastUpdateTime();
+        }
+    }, [updateDAO, updateLastUpdateTime]);
+
+    const handleManualUpdate = useCallback(async () => {
+        if (updateRefreshing) return;
+        setUpdateRefreshing(true);
+        try {
+            const { run } = require('./web/updater');
+            await run(databaseObj);
+            await updateLastUpdateTime();
+        } catch (error) {
+            console.error('Error running manual update:', error);
+        } finally {
+            setUpdateRefreshing(false);
+        }
+    }, [databaseObj, updateLastUpdateTime, updateRefreshing]);
 
     useEffect(() => {
         if (
@@ -863,6 +979,11 @@ const App = () => {
         setSelectedCollection,
         selectedCollection,
         setJsonSettings,
+        lastUpdate,
+        setLastUpdate,
+        refreshing: updateRefreshing,
+        setRefreshing: setUpdateRefreshing,
+        handleManualUpdate,
     };
 
     const renderScreen = () => {
@@ -981,6 +1102,9 @@ const App = () => {
                     searchTerm={searchTerm}
                     setSearchTerm={setSearchTerm}
                     setActiveScreen={setActiveScreen}
+                    lastUpdate={lastUpdate}
+                    refreshing={updateRefreshing}
+                    onManualUpdate={handleManualUpdate}
                 />
 
                 {renderScreen()}
@@ -1037,6 +1161,26 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         marginRight: 8,
+    },
+    updateHeaderContainer: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    updateHeaderLeft: {
+        flex: 1,
+        marginRight: 8,
+    },
+    lastUpdateText: {
+        fontSize: 13,
+        fontStyle: 'italic',
+    },
+    refreshButton: {
+        padding: 6,
+        borderRadius: 6,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     titleHeader: {
         flex: 1,
